@@ -1,0 +1,436 @@
+/* pages/user/todo/maintenance-detail/index.wxss */
+@import "/styles/variables.wxss";
+
+/* 特殊字段信息样式 */
+.special-fields-section {
+  padding: 0 30rpx;
+}
+
+.special-fields-section .section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: var(--background-color);
+  padding-bottom: 40rpx;
+}
+
+.task-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  margin: 10rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.card-cover {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  color: var(--text-white);
+  height: 80rpx;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.card-icon {
+  width: 50rpx;
+  height: 50rpx;
+  margin-right: 20rpx;
+}
+
+.card-type {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.task-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-status {
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 30rpx;
+  color: var(--text-white);
+  font-weight: bold;
+  box-shadow: var(--box-shadow);
+}
+
+/* 状态颜色 */
+.pending { 
+  background: var(--gradient-warning);
+}
+
+.inProgress { 
+  background: var(--gradient-secondary);
+}
+
+.completed { 
+  background: var(--gradient-info);
+}
+
+.card-content {
+  padding: 30rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  margin-right: 20rpx;
+  min-width: 140rpx;
+  flex-shrink: 0;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.info-value {
+  color: var(--text-main);
+  flex: 1;
+  font-size: 28rpx;
+  line-height: 1.5;
+  display: inline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.divider {
+  height: 1rpx;
+  background-color: var(--border-light);
+  margin: 30rpx 0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.description-content {
+  background-color: var(--background-color);
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-regular);
+  line-height: 1.6;
+}
+
+.card-actions {
+  padding: 20rpx 30rpx;
+  display: flex;
+  justify-content: center;
+  border-top: 1rpx solid var(--border-light);
+  background-color: var(--background-color);
+}
+
+.complete-btn {
+  background: var(--gradient-success);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  box-shadow: var(--shadow-success);
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+  width: 100%;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 电话链接样式 */
+.phone-link {
+  color: var(--primary-color);
+  margin-left: 10rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  display: inline;
+}
+
+.phone-icon {
+  margin-left: 4rpx;
+  font-size: 24rpx;
+} 
+
+/* QQ号链接样式 */
+.qq-link {
+  color: var(--primary-color);
+  font-size: 28rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 6rpx;
+  background-color: var(--status-primary-bg);
+  transition: background-color 0.3s ease;
+}
+
+.qq-link:active {
+  background-color: rgba(58, 117, 251, 0.2);
+}
+
+/* 人员信息区块样式 */
+.person-block {
+  margin-bottom: 30rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.person-header {
+  padding: 20rpx 24rpx;
+  color: var(--text-white);
+  font-weight: bold;
+}
+
+.person-title {
+  font-size: 30rpx;
+  font-weight: bold;
+}
+
+.person-content {
+  padding: 24rpx;
+  background-color: var(--card-background);
+}
+
+/* 申请人信息区块 */
+.applicant-block .person-header {
+  background: var(--gradient-warning);
+}
+
+/* 主受理人信息区块 */
+.main-assignee-block .person-header {
+  background: var(--gradient-success);
+}
+
+/* 协助受理人信息区块 */
+.additional-assignee-block .person-header {
+  background: var(--gradient-secondary);
+}
+
+/* 协助受理人单项样式 */
+.additional-assignee-item {
+  margin-bottom: 20rpx;
+}
+
+.additional-assignee-item:last-child {
+  margin-bottom: 0;
+}
+
+.assignee-name-tag {
+  background: var(--status-secondary-bg);
+  color: var(--secondary-color);
+  font-size: 26rpx;
+  font-weight: bold;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  margin-bottom: 16rpx;
+  display: inline-block;
+  border: 1rpx solid var(--secondary-color);
+}
+
+.assignee-divider {
+  height: 1rpx;
+  background: linear-gradient(to right, transparent, var(--border-color), transparent);
+  margin: 24rpx 0;
+}
+
+/* 调整人员信息区块内的间距 */
+.person-block .info-row {
+  margin-bottom: 16rpx;
+}
+
+.person-block .info-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 调整标签宽度 */
+.person-content .info-label {
+  min-width: 120rpx;
+  color: var(--text-regular);
+  font-weight: 500;
+} 
+
+/* 详情页撤销按钮 */
+.cancel-btn {
+  background: var(--card-background);
+  color: var(--danger-color);
+  border: 2rpx solid var(--danger-color);
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  margin-right: 20rpx;
+  box-shadow: var(--shadow-danger);
+}
+
+/* 撤销原因显示样式 */
+.cancel-reason-section {
+  padding: 0 30rpx;
+}
+
+.cancel-reason-content {
+  background-color: #fff5f5;
+  border: 1rpx solid var(--danger-color);
+  border-radius: 8rpx;
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+/* 撤销状态样式 */
+.cancelled { 
+  background: var(--gradient-danger);
+}
+
+/* 自定义撤销弹窗样式 */
+.cancel-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.cancel-modal {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  width: 600rpx;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid var(--border-light);
+  background: var(--gradient-danger);
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-white);
+}
+
+.modal-close {
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36rpx;
+  color: var(--text-white);
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-content {
+  padding: 30rpx;
+}
+
+.modal-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+
+.cancel-reason-input {
+  width: 100%;
+  min-height: 120rpx;
+  background-color: var(--background-color);
+  border: 1rpx solid var(--border-color);
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.cancel-reason-input:focus {
+  border-color: var(--primary-color);
+}
+
+.char-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 10rpx;
+}
+
+.modal-actions {
+  display: flex;
+  padding: 20rpx 30rpx 30rpx;
+  gap: 20rpx;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.modal-btn.cancel-btn {
+  background-color: var(--background-color);
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border-color);
+}
+
+.modal-btn.confirm-btn {
+  background: var(--gradient-danger);
+  color: var(--text-white);
+  box-shadow: var(--shadow-danger);
+}
+
+ 

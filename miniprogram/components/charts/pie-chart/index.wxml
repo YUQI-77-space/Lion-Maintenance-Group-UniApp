@@ -1,0 +1,25 @@
+<!-- components/charts/pie-chart/index.wxml -->
+<view class="chart-root">
+  <view class="chart-canvas-wrap">
+    <canvas 
+      type="2d" 
+      id="pieCanvas" 
+      class="pie-canvas"
+      style="width: {{width}}px; height: {{height}}px;"
+    ></canvas>
+  </view>
+  <view wx:if="{{legend}}" class="legend-wrap">
+    <view wx:if="{{legendSummary}}" class="legend-summary">
+      <text class="summary-primary">总贡献 {{legendSummary.weighted}}</text>
+      <text class="summary-sub">原始合计 {{legendSummary.raw}}</text>
+    </view>
+    <view class="legend-item" wx:for="{{legendItems}}" wx:key="name">
+      <view class="legend-dot" style="background-color: {{item.color}};"></view>
+      <view class="legend-texts">
+        <text class="legend-name">{{item.name}}</text>
+        <text class="legend-sub">{{item.displayValue}}｜{{item.percent}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+

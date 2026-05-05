@@ -1,0 +1,311 @@
+/* pages/team/volunteer/list/index.wxss */
+@import "/styles/variables.wxss";
+
+/* 页面容器 - 左右分栏布局 */
+.page-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 左侧分类导航 */
+.sidebar {
+  width: 180rpx;
+  flex-shrink: 0;
+  background: #F5F5F5;
+  border-right: 1px solid var(--border-light);
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar view {
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  position: relative;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar view:active {
+  opacity: 0.7;
+}
+
+.sidebar view.active {
+  color: var(--primary-color);
+  background: var(--card-background);
+  font-weight: bold;
+}
+
+.sidebar view.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 48rpx;
+  background: var(--primary-color);
+  border-radius: 0 3rpx 3rpx 0;
+}
+
+/* 右侧内容区域 */
+.content {
+  flex: 1;
+  height: 100vh;
+  background: var(--background-color);
+}
+
+/* 加载容器样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+  min-height: 300rpx;
+}
+
+/* 活动列表样式 */
+.activity-list {
+  padding: 20rpx;
+}
+
+.activity-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  padding: 30rpx 30rpx 24rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--box-shadow);
+  border: 1rpx solid var(--border-light);
+  /* 默认隐藏状态 */
+  opacity: 0;
+  transform: translateX(80rpx) translateZ(0);
+  transform-origin: center top;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 卡片入场动画 */
+.activity-card.card-animate {
+  animation: cardSlideIn 0.6s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+}
+
+.activity-card.card-animate:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(80rpx) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10rpx;
+}
+
+.card-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  flex: 1;
+  margin-right: 20rpx;
+}
+
+.status-tag {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  background-color: transparent; /* 无底色填充 */
+  border: 1rpx solid; /* 边框 */
+}
+.status-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  margin-right: 6rpx;
+}
+/* 筹备中 - 金色 */
+.status-inPreparation { 
+  color: #FFD700; 
+  border-color: #FFD700; 
+}
+.status-inPreparation .status-dot { 
+  background-color: #FFD700; 
+}
+/* 进行中 - 蓝色 */
+.status-inProgress { 
+  color: #0000FF; 
+  border-color: #0000FF; 
+}
+.status-inProgress .status-dot { 
+  background-color: #0000FF; 
+}
+/* 已结束 - 绿色 */
+.status-ended { 
+  color: #00FF00; 
+  border-color: #00FF00; 
+}
+.status-ended .status-dot { 
+  background-color: #00FF00; 
+}
+
+/* 卡片边框按状态着色 */
+.activity-card.status-inPreparation-card { 
+  border-color: #FFD700; 
+}
+.activity-card.status-inProgress-card { 
+  border-color: #0000FF; 
+}
+.activity-card.status-ended-card { 
+  border-color: #00FF00; 
+}
+
+.activity-id {
+  font-size: 24rpx;
+  color: var(--text-placeholder);
+  margin-bottom: 20rpx;
+}
+
+.card-content {
+  font-size: 28rpx;
+  color: var(--text-regular);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 15rpx;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 4rpx;
+}
+
+.activity-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+
+
+.register-btn {
+  width: 80%; /* 宽度缩减到80% */
+  font-size: 26rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  line-height: 1.5;
+  background-color: #191970; /* 底色 */
+  border: 1rpx solid #191970; /* 边框 */
+  color: #ffffff; /* 纯白色文字 */
+}
+
+.register-btn.registered {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.register-btn.recruitment-closed {
+  background-color: rgba(245, 108, 108, 0.1);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+  cursor: not-allowed;
+}
+
+.register-btn.full {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-secondary);
+}
+
+.register-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 励志名言样式 */
+.inspirational-quote {
+  margin-top: 24rpx;
+  text-align: left;
+  color: #666;
+  font-size: 28rpx;
+  line-height: 1.4;
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+/* 加载更多样式 */
+.loading-more, .no-more {
+  text-align: center;
+  padding: 30rpx 0;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid var(--border-light);
+  border-top: 4rpx solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

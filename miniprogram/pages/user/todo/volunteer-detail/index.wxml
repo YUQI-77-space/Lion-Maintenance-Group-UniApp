@@ -1,0 +1,103 @@
+<!--pages/user/todo/volunteer-detail/index.wxml-->
+<view class="container">
+  <scroll-view scroll-y="{{true}}" class="scroll-view" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+    <view class="detail-card" wx:if="{{!loading && taskDetail}}">
+      <!-- 原有内容 -->
+      <view class="card-header">
+        <text class="task-title">{{taskDetail.title}}</text>
+        <view class="task-status {{taskDetail.activityStatus}}">
+          {{taskDetail.activityStatusText}}
+    </view>
+      </view>
+
+      <view class="card-content">
+        <view class="info-row">
+          <text class="info-label">活动编号:</text>
+          <text class="info-value">{{taskDetail.taskId || taskDetail.activityId}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">活动时间:</text>
+          <text class="info-value">{{formattedStartTime}} 至 {{formattedEndTime}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">活动地点:</text>
+          <text class="info-value">{{taskDetail.location}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">志愿时长:</text>
+          <text class="info-value">{{taskDetail.volunteerHours || 0}} 小时</text>
+      </view>
+
+        <view class="divider"></view>
+
+        <view class="description-section">
+          <text class="section-title">活动描述</text>
+          <view class="description-content">
+            <text>{{taskDetail.description || '暂无描述'}}</text>
+      </view>
+    </view>
+    
+        <!-- 我的反馈 -->
+        <view class="divider"></view>
+        <view class="feedback-section">
+          <text class="section-title">我的分工信息</text>
+          <view class="my-feedback" wx:if="{{myFeedback}}">
+            <text>{{myFeedback}}</text>
+          </view>
+          <view class="empty-feedback" wx:else>
+            <text>暂无分工信息</text>
+    </view>
+    </view>
+  </view>
+
+      <!-- 按钮区域 -->
+      <view class="card-actions">
+        <button 
+          class="feedback-btn" 
+          bindtap="showFeedbackModal"
+        >分工信息</button>
+        
+    <button 
+          class="cancel-btn {{!canCancel ? 'disabled' : ''}}" 
+      bindtap="cancelRegistration"
+          disabled="{{!canCancel}}"
+    >取消报名</button>
+  </view>
+
+      <!-- 取消报名提示 -->
+      <view class="cancel-info" wx:if="{{!canCancel && cancelReasonText}}">
+        <text>{{cancelReasonText}}</text>
+  </view>
+</view>
+
+    <!-- 加载中状态 -->
+    <view class="loading-container" wx:if="{{loading}}">
+      <view class="loading">
+        <loading-animation size="default"></loading-animation>
+      </view>
+    </view>
+  </scroll-view>
+
+<!-- 反馈弹窗 -->
+  <view class="modal" wx:if="{{showFeedbackModal}}">
+    <view class="modal-mask" bindtap="closeFeedbackModal"></view>
+  <view class="modal-content">
+      <view class="modal-header">
+        <text>分工信息</text>
+      </view>
+      <view class="modal-body">
+    <textarea 
+          class="feedback-input" 
+          placeholder="请输入您在本次活动中的具体工作内容与分工..." 
+      value="{{feedbackContent}}"
+      bindinput="onFeedbackInput"
+          maxlength="500"
+    ></textarea>
+      </view>
+      <view class="modal-footer">
+        <button class="cancel-modal-btn" bindtap="closeFeedbackModal">取消</button>
+        <button class="submit-modal-btn" bindtap="submitFeedback">提交</button>
+      </view>
+    </view>
+  </view>
+</view> 

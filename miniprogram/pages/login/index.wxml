@@ -1,0 +1,103 @@
+<!-- pages/login/index.wxml -->
+<view class="container">
+  <!-- 自动登录加载界面 -->
+  <block wx:if="{{isCheckingLogin}}">
+    <view class="auto-login-container">
+      <view class="logo-wrapper">
+        <image class="logo" src="{{iconLogo}}" mode="aspectFit"></image>
+        <view class="logo-pulse"></view>
+      </view>
+      <loading-animation size="large"></loading-animation>
+    </view>
+  </block>
+
+  <!-- 登录表单，只有在非自动登录检查状态才显示 -->
+  <block wx:else>
+    <!-- 单步登录界面 -->
+    <view class="auth-container">
+      <view class="section-header">
+        <view class="section-title">登录系统</view>
+        <view class="section-subtitle">请完善个人信息并登录</view>
+      </view>
+      
+      <view class="form-section">
+        <view class="avatar-container">
+          <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+            <image class="avatar" src="{{userInfo.avatarUrl || iconDefaultAvatar}}"></image>
+            <view class="avatar-overlay">
+              <view class="avatar-icon">📷</view>
+            </view>
+          </button>
+          <view class="avatar-tips">点击选择头像</view>
+        </view>
+        
+        <view class="form-item">
+          <view class="form-label required">
+            <view class="label-icon">😊</view>
+            <view class="label-text">昵称</view>
+          </view>
+          <view class="input-wrapper">
+            <input class="form-input" type="nickname" placeholder="请输入昵称" value="{{userInfo.nickName}}" bindinput="onInputNickName" />
+            <view class="input-decoration"></view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="form-label required">
+            <view class="label-icon">💬</view>
+            <view class="label-text">QQ号</view>
+          </view>
+          <view class="input-wrapper">
+            <input class="form-input" type="number" placeholder="请输入QQ号（5-11位数字）" value="{{userInfo.qqId}}" bindinput="inputChange" data-field="qqId" />
+            <view class="input-decoration"></view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="form-label required">
+            <view class="label-icon">🎓</view>
+            <view class="label-text">学号/工号</view>
+          </view>
+          <view class="input-wrapper">
+            <input class="form-input" type="text" placeholder="请输入学号/工号" value="{{userInfo.studentId}}" bindinput="inputChange" data-field="studentId" confirm-type="done" maxlength="20" />
+            <view class="input-decoration"></view>
+          </view>
+        </view>
+        
+        <view class="form-item">
+          <view class="form-label">
+            <view class="label-icon">🔑</view>
+            <view class="label-text">身份权限码</view>
+            <view class="label-subtitle">（用于分配身份权限，支持粘贴）</view>
+          </view>
+          <view class="input-wrapper">
+            <input class="form-input" type="text" placeholder="请输入身份权限码（非必填）" value="{{userInfo.authCode}}" bindinput="inputChange" data-field="authCode" confirm-type="done" maxlength="50" />
+            <view class="input-decoration"></view>
+            <view class="paste-hint" wx:if="{{!userInfo.authCode}}">💡 长按可粘贴权限码</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="privacy-section">
+        <view class="privacy-agreement" bindtap="togglePrivacyAgree">
+          <checkbox checked="{{privacyAgree}}" />
+          <view class="privacy-text">
+            <text>我已阅读并同意</text>
+            <text class="privacy-link" catchtap="openOfficialPrivacy">《用户隐私协议》</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="action-section">
+        <button class="primary-btn" bindtap="saveUserInfo" disabled="{{!privacyAgree}}">保存并登录</button>
+      </view>
+      
+      <!-- 网络提示信息 -->
+      <view class="network-warning">
+        <text class="warning-text">请切换至 手机流量 而非 校园网，否则无法上传头像(校园网问题)，进入小程序系统正常使用校园网即可)</text>
+      </view>
+    </view>
+  </block>
+
+
+</view> 

@@ -1,0 +1,278 @@
+<!--pages/team/ewa/manage/index.wxml-->
+<wxs module="format">
+function formatEW(value) {
+  if (!value && value !== 0) {
+    return '0';
+  }
+  var num = parseFloat(value);
+  if (isNaN(num)) {
+    return '0';
+  }
+  
+  if (Math.floor(num) === num) {
+    return num + '';
+  }
+  
+  var str = num.toFixed(2);
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '.') {
+    str = str.slice(0, -1);
+  }
+  return str;
+}
+
+module.exports = {
+  formatEW: formatEW
+};
+</wxs>
+
+<view class="container">
+  <!-- 权限检查提示 -->
+  <view class="no-permission" wx:if="{{!hasPermission}}">
+    <image src="{{iconLock}}" mode="aspectFit" class="lock-icon"></image>
+    <text>抱歉，只有组长才能访问该页面</text>
+  </view>
+  
+  <!-- 管理内容 -->
+  <block wx:else>
+    <!-- 用户列表搜索 -->
+    <view class="search-bar">
+      <view class="search-input-container">
+        <image src="{{iconSearch}}" mode="aspectFit" class="search-icon"></image>
+        <input 
+          class="search-input" 
+          placeholder="搜索昵称" 
+          value="{{searchText}}"
+          bindinput="onSearchInput"
+          confirm-type="search"
+        />
+        <image 
+          src="{{iconClose}}" 
+          mode="aspectFit" 
+          class="clear-icon" 
+          wx:if="{{searchText}}"
+          bindtap="clearSearch"
+        ></image>
+      </view>
+    </view>
+    
+    <!-- 荣誉排行榜 -->
+    <view class="ranking-container">
+      <view class="ranking-title">
+        <image src="{{iconRanking}}" mode="aspectFit" class="ranking-icon"></image>
+        <text>工作量排行榜</text>
+      </view>
+      
+      <!-- 前三名特殊展示 -->
+      <view class="podium-container" wx:if="{{filteredUsers.length > 0}}">
+        <!-- 顶部紧凑按钮区：导出 / 统计 -->
+        <view class="podium-tools">
+          <view class="tool-btn" bindtap="exportEWData"><text>导出</text></view>
+          <view class="tool-btn" bindtap="goToSummary"><text>统计</text></view>
+        </view>
+        <!-- 第二名 -->
+        <view class="podium-item second" wx:if="{{filteredUsers.length >= 2}}">
+          <view class="rank-medal silver">2</view>
+          <avatar-display 
+            userInfo="{{filteredUsers[1]}}" 
+            openid="{{filteredUsers[1].ewaUserId}}"
+            size="medium"
+            showBorder="{{true}}"
+            customClass="ranking-avatar"
+          />
+          <text class="user-name">{{filteredUsers[1].nickName || filteredUsers[1].ewaUserName}}</text>
+          <text class="user-ew">{{format.formatEW(filteredUsers[1].totalEW)}}</text>
+          <view class="podium-actions">
+            <view 
+              class="podium-edit-btn" 
+              catchtap="editUserEW" 
+              data-user-id="{{filteredUsers[1].ewaUserId}}"
+            >
+              <image src="{{iconEdit}}" mode="aspectFit" class="edit-icon"></image>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 第一名 -->
+        <view class="podium-item first" wx:if="{{filteredUsers.length >= 1}}">
+          <view class="crown">👑</view>
+          <view class="rank-medal gold">1</view>
+          <avatar-display 
+            userInfo="{{filteredUsers[0]}}" 
+            openid="{{filteredUsers[0].ewaUserId}}"
+            size="large"
+            showBorder="{{true}}"
+            customClass="ranking-avatar champion"
+          />
+          <text class="user-name">{{filteredUsers[0].nickName || filteredUsers[0].ewaUserName}}</text>
+          <text class="user-ew">{{format.formatEW(filteredUsers[0].totalEW)}}</text>
+          <view class="podium-actions">
+            <view 
+              class="podium-edit-btn" 
+              catchtap="editUserEW" 
+              data-user-id="{{filteredUsers[0].ewaUserId}}"
+            >
+              <image src="{{iconEdit}}" mode="aspectFit" class="edit-icon"></image>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 第三名 -->
+        <view class="podium-item third" wx:if="{{filteredUsers.length >= 3}}">
+          <view class="rank-medal bronze">3</view>
+          <avatar-display 
+            userInfo="{{filteredUsers[2]}}" 
+            openid="{{filteredUsers[2].ewaUserId}}"
+            size="medium"
+            showBorder="{{true}}"
+            customClass="ranking-avatar"
+          />
+          <text class="user-name">{{filteredUsers[2].nickName || filteredUsers[2].ewaUserName}}</text>
+          <text class="user-ew">{{format.formatEW(filteredUsers[2].totalEW)}}</text>
+          <view class="podium-actions">
+            <view 
+              class="podium-edit-btn" 
+              catchtap="editUserEW" 
+              data-user-id="{{filteredUsers[2].ewaUserId}}"
+            >
+              <image src="{{iconEdit}}" mode="aspectFit" class="edit-icon"></image>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 其他排名 -->
+      <view class="ranking-list" wx:if="{{filteredUsers.length > 3}}">
+        <view class="list-header">
+          <text class="header-rank">排名</text>
+          <text class="header-avatar">头像</text>
+          <text class="header-name">姓名</text>
+          <text class="header-ew">工作量</text>
+          <text class="header-action">操作</text>
+        </view>
+        
+        <view 
+          class="ranking-item" 
+          wx:for="{{filteredUsers}}" 
+          wx:for-index="index"
+          wx:key="_id"
+          wx:if="{{index >= 3 && (showAllRankings || index < 10)}}"
+          data-user-id="{{item.ewaUserId}}"
+        >
+          <view class="rank-cell">{{index + 1}}</view>
+          <view class="avatar-cell">
+            <avatar-display 
+              userInfo="{{item}}" 
+              openid="{{item.ewaUserId}}"
+              size="small"
+              showBorder="{{true}}"
+              customClass="list-avatar"
+            />
+          </view>
+          <view class="name-cell">
+            <text class="user-name">{{item.nickName || item.ewaUserName}}</text>
+          </view>
+          <view class="ew-cell">{{format.formatEW(item.totalEW)}}</view>
+          <view class="action-cell">
+            <view 
+              class="action-btn edit-btn" 
+              catchtap="editUserEW" 
+              data-user-id="{{item.ewaUserId}}"
+            >
+              <image src="{{iconEdit}}" mode="aspectFit" class="btn-icon"></image>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 展开/收起按钮 -->
+        <view class="expand-btn-container" wx:if="{{filteredUsers.length > 10}}" bindtap="toggleRankings">
+          <view class="expand-btn">
+            <text>{{showAllRankings ? '收起' : '展开查看更多'}}</text>
+            <text class="expand-icon">{{showAllRankings ? '▲' : '▼'}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{filteredUsers.length === 0 && !loading}}">
+        <image src="{{iconEmpty}}" mode="aspectFit" class="empty-icon"></image>
+        <text>暂无用户数据</text>
+      </view>
+      
+      <!-- 加载中 -->
+      <view class="loading" wx:if="{{loading}}">
+        <loading-animation size="default"></loading-animation>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 编辑工作量弹窗 -->
+  <view class="edit-modal" wx:if="{{showEditModal}}">
+    <view class="modal-mask" bindtap="hideEditModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">编辑工作量</text>
+        <view class="close-btn" bindtap="hideEditModal">
+          <image src="{{iconClose}}" mode="aspectFit"></image>
+        </view>
+      </view>
+      
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">姓名</text>
+          <text class="form-value">{{editUser.ewaUserName}}</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">维修工作量</text>
+          <input 
+            class="form-input" 
+            type="number" 
+            value="{{editUser.maintenanceEW}}"
+            bindinput="onMaintenanceEWInput"
+          />
+        </view>
+        
+
+        
+        <view class="form-item">
+          <text class="form-label">志愿工作量</text>
+          <input 
+            class="form-input" 
+            type="number" 
+            value="{{editUser.volunteerEW}}"
+            bindinput="onVolunteerEWInput"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">值班工作量</text>
+          <input 
+            class="form-input" 
+            type="number" 
+            value="{{editUser.dutyEW}}"
+            bindinput="onDutyEWInput"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">总工作量</text>
+          <view class="total-ew-container">
+            <text class="form-value total-ew">{{format.formatEW(editUser.totalEW)}}</text>
+            <text class="total-ew-note">（保存后将按权重公式重新计算）</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="cancel-btn" bindtap="hideEditModal">取消</button>
+        <button class="confirm-btn" bindtap="saveUserEW">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

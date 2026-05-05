@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "维修任务",
+  "enablePullDownRefresh": false,
+  "backgroundColor": "#f6f6f6",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+}

@@ -1,0 +1,684 @@
+/* pages/team/maintenance/manage/index.wxss */
+@import "/styles/variables.wxss";
+
+/* 页面容器 - 左右分栏布局 */
+.page-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 左侧分类导航 */
+.sidebar {
+  width: 180rpx;
+  flex-shrink: 0;
+  background: #F5F5F5;
+  border-right: 1px solid var(--border-light);
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar view {
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  position: relative;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar view:active {
+  opacity: 0.7;
+}
+
+.sidebar view.active {
+  color: var(--primary-color);
+  background: var(--card-background);
+  font-weight: bold;
+}
+
+.sidebar view.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 48rpx;
+  background: var(--primary-color);
+  border-radius: 0 3rpx 3rpx 0;
+}
+
+/* 右侧内容区域 */
+.content-wrapper {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background-color);
+}
+
+/* 粘性头部：搜索框固定在页面上方，列表在其下方滚动 */
+.sticky-header {
+  flex-shrink: 0;
+  padding: 20rpx;
+  background: transparent;
+}
+
+/* 搜索框毛玻璃效果 - 使用阴影模拟半透明质感 */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.08);
+  border-radius: 30rpx;
+  padding: 10rpx 20rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+}
+
+.search-input {
+  flex: 1;
+  height: 60rpx;
+  font-size: 28rpx;
+  color: var(--text-main);
+  padding: 0 10rpx;
+  background: transparent;
+}
+
+.search-clear {
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-placeholder);
+  font-size: 32rpx;
+}
+
+.search-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-regular);
+}
+
+/* 列表滚动区域 */
+.content {
+  flex: 1;
+  height: 0; /* flex: 1 + height: 0 = 完全填满剩余空间 */
+}
+
+/* 任务列表 */
+.task-list {
+  padding-bottom: 120rpx;
+  padding-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* 任务卡片样式 */
+.task-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  margin: 0 20rpx 20rpx 20rpx;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  position: relative;
+  border: 1rpx solid var(--border-light);
+  /* 默认隐藏状态 */
+  opacity: 0;
+  transform: translateX(80rpx) translateZ(0);
+  transform-origin: center top;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 卡片入场动画 */
+.task-card.card-animate {
+  animation: cardSlideIn 0.6s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+}
+
+.task-card.card-animate:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(80rpx) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+/* 右上角EW值纯文字标注（仅管理页显示） */
+.ew-corner {
+  position: absolute;
+  top: 10rpx;
+  right: 14rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #191970; /* 规定颜色 */
+  z-index: 1;
+}
+
+/* 卡片头部 */
+.task-info {
+  padding: 24rpx 24rpx 2rpx 24rpx; /* 底部更紧凑，与footer对称 */
+  position: relative;
+}
+
+/* 取消顶部色条，统一以描边表达 */
+.status-indicator { display: none; }
+
+/* 任务编号 */
+.task-id {
+  font-size: 24rpx;
+  color: var(--text-placeholder);
+  margin-bottom: 8rpx;
+  font-weight: 400;
+}
+
+/* 任务类别标题 */
+.task-category {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  color: var(--text-main);
+  line-height: 1.4;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 任务元信息 */
+.task-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+/* 统一与列表页一致的紧急徽章（纯红） */
+.urgent-badge {
+  background-color: #FF0000; /* 纯红 */
+  color: #ffffff;
+  font-size: 22rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.management-tag {
+  background-color: transparent;
+  color: #191970; /* 组长创建统一颜色 */
+  font-size: 22rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+  border: 1rpx solid #191970;
+}
+
+.appointment-time {
+  font-size: 26rpx;
+  color: var(--text-regular);
+  flex: 1;
+  min-width: 0;
+}
+
+/* 任务底部信息 */
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0; /* 对称上下内边距，保证视觉居中 */
+  border-top: 1rpx solid var(--border-light);
+  gap: 16rpx;
+}
+
+/* 任务状态标签 */
+.task-status {
+  padding: 6rpx 14rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  border: 1rpx solid;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  background-color: transparent; /* 无底色 */
+}
+
+.status-pending { color: var(--maintenance-pending-color); border-color: var(--maintenance-pending-color); background-color: transparent; }
+
+.status-pending::before {
+  content: '';
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--maintenance-pending-color);
+  margin-right: 6rpx;
+}
+
+.status-inProgress { color: var(--maintenance-inProgress-color); border-color: var(--maintenance-inProgress-color); background-color: transparent; }
+
+.status-inProgress::before {
+  content: '';
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--maintenance-inProgress-color);
+  margin-right: 6rpx;
+}
+
+.status-completed { color: var(--maintenance-completed-color); border-color: var(--maintenance-completed-color); background-color: transparent; }
+
+/* 新增：已撤销 */
+.status-cancelled { color: var(--maintenance-cancelled-color); border-color: var(--maintenance-cancelled-color); background-color: transparent; }
+
+.status-cancelled::before {
+  content: '';
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--maintenance-cancelled-color);
+  margin-right: 6rpx;
+}
+
+/* 卡片边框按状态着色 */
+.pending-card { border-color: var(--maintenance-pending-color); }
+.inProgress-card { border-color: var(--maintenance-inProgress-color); }
+.completed-card { border-color: var(--maintenance-completed-color); }
+.cancelled-card { border-color: var(--maintenance-cancelled-color); }
+
+.status-completed::before {
+  content: '';
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background-color: var(--maintenance-completed-color);
+  margin-right: 6rpx;
+}
+
+/* 任务操作按钮区域 */
+.task-actions {
+  display: flex;
+  gap: 6rpx;
+  flex-shrink: 0;
+  align-items: center;
+  padding-right: 4rpx;
+}
+
+/* 操作按钮样式 */
+.action-btn {
+  /* 使按钮宽度随文字自适应，并限制在卡片内 */
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+
+  font-size: 28rpx; /* 与认领按钮一致略大 */
+  padding: 10rpx 32rpx; /* 与认领按钮一致更宽 */
+  border-radius: 999rpx; /* 宽圆角矩形 */
+  line-height: 1.2;
+  background-color: transparent;
+  /* 边框更细一些 */
+  border: 1rpx solid;
+  margin: 0;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.3s ease;
+  align-items: center;
+  justify-content: center;
+  min-height: 56rpx;
+  color: #ffffff; /* 默认白字，具体颜色由子类覆盖背景/边框 */
+}
+
+.action-btn::after {
+  border: none;
+}
+
+/* 悬停 / 点击反馈 */
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.ew-btn { border-color: #191970; background-color: #191970; }
+
+.ew-btn:active { opacity: 0.9; transform: scale(0.95); }
+
+.delete-btn { border-color: #B22222; background-color: #B22222; }
+
+.delete-btn:active { opacity: 0.9; transform: scale(0.95); }
+
+/* 无任务提示 */
+.no-task {
+  text-align: center;
+  padding: 100rpx 20rpx;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  margin: 20rpx 0;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 24rpx 0;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}
+
+/* EW设置弹窗 */
+.ew-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 680rpx; /* 扩大弹窗宽度 */
+  max-height: 85vh; /* 限制最大高度 */
+  z-index: 1001;
+  background: var(--card-background);
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 24rpx 30rpx; /* 减小上下内边距 */
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  text-align: center;
+  border-bottom: 1rpx solid var(--border-light);
+  background-color: var(--background-color);
+  flex-shrink: 0;
+}
+
+.modal-body {
+  padding: 24rpx 30rpx; /* 减小内边距 */
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.task-info-modal {
+  margin-bottom: 20rpx; /* 减小间距 */
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx; /* 减小间距 */
+}
+
+.task-info-modal text {
+  font-size: 26rpx; /* 略微减小字体 */
+  color: var(--text-regular);
+  line-height: 1.4;
+}
+
+.ew-description {
+  padding: 16rpx; /* 减小内边距 */
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(103, 194, 58, 0.1) 50%, rgba(255, 152, 0, 0.1) 100%);
+  border-radius: 12rpx;
+  margin: 16rpx 0; /* 减小间距 */
+  border-left: 4rpx solid var(--info-color);
+}
+
+.ew-tip {
+  font-size: 24rpx; /* 减小字体 */
+  color: var(--info-color);
+  font-weight: 500;
+  display: block;
+  text-align: center;
+}
+
+.ew-slider {
+  margin-top: 16rpx; /* 减小间距 */
+}
+
+.ew-slider text {
+  display: block;
+  text-align: center;
+  margin-bottom: 16rpx; /* 减小间距 */
+  font-size: 34rpx; /* 略微减小字体 */
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.ew-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  width: 100%;
+}
+
+.ew-slider-control {
+  flex: 1;
+  min-width: 0; /* prevent overflow issues */
+}
+
+.ew-input {
+  width: 140rpx; /* 减小宽度 */
+  padding: 6rpx 10rpx; /* 减小内边距 */
+  border: 1px solid var(--border-light);
+  border-radius: 8rpx;
+  text-align: center;
+  background-color: var(--card-background);
+  color: var(--text-main);
+  font-size: 26rpx;
+}
+
+/* 受理人员区域 */
+.assignees-section {
+  margin-top: 20rpx;
+  border-top: 1rpx solid var(--border-light);
+  padding-top: 16rpx;
+}
+
+.assignees-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12rpx;
+}
+
+.assignees-list {
+  max-height: 240rpx; /* 最多显示约4-5个受理人 */
+  border: 1rpx solid var(--border-light);
+  border-radius: 8rpx;
+  background-color: var(--background-color);
+}
+
+.assignee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 16rpx;
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+.assignee-item:last-child {
+  border-bottom: none;
+}
+
+.assignee-name {
+  font-size: 26rpx;
+  color: var(--text-main);
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assignee-role {
+  font-size: 24rpx;
+  color: var(--text-regular);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  background-color: var(--border-light);
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.assignee-role.primary {
+  background-color: rgba(58, 134, 255, 0.15);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.no-assignees {
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.no-assignees text {
+  font-size: 26rpx;
+  color: var(--text-placeholder);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 24rpx 30rpx;
+  border-top: 1rpx solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.btn-cancel, .btn-confirm {
+  flex: 1;
+  height: 72rpx; /* 减小高度 */
+  line-height: 72rpx;
+  font-size: 28rpx; /* 减小字体 */
+  border-radius: 36rpx; /* 圆角矩形 */
+  border: 2rpx solid; /* 细边框 */
+  margin: 0;
+  background-color: transparent; /* 无底色填充 */
+  transition: all 0.3s ease;
+}
+
+.btn-cancel::after, .btn-confirm::after {
+  border: none;
+}
+
+.btn-cancel {
+  border-color: var(--text-regular);
+  color: var(--text-regular);
+}
+
+.btn-cancel:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+.btn-confirm {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-confirm:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+/* 遮罩层 */
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+/* 自定义二次确认弹窗 */
+.custom-confirm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600rpx;
+  z-index: 1001;
+  background: var(--card-background);
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.confirm-text {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-bottom: 30rpx;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.confirm-input {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid var(--border-light);
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  background-color: var(--background-color);
+  color: var(--text-main);
+}
+
+.confirm-input:focus {
+  border-color: var(--primary-color);
+  background-color: var(--card-background);
+}
+
+/* 响应式调整（移除不被支持的@media） */
+
+/* 创建任务按钮样式 */
+.create-btn {
+  position: fixed;
+  right: 40rpx;
+  bottom: 100rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background-color: #000000; /* 纯黑底色 */
+  border: 1rpx solid #000000; /* 纯黑边框 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: all 0.2s ease;
+}
+
+.create-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 10rpx rgba(58, 134, 255, 0.4);
+}
+
+.add-icon {
+  width: 50rpx;
+  height: 50rpx;
+  filter: brightness(0) invert(1); /* 纯白“+”号 */
+}

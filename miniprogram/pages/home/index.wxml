@@ -1,0 +1,186 @@
+<!--pages/home/index.wxml-->
+<!-- 自定义导航栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
+  <view class="navbar-content">
+    <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
+    <text class="navbar-title">物科院维修组</text>
+  </view>
+</view>
+
+<view class="home-container" style="padding-top: {{navBarHeight + 20}}px;" animation="{{pageAnimation}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+  <!-- 轮播图区域 -->
+  <view class="swiper-section">
+    <block wx:if="{{swiperImages.length}}">
+      <swiper 
+        class="home-swiper" 
+        indicator-dots="{{true}}" 
+        indicator-color="rgba(255,255,255,0.5)"
+        indicator-active-color="#fff"
+        autoplay="{{true}}" 
+        interval="{{swiperInterval}}" 
+        duration="{{swiperDuration}}"
+        circular="{{true}}"
+        current="{{swiperCurrent}}"
+        bindchange="onSwiperChange"
+        bindtouchstart="onSwiperTouchStart"
+        bindtouchend="onSwiperTouchEnd"
+        bindtouchmove="onSwiperTouchMove">
+        <swiper-item wx:for="{{swiperImages}}" wx:key="id" class="swiper-item">
+          <image 
+            class="swiper-image" 
+            src="{{item.url}}" 
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onImageError"
+            data-index="{{index}}">
+          </image>
+        </swiper-item>
+      </swiper>
+    </block>
+    <block wx:else>
+      <view class="swiper-skeleton"></view>
+    </block>
+  </view>
+
+  <!-- 功能入口区域 -->
+  <view class="function-entries-section entry-grid">
+    <entry-item
+      wx:for="{{functionEntries}}" 
+      wx:for-item="entry"
+      wx:key="id"
+      icon="{{entry.icon}}"
+      title="{{entry.title}}"
+      itemIndex="{{index}}"
+      bgColor="{{entry.bgColor}}"
+      customClass="{{entry.title === '我要报修' ? 'entry-item-primary' : ''}}"
+      bind:tap="onEntryItemTap">
+    </entry-item>
+  </view>
+
+  <!-- 特色活动板块 -->
+  <view class="section">
+    <section-header
+      title="特色活动"
+      titleClass="section-title-border"
+      showMore="{{true}}"
+      moreText="更多"
+      bind:more="onSpecialEventsMore">
+    </section-header>
+    <block wx:if="{{isLoadingSpecialEvents || specialEvents.length === 0}}">
+      <view class="grid-container">
+        <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+          <view class="skeleton-block grid-image-skeleton"></view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="grid-container">
+        <view 
+          class="grid-item" 
+          wx:for="{{specialEvents}}" 
+          wx:key="id">
+          <image 
+            class="grid-image" 
+            src="{{item.url}}" 
+            mode="aspectFill"
+            lazy-load="{{true}}">
+          </image>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 团队风采板块 -->
+  <view class="section">
+    <section-header
+      title="团队风采"
+      titleClass="section-title-border"
+      showMore="{{true}}"
+      moreText="更多"
+      bind:more="onTeamSpiritMore">
+    </section-header>
+    <block wx:if="{{isLoadingTeamSpirit || teamSpirit.length === 0}}">
+      <view class="grid-container">
+        <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+          <view class="skeleton-block grid-image-skeleton"></view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="grid-container">
+        <view 
+          class="grid-item" 
+          wx:for="{{teamSpirit}}" 
+          wx:key="id">
+          <image 
+            class="grid-image" 
+            src="{{item.url}}" 
+            mode="aspectFill"
+            lazy-load="{{true}}">
+          </image>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 团队荣誉板块 -->
+  <view class="section">
+    <section-header
+      title="团队荣誉"
+      titleClass="section-title-border">
+    </section-header>
+    <block wx:if="{{teamHonors.length}}">
+      <view class="honors-conveyor">
+        <view class="conveyor-track">
+          <view class="conveyor-content" style="animation: conveyor-move {{conveyorDuration}}ms linear infinite;">
+            <!-- 第一组图片 -->
+            <view 
+              class="honor-card" 
+              wx:for="{{teamHonors}}" 
+              wx:key="id"
+              style="width: {{item.displayWidth}}rpx;"
+              bindtap="onHonorTap"
+              data-honor="{{item}}">
+              <image 
+                class="honor-card-image" 
+                src="{{item.url}}" 
+                mode="aspectFit"
+                lazy-load="{{true}}"
+                binderror="onHonorImageError"
+                bindload="onHonorImageLoad"
+                data-id="{{item.id}}">
+              </image>
+            </view>
+            <!-- 第二组图片（复制，用于无缝循环） -->
+            <view 
+              class="honor-card" 
+              wx:for="{{teamHonors}}" 
+              wx:key="index"
+              style="width: {{item.displayWidth}}rpx;"
+              bindtap="onHonorTap"
+              data-honor="{{item}}">
+              <image 
+                class="honor-card-image" 
+                src="{{item.url}}" 
+                mode="aspectFit"
+                lazy-load="{{true}}">
+              </image>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="honors-conveyor">
+        <view class="conveyor-track">
+          <view class="conveyor-content" style="animation: conveyor-move 16000ms linear infinite;">
+            <view class="honor-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" style="width: 200rpx;">
+              <view class="skeleton-block honor-card-skeleton"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+</view>

@@ -1,0 +1,415 @@
+/* pages/user/todo/volunteer-detail/index.wxss */
+@import "/styles/variables.wxss";
+
+.container {
+  min-height: 100vh;
+  background-color: var(--background-color);
+  padding-bottom: 40rpx;
+}
+
+.scroll-view {
+  height: 100vh;
+}
+
+.detail-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  margin: 20rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.task-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  margin: 10rpx;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.card-cover {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  color: var(--text-white);
+  height: 80rpx;
+  background: linear-gradient(135deg, var(--success-color), var(--secondary-color));
+}
+
+.card-icon {
+  width: 50rpx;
+  height: 50rpx;
+  margin-right: 20rpx;
+}
+
+.card-type {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.task-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-status {
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 30rpx;
+  color: var(--text-white);
+  font-weight: bold;
+  box-shadow: var(--box-shadow);
+}
+
+/* 状态颜色 */
+.inPreparation { 
+  background: var(--gradient-warning);
+}
+
+.inProgress { 
+  background: var(--gradient-secondary);
+}
+
+.ended { 
+  background: var(--gradient-info);
+}
+
+.card-content {
+  padding: 30rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  margin-right: 20rpx;
+  min-width: 140rpx;
+  flex-shrink: 0;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+.info-value {
+  color: var(--text-main);
+  flex: 1;
+  font-size: 28rpx;
+  line-height: 1.5;
+  display: inline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.divider {
+  height: 1rpx;
+  background-color: var(--border-light);
+  margin: 30rpx 0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.description-section {
+  margin-bottom: 20rpx;
+}
+
+.description-content {
+  background-color: var(--background-color);
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-regular);
+  line-height: 1.6;
+}
+
+.feedback-section {
+  margin-bottom: 20rpx;
+}
+
+.my-feedback {
+  background-color: var(--background-color);
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-main);
+  line-height: 1.6;
+  border-left: 4rpx solid var(--primary-color);
+}
+
+.empty-feedback {
+  background-color: var(--background-color);
+  padding: 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.card-actions {
+  padding: 20rpx 30rpx;
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+  border-top: 1rpx solid var(--border-light);
+  background-color: var(--background-color);
+}
+
+.feedback-btn {
+  background: #191970;
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 30rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  box-shadow: var(--shadow-primary);
+  flex: 1;
+}
+
+.cancel-btn {
+  background: var(--gradient-danger);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 30rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  box-shadow: var(--shadow-danger);
+  flex: 1;
+}
+
+.cancel-btn.disabled {
+  background: var(--gradient-info);
+  color: var(--text-white);
+  opacity: 0.6;
+}
+
+.cancel-info {
+  padding: 20rpx 30rpx;
+  background-color: var(--warning-background);
+  border-top: 1rpx solid var(--border-light);
+  font-size: 24rpx;
+  color: var(--warning-color);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+  width: 100%;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 反馈弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  width: 80%;
+  max-width: 600rpx;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+.modal-header {
+  padding: 30rpx;
+  border-bottom: 1rpx solid var(--border-light);
+  text-align: center;
+}
+
+.modal-header text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.modal-body {
+  padding: 30rpx;
+}
+
+.feedback-input {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 20rpx;
+  border: 1rpx solid var(--border-light);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: var(--text-main);
+  background-color: var(--background-color);
+  box-sizing: border-box;
+}
+
+.modal-footer {
+  padding: 20rpx 30rpx;
+  display: flex;
+  gap: 20rpx;
+  border-top: 1rpx solid var(--border-light);
+  background-color: var(--background-color);
+}
+
+.cancel-modal-btn {
+  background: var(--gradient-info);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  border-radius: 30rpx;
+  padding: 0 30rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  flex: 1;
+}
+
+.submit-modal-btn {
+  background: var(--gradient-success);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  border-radius: 30rpx;
+  padding: 0 30rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  flex: 1;
+  box-shadow: var(--shadow-success);
+}
+
+/* 遗留的旧样式，保持兼容性 */
+.register-btn {
+  background: var(--gradient-success);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  box-shadow: var(--shadow-success);
+}
+
+.disabled-btn {
+  background: var(--gradient-info);
+  color: var(--text-white);
+  border: none;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 40rpx;
+  padding: 0 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+} 
+
+/* 遮罩层 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-background);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.modal-message {
+  font-size: 28rpx;
+  color: var(--text-regular);
+  text-align: center;
+  margin-bottom: 40rpx;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-btn {
+  padding: 20rpx 40rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.modal-confirm {
+  background: var(--gradient-success);
+  color: var(--text-white);
+  box-shadow: var(--shadow-success);
+}
+
+.modal-cancel {
+  background: var(--gradient-danger);
+  color: var(--text-white);
+  box-shadow: var(--shadow-danger);
+}
+
+ 

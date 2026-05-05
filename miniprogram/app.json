@@ -1,0 +1,87 @@
+{
+  "cloud": true,
+  "pages": [
+    "pages/startup/index",
+    "pages/home/index",
+    "pages/home/special-events/index",
+    "pages/home/team-spirit/index",
+    "pages/user/profile/index",
+    "pages/login/index",
+    
+    "pages/user/todo/index",
+    "pages/user/todo/maintenance-detail/index",
+    "pages/user/todo/volunteer-detail/index",
+    "pages/user/message/index",
+    "pages/user/about/index",
+    "pages/team/home/index",
+    "pages/team/home/more/index",
+    "pages/team/manual/index",
+    "pages/team/software/index",
+    "pages/team/maintenance/list/index",
+    "pages/team/maintenance/detail/index",
+    "pages/team/maintenance/manage/index",
+    "pages/team/maintenance/create/index",
+    "pages/team/volunteer/list/index",
+    "pages/team/volunteer/detail/index",
+    "pages/team/volunteer/create/index",
+    "pages/team/volunteer/manage/index",
+    "pages/team/ewa/manage/index",
+    "pages/team/ewa/summary/index",
+    "pages/team/duty/roster/index",
+    "pages/team/duty/manage/index",
+    "pages/repair/index",
+    "pages/repair/map/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#3a75fb",
+    "navigationBarTitleText": "维修组管理系统",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0A2540",
+    "backgroundColorTop": "#0A2540",
+    "backgroundColorBottom": "#0A2540"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "您的位置信息将用于定位活动地点"
+    }
+  },
+  "usingComponents": {},
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "darkmode": false,
+  "lazyCodeLoading": "requiredComponents",
+  "tabBar": {
+    "custom": true,
+    "color": "#909399",
+    "selectedColor": "#3a75fb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "images/default/tabs/home.png",
+        "selectedIconPath": "images/default/tabs/home-active.png"
+      },
+      {
+        "pagePath": "pages/team/home/index",
+        "text": "维修组",
+        "iconPath": "images/default/tabs/team.png",
+        "selectedIconPath": "images/default/tabs/team-active.png"
+      },
+      {
+        "pagePath": "pages/repair/index",
+        "text": "报修",
+        "iconPath": "images/default/tabs/repair.png",
+        "selectedIconPath": "images/default/tabs/repair-active.png"
+      },
+      {
+        "pagePath": "pages/user/profile/index",
+        "text": "我的",
+        "iconPath": "images/default/tabs/user.png",
+        "selectedIconPath": "images/default/tabs/user-active.png"
+      }
+    ]
+  }
+} 

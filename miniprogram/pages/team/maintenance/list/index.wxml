@@ -1,0 +1,64 @@
+<!--pages/team/maintenance/list/index.wxml-->
+<view class="page-container">
+  <!-- 左侧分类导航 -->
+  <view class="sidebar" style="width: 180rpx;">
+    <view 
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="sidebar-item {{activeCategory === item.key ? 'active' : ''}}"
+      bindtap="onCategoryChange"
+      data-key="{{item.key}}"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <!-- 右侧内容区域 -->
+  <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <view class="container">
+      <!-- 加载动画 -->
+      <view class="loading-container" wx:if="{{loading}}">
+        <loading-animation size="large" />
+      </view>
+      
+      <!-- 任务列表 -->
+      <view class="task-list" wx:if="{{!loading && allTasks.length > 0}}">
+        <block wx:for="{{allTasks}}" wx:key="maintenanceTaskId">
+          <view class="task-card {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
+            <view class="status-indicator {{item.taskStatus}}"></view>
+            <view class="task-info" bindtap="viewTaskDetail" data-task="{{item}}">
+              <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
+              <view class="task-category">
+                {{item.level1}} > {{item.level2}} > {{item.level3}}
+              </view>
+              <view class="task-meta">
+                <text class="urgent-badge" wx:if="{{item.isUrgent === 1}}">紧急</text>
+                <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
+                <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
+              </view>
+              <view class="task-footer">
+                <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
+                <view class="btn btn-claim" 
+                      wx:if="{{item.taskStatus === 'pending'}}"
+                      catchtap="claimTask" 
+                      data-task-id="{{item.maintenanceTaskId}}">
+                  认领
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+        <!-- 加载更多 -->
+        <view class="load-more" wx:if="{{allTasks.length > 0}}">
+          <text wx:if="{{loadingMore}}">加载中...</text>
+          <text wx:elif="{{!hasMore}}">— 已加载全部 —</text>
+        </view>
+      </view>
+
+      <!-- 无任务提示 -->
+      <view class="no-task" wx:if="{{!loading && allTasks.length === 0}}">
+        <text>暂无维修任务</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

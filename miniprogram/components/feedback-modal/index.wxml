@@ -1,0 +1,26 @@
+<!-- 反馈模态窗组件 -->
+<view class="feedback-modal-overlay" wx:if="{{show}}" catchtouchmove="preventTouchMove" catchtap="preventTap">
+  <view class="feedback-modal-container" catchtap="onModalContentTap">
+    <!-- 消息标题 -->
+    <view class="modal-header">
+      <text class="modal-title">{{title}}</text>
+    </view>
+    
+    <!-- 消息内容 -->
+    <view class="modal-content">
+      <text class="modal-details" decode="{{true}}">{{formattedDetails}}</text>
+    </view>
+    
+    <!-- 确认按钮 -->
+    <view class="modal-footer">
+      <button 
+        class="confirm-btn {{isConfirming ? 'confirming' : ''}}" 
+        bindtap="onConfirm"
+        disabled="{{isConfirming}}"
+      >
+        <text wx:if="{{!isConfirming}}">确认收到</text>
+        <text wx:else>确认中...</text>
+      </button>
+    </view>
+  </view>
+</view>

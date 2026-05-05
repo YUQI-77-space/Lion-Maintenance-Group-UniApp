@@ -1,0 +1,41 @@
+<view class="container">
+  <view class="map-tip">以下是维修问题分类地图，点击即可跳转。</view>
+
+  <view class="map-list">
+    <block wx:for="{{categories}}" wx:key="id">
+      <view class="map-card">
+        <view class="cat-header" bindtap="toggleCategory" data-id="{{item.id}}">
+          <view class="cat-name">{{item.name}}</view>
+          <view class="arrow {{expandedCategories[item.id] ? 'expanded' : ''}}"></view>
+        </view>
+
+        <view wx:if="{{expandedCategories[item.id]}}" class="cat-body">
+          <block wx:for="{{item.subcategories}}" wx:key="id" wx:for-item="sub">
+            <view class="sub-card">
+              <view class="sub-header" bindtap="toggleSubcategory" data-id="{{sub.id}}">
+                <view class="sub-name">{{sub.name}}</view>
+                <view class="arrow small {{expandedSubcategories[sub.id] ? 'expanded' : ''}}"></view>
+              </view>
+              <view wx:if="{{expandedSubcategories[sub.id]}}" class="types">
+                <view
+                  class="type-chip"
+                  wx:for="{{sub.types}}"
+                  wx:key="id"
+                  wx:for-item="typeItem"
+                  data-cat-id="{{item.id}}"
+                  data-sub-id="{{sub.id}}"
+                  data-type-id="{{typeItem.id}}"
+                  bindtap="onTypeTap"
+                >
+                  {{typeItem.name}}
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+

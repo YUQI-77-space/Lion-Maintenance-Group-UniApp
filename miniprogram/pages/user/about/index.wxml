@@ -1,0 +1,73 @@
+<!--pages/user/about/index.wxml-->
+<view class="container" style="min-height:100vh;background-color: var(--background-color);">
+  <!-- Logo部分 -->
+  <view class="logo-section">
+    <image class="logo" src="{{iconLogo}}" mode="aspectFit"></image>
+    <view class="about-slogan">提供更好的服务，遇见更好的自己！</view>
+  </view>
+  
+  <!-- 介绍部分 -->
+  <view class="intro-section">
+    <view class="section-title">关于维修组</view>
+    <view class="intro-content intro-paragraph">
+      物科院维修组成立于1978年南京师范学院物理系，现为南京师范大学物理科学与技术学院的特色学生组织。
+    </view>
+    <view class="intro-content">
+      这里汇聚着一群对发明创造充满热忱、沉迷动手实践的学子——他们总爱拆解电器零件探究原理，也擅长把杂乱的废旧零件重新设计，变成充满巧思的创新实物。
+      依托物科院的学科特色，维修组还会定期发挥所学技能，面向全校师生及校外社区开展义务维修服务，用技术传递温暖。同时我们也期待更多志同道合的同学加入我们的团队，一起建设更加美好的维修组大家族。
+    </view>
+  </view>
+  
+  <view class="intro-section">
+    <view class="section-title">相关维修业务</view>
+    <view class="intro-content">→ 同学们可以在这里获得免费义务维修服务，包括：</view>
+    <view class="intro-list">
+      <view class="intro-list-item">
+        <text class="dot">•</text>
+        <text class="text">笔记本清灰、换固态、换电源、软件配置安装等相关问题</text>
+      </view>
+      <view class="intro-list-item">
+        <text class="dot">•</text>
+        <text class="text">电器维修，如吹风机故障、充电宝故障、收音机故障等</text>
+      </view>
+      <view class="intro-list-item">
+        <text class="dot">•</text>
+        <text class="text">自行车保养维修、补胎充气等</text>
+      </view>
+      <view class="intro-list-item">
+        <text class="dot">•</text>
+        <text class="text">还包括维修咨询、五金工具借用等丰富多彩的维修服务</text>
+      </view>
+    </view>
+    <view class="intro-content intro-paragraph">
+      具体可以在报修里选择需要的服务，也可以在维修服务群找到相关文件。QQ群号码：
+      <text class="copyable-text" bindtap="copyText" data-text="966514978">966514978</text>
+    </view>
+  </view>
+  
+  <!-- 联系方式部分 -->
+  <view class="contact-section">
+    <view class="section-title">联系我们</view>
+    <view class="contact-item">
+      <text class="contact-label">维修地点：</text>
+      <text class="contact-value copyable-text" bindtap="copyText" data-text="南师大仙林校区格物楼北楼5楼玻璃房">南师大仙林校区格物楼北楼5楼玻璃房</text>
+    </view>
+    <view class="contact-item">
+      <text class="contact-label">电子邮箱：</text>
+      <text class="contact-value copyable-text" bindtap="copyText" data-text="weixiuzu2025@163.com">weixiuzu2025@163.com</text>
+    </view>
+    <view class="contact-item">
+      <text class="contact-label">联系电话：</text>
+      <text class="contact-value copyable-text" bindtap="copyText" data-text="18805189371">18805189371</text>
+    </view>
+  </view>
+  
+  <view class="developer-info">开发者：2026届 光电系 卢齐军 及 维修组全体成员</view>
+
+  <!-- 版权信息 -->
+  <view class="footer">
+    <text>© {{currentYear}} 南京师范大学物科院维修组 版权所有</text>
+  </view>
+  
+
+</view>

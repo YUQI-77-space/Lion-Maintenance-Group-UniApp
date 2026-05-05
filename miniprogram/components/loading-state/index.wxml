@@ -1,0 +1,10 @@
+<!-- 加载状态组件 -->
+<view class="loading-state {{customClass}}">
+  <!-- 加载动画 -->
+  <view class="loading-spinner {{size}}">
+    <view class="spinner-ring"></view>
+  </view>
+  
+  <!-- 加载文字 -->
+  <text class="loading-text" wx:if="{{text}}">{{ text }}</text>
+</view>

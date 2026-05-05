@@ -1,0 +1,162 @@
+/* pages/home/index.wxss - 极简线框风格 */
+/* 引入公共样式 */
+@import "/styles/common.wxss";
+@import "/styles/custom-navbar.wxss";
+
+/* ============================================
+   页面容器
+   ============================================ */
+.home-container {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   轮播图区域
+   ============================================ */
+.swiper-section {
+  position: relative;
+  margin: 0 20rpx var(--space-lg) 20rpx;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.home-swiper {
+  width: 100%;
+  height: 400rpx;
+  border-radius: var(--radius-card);
+}
+
+.swiper-item {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.swiper-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 指示器 */
+.home-swiper .wx-swiper-dots {
+  bottom: 20rpx;
+}
+
+.home-swiper .wx-swiper-dot {
+  width: 16rpx;
+  height: 16rpx;
+  margin: 0 8rpx;
+  border-radius: 8rpx;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.home-swiper .wx-swiper-dot-active {
+  background-color: #fff;
+}
+
+/* 骨架屏 - 使用公共加载动画样式 */
+.swiper-skeleton {
+  width: 100%;
+  height: 400rpx;
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+}
+
+/* ============================================
+   功能入口区域
+   ============================================ */
+.function-entries-section {
+  margin: 0 20rpx var(--space-xl) 20rpx;
+}
+
+/* 功能入口网格 - 使用公共 entry-grid */
+.function-entries-section .entry-grid {
+  /* 公共样式已处理 */
+}
+
+/* ============================================
+   板块通用样式
+   ============================================ */
+.section {
+  margin: 0 20rpx var(--space-xl) 20rpx;
+}
+
+/* ============================================
+   图片网格 - 使用公共 grid-container
+   ============================================ */
+.grid-image-skeleton {
+  width: 100%;
+  height: 220rpx;
+  border-radius: var(--radius-image);
+  background: var(--bg-card);
+}
+
+/* ============================================
+   荣誉履带区域
+   ============================================ */
+.honors-conveyor {
+  overflow: hidden;
+  position: relative;
+}
+
+.conveyor-track {
+  height: 280rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.conveyor-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 16rpx;
+  height: 100%;
+  white-space: nowrap;
+}
+
+.honor-card {
+  position: relative;
+  height: 240rpx;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+  background-color: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.honor-card:active {
+  opacity: 0.8;
+}
+
+.honor-card-image {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-page);
+}
+
+.honor-card-skeleton {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-image);
+  background: var(--bg-card);
+}
+
+@keyframes conveyor-move {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ============================================
+   骨架屏加载动画
+   ============================================ */
+.skeleton-block {
+  background: var(--bg-card);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

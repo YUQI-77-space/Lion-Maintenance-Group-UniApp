@@ -1,0 +1,126 @@
+<!--pages/team/volunteer/manage/index.wxml-->
+<view class="page-container">
+  <!-- 左侧分类导航 -->
+  <view class="sidebar" style="width: 180rpx;">
+    <view class="{{currentStatus === 'all' ? 'active' : ''}}" bindtap="switchStatus" data-status="all">全部</view>
+    <view class="{{currentStatus === 'pending' ? 'active' : ''}}" bindtap="switchStatus" data-status="pending">待发布</view>
+    <view class="{{currentStatus === 'inPreparation' ? 'active' : ''}}" bindtap="switchStatus" data-status="inPreparation">筹备中</view>
+    <view class="{{currentStatus === 'inProgress' ? 'active' : ''}}" bindtap="switchStatus" data-status="inProgress">进行中</view>
+    <view class="{{currentStatus === 'ended' ? 'active' : ''}}" bindtap="switchStatus" data-status="ended">已结束</view>
+  </view>
+
+  <!-- 右侧内容区域 -->
+  <view class="content-wrapper">
+    <!-- 粘性头部：搜索框固定在页面上方 -->
+    <view class="sticky-header">
+      <!-- 搜索框毛玻璃效果 -->
+      <view class="search-box">
+        <input class="search-input"
+               placeholder="搜索活动标题"
+               value="{{searchKeyword}}"
+               bindinput="handleSearchInput"
+               bindconfirm="handleSearchConfirm"/>
+        <view class="search-icon" bindtap="handleSearchConfirm">🔍</view>
+      </view>
+    </view>
+
+    <!-- 列表滚动区域 -->
+    <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+      <!-- 初始加载提示 -->
+      <view class="initial-loading" wx:if="{{initialLoading}}">
+        <view class="loading-container">
+          <loading-animation size="large"></loading-animation>
+        </view>
+      </view>
+
+      <!-- 活动列表 -->
+      <view class="activity-list" wx:if="{{activities.length > 0 && !initialLoading}}">
+        <view class="activity-card status-{{item.activityStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;" wx:for="{{activities}}" wx:key="activityId" data-id="{{item.activityId}}" bindtap="goToDetail">
+        <view class="card-header">
+          <view class="header-left">
+            <view class="card-title">{{item.title}}</view>
+            <view class="activity-id">编号: {{item.activityId}}</view>
+          </view>
+          <view class="status-tag status-{{item.activityStatus}}">
+            <view class="status-dot"></view>
+            <text>{{item.statusText}}</text>
+          </view>
+        </view>
+
+        <!-- 待发布倒计时 -->
+        <view class="countdown-banner" wx:if="{{item.activityStatus === 'pending' && item.publishTime}}">
+          <text class="countdown-label">距离发布还有：</text>
+          <text class="countdown-time">{{item.countdownText || '计算中...'}}</text>
+        </view>
+
+        <!-- 详细信息展示区域 -->
+        <view class="card-content">
+          <view class="info-row">
+            <image class="info-icon" src="{{iconCalendar}}"></image>
+            <text>时间: {{item.formattedStartTime}}</text>
+          </view>
+          <view class="info-row">
+            <image class="info-icon" src="{{iconLocation}}"></image>
+            <text>地点: {{item.location}}</text>
+          </view>
+          <view class="info-row">
+            <image class="info-icon" src="{{iconPeople}}"></image>
+            <text>报名人数: {{item.numberOfVolunteers}}/{{item.volunteerCount}}人</text>
+          </view>
+        </view>
+
+        <view class="card-footer">
+          <!-- 招募状态切换 -->
+          <view class="recruitment-toggle" wx:if="{{item.activityStatus !== 'pending' && item.activityStatus !== 'ended'}}" catchtap="stopEvent">
+              <text class="toggle-label {{item.recruitmentOpen ? 'open' : 'closed'}}">{{item.recruitmentOpen ? '招募已开启' : '招募已关闭'}}</text>
+              <switch class="recruitment-switch"
+                      checked="{{!!item.recruitmentOpen}}"
+                      disabled="{{toggleLoading && toggleLoadingId === item.activityId}}"
+                      color="#52c41a"
+                      bindchange="handleRecruitmentSwitch"
+                      data-id="{{item.activityId}}"
+                      data-index="{{index}}"></switch>
+            </view>
+
+            <!-- 待发布状态提示 -->
+            <view class="pending-notice" wx:if="{{item.activityStatus === 'pending'}}">
+              <text>活动将在发布时间自动发布</text>
+            </view>
+
+            <!-- 编辑和删除按钮 -->
+            <view class="actions">
+              <view class="action-btn edit-btn" catchtap="goToEdit" data-id="{{item.activityId}}" data-index="{{index}}">
+                <text>编辑</text>
+              </view>
+            <view class="action-btn delete-btn" catchtap="deleteActivity" data-id="{{item.activityId}}" data-index="{{index}}">
+                <text>删除</text>
+              </view>
+            </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="loading-more" wx:if="{{loading}}">
+        <loading-animation size="small"></loading-animation>
+      </view>
+
+      <view class="no-more" wx:if="{{!loading && !hasMore && activities.length > 0}}">
+        <text>没有更多活动了</text>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!initialLoading && !loading && !pullDownRefreshing && activities.length === 0}}">
+      <image class="empty-icon" src="{{iconEmpty}}"></image>
+      <text class="empty-text">暂无志愿活动</text>
+      <text class="empty-desc">点击右下角按钮创建新的志愿活动</text>
+    </view>
+  </scroll-view>
+  </view>
+
+  <!-- 创建活动按钮 -->
+  <view class="create-btn" bindtap="goToCreate">
+    <image class="add-icon" src="{{iconAdd}}"></image>
+  </view>
+</view>
+

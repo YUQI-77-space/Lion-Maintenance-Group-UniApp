@@ -1,0 +1,10 @@
+<!-- pages/team/software/index.wxml -->
+<view class="container">
+  <view class="content">
+    <image class="icon" src="{{iconSoftware}}" mode="aspectFit"></image>
+    <view class="title">软件库</view>
+    <view class="description">该功能正在开发中，敬请期待...</view>
+    <view class="status-badge">开发中</view>
+  </view>
+</view>
+

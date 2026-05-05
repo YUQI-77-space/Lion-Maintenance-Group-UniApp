@@ -1,0 +1,114 @@
+/* ============================================
+   公共自定义导航栏样式 - 极简线框风格
+   ============================================ */
+@import "./variables.wxss";
+
+/* === 导航栏容器 === */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 var(--space-md);
+}
+
+/* === Logo === */
+.navbar-logo {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  margin-right: var(--space-sm);
+  flex-shrink: 0;
+}
+
+/* === 标题 === */
+.navbar-title {
+  font-size: var(--font-subtitle);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 1rpx;
+}
+
+/* === 返回按钮 === */
+.navbar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  margin-right: var(--space-xs);
+  background: transparent;
+}
+
+.navbar-back::before {
+  content: '';
+  width: 20rpx;
+  height: 20rpx;
+  border-left: 3rpx solid var(--text-primary);
+  border-bottom: 3rpx solid var(--text-primary);
+  transform: rotate(45deg);
+}
+
+.navbar-back-text {
+  font-size: var(--font-body);
+  color: var(--primary);
+}
+
+/* === 右侧操作区 === */
+.navbar-right {
+  position: absolute;
+  right: var(--space-md);
+  display: flex;
+  align-items: center;
+}
+
+.navbar-action {
+  font-size: var(--font-body);
+  color: var(--primary);
+}
+
+/* === 分页导航 === */
+.navbar-tabs {
+  display: flex;
+  align-items: center;
+  height: 80rpx;
+  padding: 0 var(--space-md);
+  background: var(--bg-card);
+}
+
+.navbar-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: var(--font-body);
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.navbar-tab.active {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.navbar-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background: var(--primary);
+  border-radius: 2rpx;
+}

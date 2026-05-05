@@ -1,0 +1,85 @@
+<!--pages/team/volunteer/list/index.wxml-->
+<view class="page-container">
+  <!-- 左侧分类导航 -->
+  <view class="sidebar" style="width: 180rpx;">
+    <view class="{{currentStatus === 'all' ? 'active' : ''}}" bindtap="switchStatus" data-status="all">全部</view>
+    <view class="{{currentStatus === 'inPreparation' ? 'active' : ''}}" bindtap="switchStatus" data-status="inPreparation">筹备中</view>
+    <view class="{{currentStatus === 'inProgress' ? 'active' : ''}}" bindtap="switchStatus" data-status="inProgress">进行中</view>
+    <view class="{{currentStatus === 'ended' ? 'active' : ''}}" bindtap="switchStatus" data-status="ended">已结束</view>
+  </view>
+
+  <!-- 右侧内容区域 -->
+  <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <!-- 加载动画 -->
+    <view class="loading-container" wx:if="{{initialLoading}}">
+      <loading-animation size="large" />
+    </view>
+
+    <!-- 加载更多动画 -->
+    <view class="loading-container" wx:if="{{loading && !initialLoading && activities.length === 0}}">
+      <loading-animation size="large" />
+    </view>
+
+    <!-- 活动列表 -->
+    <view class="activity-list" wx:if="{{activities.length > 0}}">
+      <view class="activity-card status-{{item.activityStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;" wx:for="{{activities}}" wx:key="activityId" data-id="{{item.activityId}}" bindtap="goToDetail">
+        <view class="card-header">
+          <view class="card-title">{{item.title}}</view>
+          <view class="status-tag status-{{item.activityStatus}}">
+            <view class="status-dot"></view>
+            <text>{{item.statusText}}</text>
+          </view>
+        </view>
+        <view class="activity-id">编号: {{item.activityId}}</view>
+
+        <view class="card-content">
+          <view class="info-row">
+            <image class="info-icon" src="{{iconCalendar}}"></image>
+            <text>时间: {{item.startTimeFormatted}}</text>
+          </view>
+          <view class="info-row">
+            <image class="info-icon" src="{{iconLocation}}"></image>
+            <text>{{item.location}}</text>
+          </view>
+          <view class="info-row">
+            <image class="info-icon" src="{{iconPeople}}"></image>
+            <text>{{item.numberOfVolunteers}}/{{item.volunteerCount}}人</text>
+          </view>
+        </view>
+        <view class="activity-footer">
+          <view class="activity-register" wx:if="{{item.activityStatus !== 'ended'}}">
+            <button class="register-btn {{item.isRegistered ? 'registered' : ''}} {{(!item.isRegistered && item.recruitmentOpen === false) ? 'recruitment-closed' : ''}} {{(!item.isRegistered && item.isFull) ? 'full' : ''}}"
+                    catchtap="handleRegister"
+                    data-id="{{item.activityId}}"
+                    data-registered="{{item.isRegistered}}"
+                    data-recruitment-open="{{item.recruitmentOpen}}"
+                    data-full="{{item.isFull}}"
+                    data-status="{{item.activityStatus}}"
+                    data-index="{{index}}"
+                    disabled="{{!item.isRegistered && (item.recruitmentOpen === false || item.isFull)}}">
+              {{item.isRegistered ? '已报名' : (!item.recruitmentOpen ? '招募暂时关闭' : (item.isFull ? '已满员' : '立即报名'))}}
+            </button>
+          </view>
+          <view class="inspirational-quote" wx:if="{{item.activityStatus === 'ended'}}">
+            {{item.inspirationalQuote}} — {{item.quoteAuthor}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="loading-more" wx:if="{{loading && activities.length > 0}}">
+        <loading-animation size="small"></loading-animation>
+      </view>
+
+      <view class="no-more" wx:if="{{!loading && !hasMore && activities.length > 0}}">
+        <text>没有更多活动了</text>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!initialLoading && !loading && activities.length === 0}}">
+      <image class="empty-icon" src="{{iconEmpty}}"></image>
+      <text class="empty-text">暂无志愿活动</text>
+    </view>
+  </scroll-view>
+</view>

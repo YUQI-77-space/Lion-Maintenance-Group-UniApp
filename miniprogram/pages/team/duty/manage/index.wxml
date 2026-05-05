@@ -1,0 +1,538 @@
+<!--pages/team/duty/manage/index.wxml-->
+<view class="container">
+  <!-- 顶部分页导航 -->
+  <view class="tab-header">
+    <view 
+      class="tab-item {{currentTab === 0 ? 'active' : ''}}" 
+      data-index="0" 
+      bindtap="onTabClick"
+    >
+      <text class="tab-title">本周值班</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 1 ? 'active' : ''}}" 
+      data-index="1" 
+      bindtap="onTabClick"
+    >
+      <text class="tab-title">值班设置</text>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 2 ? 'active' : ''}}" 
+      data-index="2" 
+      bindtap="onTabClick"
+    >
+      <text class="tab-title">当前配置</text>
+    </view>
+  </view>
+
+  <!-- 内容分页：支持左右滑动，保持循环布局但不自动切换 -->
+  <swiper 
+    class="tab-swiper" 
+    current="{{swiperCurrent}}" 
+    bindchange="onSwiperChange"
+    circular="true"
+    duration="300"
+    indicator-dots="false"
+    autoplay="{{false}}"
+  >
+    <!-- 页 1：本周值班 -->
+    <swiper-item>
+      <view class="page-section page-duty">
+        <!-- 页面头部汇总 -->
+        <view class="page-header">
+          <view class="page-title-row">
+            <text class="page-main-title">第{{currentWeek}}周 值班表</text>
+            <text class="page-date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
+          </view>
+          <view class="page-stats" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+            <text class="page-stat-chip">可选 {{availableSlots}}</text>
+            <text class="page-stat-chip">已排 {{assignedSlots}}</text>
+            <text class="page-stat-chip warning" wx:if="{{isDeleteMode && selectedSlots.length > 0}}">
+              已选 {{selectedSlots.length}}
+            </text>
+          </view>
+        </view>
+
+        <!-- 值班表格显示 -->
+        <view class="duty-table-section">
+    <!-- 表格加载状态（全局 loading 时不再重复显示） -->
+    <view class="table-loading-container" wx:if="{{tableLoading && !isLoading}}">
+            <image class="loading-icon" src="{{iconLoading}}" mode="aspectFit"></image>
+            <text class="loading-text">正在加载值班数据...</text>
+          </view>
+
+          <!-- 表格错误状态 -->
+          <view class="table-error-container" wx:if="{{tableError && !tableLoading}}">
+            <image class="error-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
+            <text class="error-text">{{tableErrorMessage}}</text>
+            <button class="retry-btn" bindtap="retryLoadTableData">重新加载</button>
+          </view>
+
+          <!-- 值班表格 -->
+          <view class="duty-table-container" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+            <view class="duty-table">
+              <!-- 左侧固定列 -->
+              <view class="fixed-column">
+                <!-- 固定表头 -->
+                <view class="fixed-header-cell">
+                  <text class="header-text">时间段</text>
+                </view>
+                
+                <!-- 固定时间列 -->
+                <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
+                  <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
+                  <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
+                </view>
+              </view>
+              
+              <!-- 右侧滚动区域 -->
+              <scroll-view class="scrollable-area" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+                <view class="scrollable-content">
+                  <!-- 滚动表头 -->
+                  <view class="scrollable-header-row">
+                    <view class="header-cell" wx:for="{{weekDates}}" wx:key="dayOfWeek">
+                      <text class="day-name">{{item.dayName}}</text>
+                      <text class="day-date">{{item.dateDisplay}}</text>
+                    </view>
+                  </view>
+                  
+                  <!-- 滚动内容行 -->
+                  <view class="scrollable-content-row" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData" wx:for-index="rowIndex">
+                    <view class="duty-cell {{slotData.statusClass}} {{isDeleteMode && slotData.canDelete ? 'deletable' : ''}}" 
+                          wx:for="{{timeSlotData.dailySlots}}" wx:key="dayOfWeek" wx:for-item="slotData" wx:for-index="colIndex"
+                          bindtap="toggleSlotSelection"
+                          data-slot-id="{{slotData.dutySlotId || ''}}"
+                          data-can-delete="{{slotData.canDelete || false}}"
+                          data-is-delete-mode="{{isDeleteMode}}"
+                          data-status-text="{{slotData.statusText || ''}}"
+                          data-row-index="{{rowIndex}}"
+                          data-col-index="{{colIndex}}">
+                          
+                      <!-- 删除模式下的复选框 -->
+                      <view class="checkbox-container" wx:if="{{isDeleteMode && slotData.canDelete}}">
+                        <view class="checkbox {{slotData.isSelected ? 'checked' : ''}}">
+                          <image class="check-icon" src="{{iconCheck}}" mode="aspectFit" wx:if="{{slotData.isSelected}}"></image>
+                        </view>
+                      </view>
+                      
+                      <text class="slot-text">{{slotData.statusText}}</text>
+                    </view>
+                  </view>
+                </view>
+              </scroll-view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 底部操作栏：状态说明 + 删除操作 -->
+        <view class="bottom-action-bar" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+          <!-- 状态说明 -->
+          <view class="legend-section">
+            <view class="legend-title">状态说明</view>
+            <view class="legend-items">
+              <view class="legend-item">
+                <view class="legend-dot can-duty"></view>
+                <text class="legend-text">可选</text>
+              </view>
+              <view class="legend-item">
+                <view class="legend-dot assigned"></view>
+                <text class="legend-text">已排班</text>
+              </view>
+              <view class="legend-item">
+                <view class="legend-dot no-duty"></view>
+                <text class="legend-text">休假</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 删除操作区域 -->
+          <view class="delete-action-section" wx:if="{{assignedSlots > 0}}">
+            <!-- 删除模式提示 -->
+            <view class="delete-mode-tip" wx:if="{{isDeleteMode}}">
+              <text class="tip-text">删除模式中，点击表格中的已分配时段进行选择</text>
+            </view>
+            
+            <!-- 删除操作按钮 -->
+            <view class="delete-buttons-group">
+              <button class="delete-action-btn {{isDeleteMode ? 'delete-confirm' : 'delete-init'}}" 
+                      bindtap="toggleDeleteMode"
+                      disabled="{{isLoading}}">
+                <image class="delete-icon" src="{{isDeleteMode ? iconCheck : iconDelete}}" mode="aspectFit"></image>
+                <text class="delete-text">{{isDeleteMode ? '确认删除' : '删除值班'}}</text>
+                <text class="selected-count" wx:if="{{isDeleteMode && selectedSlots.length > 0}}">({{selectedSlots.length}})</text>
+              </button>
+              
+              <!-- 取消删除按钮 -->
+              <button class="cancel-delete-btn" wx:if="{{isDeleteMode}}" bindtap="cancelDeleteMode">
+                <image class="cancel-icon" src="{{iconClose}}" mode="aspectFit"></image>
+                <text>取消</text>
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- 页 2：值班设置 -->
+    <swiper-item>
+      <view class="page-section page-settings">
+        <!-- 学期与当前周设置卡片 -->
+        <view class="settings-card settings-card-primary">
+          <view class="settings-card-header">
+            <text class="settings-card-title">学期与当前周</text>
+          </view>
+          <view class="settings-row">
+            <view class="settings-row-left">
+              <text class="settings-label">学期开始日期</text>
+              <text class="settings-value">{{configData.startDate || '未设置'}}</text>
+            </view>
+            <button class="settings-btn primary" bindtap="setupSemester" disabled="{{isLoading}}">
+              设置开学日
+            </button>
+          </view>
+          <view class="settings-row">
+            <view class="settings-row-left">
+              <text class="settings-label">当前周次</text>
+              <text class="settings-value">第 {{configData.currentWeek || currentWeek}} 周</text>
+            </view>
+            <button class="settings-btn ghost" bindtap="showSimpleWeekSwitcher" disabled="{{isLoading || !configData.startDate}}">
+              切换当前周
+            </button>
+          </view>
+        </view>
+
+        <!-- 编辑权限 & 自动切周（合并模块，开关型） -->
+        <view class="settings-card" wx:if="{{configData}}">
+          <view class="settings-card-header">
+            <text class="settings-card-title">编辑与自动切周</text>
+          </view>
+          <view class="settings-row">
+            <view class="settings-row-left">
+              <text class="settings-label">编辑权限</text>
+              <text class="settings-value">{{configData.isEditingEnabled ? '开启' : '关闭'}}</text>
+            </view>
+            <switch 
+              checked="{{configData.isEditingEnabled}}" 
+              bindchange="onEditPermissionSwitchChange" 
+            />
+          </view>
+          <view class="settings-row">
+            <view class="settings-row-left">
+              <text class="settings-label">自动切换周次</text>
+              <text class="settings-value">
+                <block wx:if="{{configData.autoSwitchEnabled !== false}}">
+                  已开启（每周{{autoSwitchDayOptions[(configData.autoSwitchDayOfWeek || configData.autoSwitchDayOfWeek === 0) ? configData.autoSwitchDayOfWeek : 1] || '周一'}} {{configData.autoSwitchTime || '10:30'}}）
+                </block>
+                <block wx:else>已关闭</block>
+              </text>
+            </view>
+            <switch 
+              checked="{{configData.autoSwitchEnabled !== false}}" 
+              bindchange="onAutoSwitchToggleChange" 
+              disabled="{{isLoading || !configData.startDate}}"
+            />
+          </view>
+        </view>
+
+        <!-- 危险设置：重置本周数据（折叠） -->
+        <view class="settings-danger-wrapper">
+          <view class="danger-toggle-bar" bindtap="toggleDangerZone">
+            <text class="danger-toggle-text">危险设置</text>
+          </view>
+          <view class="settings-card settings-card-warning" wx:if="{{showDangerZone}}">
+            <view class="settings-card-header">
+              <text class="settings-card-title">本周数据维护</text>
+            </view>
+            <button 
+              class="settings-btn danger full" 
+              bindtap="showSimpleResetConfirm" 
+              disabled="{{isLoading || !configData.currentWeek}}"
+            >
+              重置本周数据
+            </button>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+
+    <!-- 页 3：当前配置 -->
+    <swiper-item>
+      <view class="page-section page-config" wx:if="{{configData}}">
+        <!-- 总览卡 -->
+        <view class="config-summary-card">
+          <view class="config-summary-line">
+            <text class="config-summary-label">学期开始</text>
+            <text class="config-summary-value">
+              {{configData.startDate || '未设置'}}
+            </text>
+          </view>
+          <view class="config-summary-line">
+            <text class="config-summary-label">当前周次</text>
+            <text class="config-summary-value">第 {{configData.currentWeek}} 周</text>
+          </view>
+          <view class="config-summary-line">
+            <text class="config-summary-label">自动切周</text>
+            <text class="config-summary-value">
+              {{ (configData.autoSwitchEnabled !== false) ? '已开启' : '已关闭' }}
+            </text>
+          </view>
+        </view>
+
+        <!-- 配置详情卡片 -->
+        <view class="config-detail-card">
+          <view class="section-title">周次与时间</view>
+          <view class="config-item">
+            <text class="config-label">当前周次</text>
+            <text class="config-value">第 {{configData.currentWeek}} 周</text>
+          </view>
+          <view class="config-item">
+            <text class="config-label">当前学年</text>
+            <text class="config-value">{{currentYear}}</text>
+          </view>
+          <view class="config-item">
+            <text class="config-label">本周范围</text>
+            <text class="config-value">{{weekDateRange || '暂无'}}</text>
+          </view>
+        </view>
+
+        <view class="config-detail-card">
+          <view class="section-title">编辑与锁定</view>
+          <view class="config-item">
+            <text class="config-label">编辑权限</text>
+            <text class="config-value {{configData.isEditingEnabled ? 'enabled' : 'disabled'}}">
+              {{configData.isEditingEnabled ? '开启' : '关闭'}}
+            </text>
+          </view>
+          <view class="config-item">
+            <text class="config-label">系统锁定</text>
+            <text class="config-value {{configData.isSystemLock ? 'locked' : 'unlocked'}}">
+              {{configData.isSystemLock ? '已锁定' : '未锁定'}}
+            </text>
+          </view>
+        </view>
+
+        <view class="config-detail-card">
+          <view class="section-title">自动切周详情</view>
+          <view class="config-item">
+            <text class="config-label">自动切周状态</text>
+            <text class="config-value">
+              {{ (configData.autoSwitchEnabled !== false) ? '已开启' : '已关闭' }}
+            </text>
+          </view>
+          <view class="config-item">
+            <text class="config-label">切周时间</text>
+            <text class="config-value">
+              <block wx:if="{{configData.autoSwitchEnabled !== false}}">
+                每周{{autoSwitchDayOptions[(configData.autoSwitchDayOfWeek || configData.autoSwitchDayOfWeek === 0) ? configData.autoSwitchDayOfWeek : 1] || '周一'}} {{configData.autoSwitchTime || '21:40'}}
+              </block>
+              <block wx:else>
+                未开启
+              </block>
+            </text>
+          </view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 设置进度显示 -->
+  <view class="progress-section" wx:if="{{setupProgress}}">
+    <view class="progress-card">
+      <image class="progress-icon" src="{{iconLoading}}" mode="aspectFit"></image>
+      <text class="progress-text">{{setupProgress}}</text>
+    </view>
+  </view>
+
+  <!-- 日期选择器弹窗 -->
+  <view class="simple-modal" wx:if="{{showDatePickerModal}}">
+    <view class="modal-mask" bindtap="cancelDateSelection"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">选择学期开始日期</text>
+        <text class="modal-subtitle">请选择周一作为学期开始日期</text>
+      </view>
+      
+      <view class="picker-container">
+        <picker mode="date" value="{{tempDate}}" bindchange="onTempDateChange">
+          <view class="picker-display">
+            <image class="picker-icon" src="{{iconCalendar}}" mode="aspectFit"></image>
+            <text class="picker-text">{{tempDate || '请选择日期'}}</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelDateSelection">取消</button>
+        <button class="modal-button confirm" bindtap="confirmDateSelection">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 简化的周次切换弹窗 -->
+  <view class="simple-modal" wx:if="{{showWeekSwitcherModal}}">
+    <view class="modal-mask" bindtap="cancelWeekSwitcher"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">切换当前周</text>
+        <text class="modal-subtitle">选择要切换到的周次 (1-20)</text>
+      </view>
+      
+      <view class="week-picker-section">
+        <picker mode="selector" range="{{weekOptions}}" value="{{selectedWeekIndex}}" bindchange="onWeekPickerChange">
+          <view class="picker-display">
+            <image class="picker-icon" src="{{iconSwitch}}" mode="aspectFit"></image>
+            <text class="picker-text">{{selectedWeek ? '第' + selectedWeek + '周' : '请选择周次'}}</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelWeekSwitcher">取消</button>
+        <button class="modal-button confirm" bindtap="confirmSimpleWeekSwitch" disabled="{{!selectedWeek}}">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 简化的重置确认弹窗 -->
+  <view class="simple-modal" wx:if="{{showResetConfirmModal}}">
+    <view class="modal-mask" bindtap="cancelReset"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">确认重置</text>
+        <text class="modal-subtitle">将清空第{{configData.currentWeek}}周的所有值班选择</text>
+      </view>
+      
+      <view class="warning-section">
+        <image class="warning-icon" src="{{iconTools}}" mode="aspectFit"></image>
+        <text class="warning-text">此操作不可撤销，确定继续吗？</text>
+      </view>
+      
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelReset">取消</button>
+        <button class="modal-button confirm danger" bindtap="confirmReset">确定重置</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 简化的编辑权限确认弹窗 -->
+  <view class="simple-modal" wx:if="{{showEditPermissionModal}}">
+    <view class="modal-mask" bindtap="cancelEditPermissionToggle"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">{{permissionActionText}}编辑权限</text>
+        <text class="modal-subtitle">第{{configData.currentWeek}}周的值班编辑权限</text>
+      </view>
+      
+      <view class="permission-preview">
+        <view class="status-change">
+          <view class="status-item current-status {{configData.isEditingEnabled ? 'enabled' : 'disabled'}}">
+            <image class="status-icon" src="{{configData.isEditingEnabled ? iconUnlock : iconLock}}" mode="aspectFit"></image>
+            <text class="status-text">当前：{{configData.isEditingEnabled ? '开启' : '关闭'}}</text>
+          </view>
+          <text class="arrow">→</text>
+          <view class="status-item target-status {{!configData.isEditingEnabled ? 'enabled' : 'disabled'}}">
+            <image class="status-icon" src="{{!configData.isEditingEnabled ? iconUnlock : iconLock}}" mode="aspectFit"></image>
+            <text class="status-text">变更为：{{!configData.isEditingEnabled ? '开启' : '关闭'}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelEditPermissionToggle">取消</button>
+        <button class="modal-button confirm" bindtap="confirmEditPermissionToggle">确定{{permissionActionText}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 删除值班确认弹窗 -->
+  <view class="simple-modal" wx:if="{{showDeleteConfirmModal}}">
+    <view class="modal-mask" bindtap="cancelDeleteConfirm"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">确认删除值班分配</text>
+        <text class="modal-subtitle">将删除所选的 {{selectedSlots.length}} 个值班时段</text>
+      </view>
+      
+      <!-- 删除详情预览 -->
+      <view class="delete-preview">
+        <view class="preview-header">
+          <text class="preview-title">删除内容预览：</text>
+        </view>
+        <scroll-view class="delete-list" scroll-y="{{true}}" wx:if="{{deletePreviewList.length > 0}}">
+          <view class="delete-item" wx:for="{{deletePreviewList}}" wx:key="dutySlotId">
+            <view class="delete-item-time">
+              <text class="day-info">{{item.dayName}} {{item.dateDisplay}}</text>
+              <text class="time-info">{{item.timeSlot}} ({{item.startTime}}-{{item.endTime}})</text>
+            </view>
+            <view class="delete-item-user">
+              <text class="user-name">{{item.assignedName}}</text>
+              <view class="status-tag {{item.wasConfirmed ? 'confirmed' : 'preselected'}}">
+                {{item.wasConfirmed ? '已确认' : '预选'}}
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+      
+      <view class="warning-section">
+        <image class="warning-icon" src="{{iconTools}}" mode="aspectFit"></image>
+        <text class="warning-text">此操作将清除选中时段的值班分配，且不可撤销！</text>
+      </view>
+      
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelDeleteConfirm">取消</button>
+        <button class="modal-button confirm danger" bindtap="confirmDeleteAssignment" disabled="{{confirmDeleteDisabled}}">确定删除</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-overlay" wx:if="{{isLoading}}">
+    <view class="loading-content">
+      <loading-animation size="large"></loading-animation>
+    </view>
+  </view>
+
+  <!-- 自动切周设置弹窗 -->
+  <view class="simple-modal" wx:if="{{showAutoSwitchModal}}">
+    <view class="modal-mask" bindtap="cancelAutoSwitchSettings"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">自动切换周次设置</text>
+        <text class="modal-subtitle">默认每周日 22:00 自动切换到下一周</text>
+      </view>
+
+      <view class="auto-switch-section">
+        <view class="auto-switch-row">
+          <text class="auto-switch-label">开启自动切周</text>
+          <switch checked="{{autoSwitchEnabledTemp}}" bindchange="onAutoSwitchEnabledChange" />
+        </view>
+
+        <view class="auto-switch-row">
+          <text class="auto-switch-label">每周哪一天</text>
+          <picker mode="selector" range="{{autoSwitchDayOptions}}" value="{{autoSwitchDayIndexTemp}}" bindchange="onAutoSwitchDayChange">
+            <view class="picker-display">
+              <image class="picker-icon" src="{{iconCalendar}}" mode="aspectFit"></image>
+              <text class="picker-text">{{autoSwitchDayOptions[autoSwitchDayIndexTemp]}}</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="auto-switch-row">
+          <text class="auto-switch-label">切换时间</text>
+          <picker mode="time" value="{{autoSwitchTimeTemp}}" bindchange="onAutoSwitchTimeChange">
+            <view class="picker-display">
+              <image class="picker-icon" src="{{iconTime}}" mode="aspectFit"></image>
+              <text class="picker-text">{{autoSwitchTimeTemp}}</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="modal-buttons">
+        <button class="modal-button cancel" bindtap="cancelAutoSwitchSettings">取消</button>
+        <button class="modal-button confirm" bindtap="saveAutoSwitchSettings">保存</button>
+      </view>
+    </view>
+  </view>
+</view> 

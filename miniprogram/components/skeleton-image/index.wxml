@@ -1,0 +1,25 @@
+<!-- components/skeleton-image/index.wxml -->
+<view class="skeleton-wrapper {{showRealImage ? 'loaded' : ''}} {{loadError ? 'has-error' : ''}}">
+  <!-- 骨架屏占位 - 在图片准备好之前显示 -->
+  <view class="skeleton-placeholder" wx:if="{{!showRealImage && !loadError}}">
+    <view class="shimmer"></view>
+  </view>
+  
+  <!-- 渐变背景色 -->
+  <view class="placeholder-bg" wx:if="{{!showRealImage && !loadError}}" style="background-color: {{placeholderColor}}"></view>
+  
+  <!-- 真实图片 - 始终存在，但通过样式控制显隐 -->
+  <image 
+    class="actual-image {{showRealImage ? 'visible' : ''}}" 
+    src="{{src}}" 
+    mode="{{mode}}"
+    lazy-load="{{lazyLoad}}"
+    bindload="onImageLoad"
+    binderror="onImageError"
+  />
+  
+  <!-- 加载失败占位 -->
+  <view class="error-placeholder" wx:if="{{loadError}}">
+    <text class="error-icon">!</text>
+  </view>
+</view>

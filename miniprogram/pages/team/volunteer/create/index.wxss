@@ -1,0 +1,252 @@
+/* pages/team/volunteer/create/index.wxss */
+@import "/styles/variables.wxss";
+
+.container {
+  padding: 30rpx;
+  background-color: var(--background-color);
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+/* 表单样式 */
+.form-group {
+  background-color: var(--card-background);
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--box-shadow);
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  font-weight: bold;
+}
+
+.required {
+  color: var(--danger-color);
+  margin-left: 6rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  border: 1rpx solid var(--border-color);
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  background-color: var(--card-background);
+  color: var(--text-main);
+}
+
+/* 🔥 新增：活动时长显示区域样式 */
+.duration-display {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: var(--background-color);
+  border-radius: 8rpx;
+  border: 1rpx solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.duration-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.duration-value {
+  font-size: 28rpx;
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  border: 1rpx solid var(--border-color);
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  background-color: var(--card-background);
+  color: var(--text-main);
+}
+
+.textarea-counter {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 10rpx;
+}
+
+.form-tips {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 10rpx;
+}
+
+/* 时间选择器 */
+.time-picker-group {
+  margin-bottom: 20rpx;
+}
+
+.time-lock-tip {
+  font-size: 24rpx;
+  color: var(--danger-color);
+  background-color: rgba(255, 107, 107, 0.08);
+  border: 1rpx dashed var(--danger-color);
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  line-height: 1.5;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  height: 80rpx;
+  border: 1rpx solid var(--border-color);
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  margin-bottom: 20rpx;
+  background-color: var(--card-background);
+}
+
+.picker-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-right: 20rpx;
+}
+
+.picker-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-regular);
+}
+
+.picker-disabled {
+  opacity: 0.6;
+  background-color: var(--border-light);
+  pointer-events: none;
+}
+
+/* 🔥 修改：按钮样式改为边框+文字组合 */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40rpx;
+  margin-bottom: 40rpx;
+  gap: 20rpx;
+}
+
+.btn-cancel, .btn-submit {
+  width: 45%;
+  height: 90rpx;
+  line-height: 90rpx;
+  text-align: center;
+  border-radius: 45rpx;
+  font-size: 32rpx;
+  /* 🔥 去掉背景色，添加边框样式 */
+  background-color: transparent;
+  border: 2rpx solid;
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 🔥 取消按钮 - 仅黑色边框，无底色填充，黑色文字 */
+.btn-cancel {
+  border-color: #000000;
+  background-color: transparent;
+  color: #000000;
+}
+
+/* 🔥 确认按钮 - #191970 填充底色和边框，纯白色文字 */
+.btn-submit {
+  border-color: #191970;
+  background-color: #191970;
+  color: #ffffff;
+}
+
+/* 🔥 新增：按钮点击效果 */
+.btn-hover {
+  transition: all 0.15s ease;
+}
+
+/* 🔥 取消按钮点击时效果 */
+.btn-cancel-active {
+  opacity: 0.9 !important;
+  transform: scale(0.98);
+}
+
+/* 🔥 确认按钮点击时效果 */
+.btn-submit-active {
+  opacity: 0.9 !important;
+  transform: scale(0.98);
+}
+
+/* 🔥 按钮文字样式 */
+.btn-cancel text,
+.btn-submit text {
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+/* 🔥 加载状态时按钮禁用效果 */
+.btn-submit[disabled] {
+  border-color: var(--border-color) !important;
+  color: var(--text-placeholder) !important;
+  background-color: var(--border-light) !important;
+  opacity: 0.6;
+}
+
+/* 定时发布区域样式 */
+.scheduled-publish-section {
+  margin-top: 10rpx;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.switch-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+}
+
+.publish-time-picker {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+/* 加载中 */
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}

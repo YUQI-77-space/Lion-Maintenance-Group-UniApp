@@ -1,0 +1,86 @@
+<!-- pages/user/profile/index.wxml -->
+<!-- 自定义导航栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
+  <view class="navbar-content">
+    <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
+    <text class="navbar-title">物科院维修组</text>
+  </view>
+</view>
+
+<view class="profile-page" style="padding-top: {{navBarHeight}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}">
+  <!-- 沉浸式头部区域 -->
+  <view class="profile-header">
+    <!-- 暗纹背景 -->
+    <view class="header-pattern"></view>
+    
+    <!-- 退出按钮（右上角） -->
+    <view class="header-logout" bindtap="logout">
+      <text class="logout-text">退出</text>
+    </view>
+    
+    <!-- 用户信息区域 -->
+    <view class="header-user">
+      <view class="avatar-container">
+        <avatar-display 
+          userInfo="{{userInfo}}" 
+          openid="{{userInfo.openid}}"
+          size="large"
+          showBorder="{{true}}"
+          customClass="profile-avatar"
+        />
+      </view>
+      <view class="user-meta">
+        <view class="nickname">{{userInfo.nickName || '未登录'}}</view>
+        <view class="role-tag">{{roleName}}</view>
+      </view>
+    </view>
+    
+    <!-- 部门选择器（仅维修组成员显示） -->
+    <view class="header-department" wx:if="{{role === 'member' || role === 'leader'}}">
+      <picker 
+        mode="selector" 
+        range="{{departmentList}}" 
+        value="{{departmentIndex}}"
+        bindchange="onDepartmentChange"
+        class="department-picker"
+      >
+        <view class="picker-content">
+          <text class="picker-text">{{currentDepartment || '点击选择部门'}}</text>
+          <image class="picker-arrow" src="{{iconArrowRight}}" mode="aspectFit" />
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 功能入口区域 -->
+  <view class="profile-content">
+    <view class="function-list">
+      <block wx:for="{{functionList}}" wx:key="id">
+        <view class="function-item" bindtap="navigateTo" data-path="{{item.path}}" data-id="{{item.id}}">
+          <image class="item-icon" src="{{item.icon}}" mode="aspectFit" />
+          <view class="item-content">
+            <view class="item-title">{{item.name}}</view>
+            <view class="item-desc">{{item.id === 'todo' ? '查看和管理任务' : (item.id === 'message' ? '查看通知消息' : '了解维修组')}}</view>
+          </view>
+          <!-- 计数徽章：箭头左侧显示 -->
+          <view class="item-badge" wx:if="{{item.id === 'todo' && todoCount > 0}}">{{todoCount > 99 ? '99+' : todoCount}}</view>
+          <view class="item-badge" wx:if="{{item.id === 'message' && unreadMessageCount > 0}}">{{unreadMessageCount > 99 ? '99+' : unreadMessageCount}}</view>
+          <image class="item-arrow" src="{{iconArrowRight}}" mode="aspectFit" />
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 待反馈消息弹窗 -->
+  <feedback-modal 
+    id="feedbackModal"
+    wx:if="{{showFeedbackModal}}"
+    show="{{showFeedbackModal}}"
+    title="{{currentFeedbackMessage.content.title}}"
+    details="{{currentFeedbackMessage.content.details}}"
+    messageId="{{currentFeedbackMessage._id}}"
+    messageType="{{currentFeedbackMessage.type}}"
+    activityId="{{currentFeedbackMessage.relatedId}}"
+    bind:confirm="onFeedbackConfirm"
+  />
+</view>

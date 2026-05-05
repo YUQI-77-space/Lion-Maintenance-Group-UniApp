@@ -1,0 +1,36 @@
+/* pages/startup/index.wxss */
+page {
+  width: 100%;
+  height: 100%;
+  background-color: #D6E8F0 !important;
+}
+
+.startup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #D6E8F0;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+.startup-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-color: #D6E8F0;
+  will-change: auto;
+}
+
+/* 旧的logo与标题元素已移除，减少绘制与布局 */
+
+/* 淡出动画 */
+.startup-container.fade-out {
+  opacity: 0;
+}
+

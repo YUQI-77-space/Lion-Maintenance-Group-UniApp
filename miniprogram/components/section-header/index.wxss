@@ -1,0 +1,50 @@
+/* components/section-header/index.wxss */
+@import "../../styles/variables.wxss";
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.section-title {
+  font-size: var(--font-subtitle);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-title-plain {
+  /* 仅文字 */
+}
+
+.section-title-border {
+  padding-left: var(--space-sm);
+  border-left: 4rpx solid var(--primary);
+}
+
+.section-title-accent {
+  color: var(--primary);
+}
+
+.section-more {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+}
+
+.more-text {
+  /* 文字 */
+}
+
+.more-arrow {
+  margin-left: 4rpx;
+  font-size: var(--font-body);
+  color: var(--text-muted);
+}

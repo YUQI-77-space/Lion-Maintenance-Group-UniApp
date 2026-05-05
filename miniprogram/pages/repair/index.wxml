@@ -1,0 +1,254 @@
+<!-- miniprogram/pages/repair/index.wxml -->
+<!-- 自定义导航栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
+  <view class="navbar-content">
+    <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
+    <text class="navbar-title">物科院维修组</text>
+  </view>
+</view>
+
+<view class="repair-container" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
+  <!-- 步骤内容 -->
+  <view wx:if="{{currentStep === 0}}">
+    <!-- 搜索栏 -->
+    <view class="repair-search-wrapper">
+      <view class="repair-search-bar">
+        <image class="repair-search-icon" src="{{iconSearch}}" mode="aspectFit"></image>
+        <input
+          class="repair-search-input"
+          placeholder="搜索关键字快速找到具体维修问题，例如：清灰、电风扇、手机屏幕"
+          confirm-type="search"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+          bindfocus="onSearchFocus"
+          bindblur="onSearchBlur"
+        />
+        <view wx:if="{{searchKeyword}}" class="repair-search-clear" bindtap="onSearchClear">清空</view>
+      </view>
+
+      <!-- 快捷关键词（无输入时展示） -->
+      <view wx:if="{{showQuickKeywords && !searchKeyword}}" class="repair-search-result-panel quick-keywords-panel">
+        <view class="quick-keywords-title">常用问题快捷选择</view>
+        <view class="quick-keywords-row">
+          <view
+            class="quick-keyword-chip"
+            wx:for="{{quickKeywords}}"
+            wx:key="value"
+            data-value="{{item.value}}"
+            bindtap="onQuickKeywordTap"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 搜索结果列表 -->
+      <view wx:if="{{showSearchResult && searchResults.length}}" class="repair-search-result-panel">
+        <scroll-view scroll-y="true" style="max-height: 480rpx;">
+          <view
+            wx:for="{{searchResults}}"
+            wx:key="id"
+            class="repair-search-result-item"
+            data-cat-id="{{item.categoryId}}"
+            data-sub-id="{{item.subcategoryId}}"
+            data-type-id="{{item.typeId}}"
+            bindtap="onSearchResultTap"
+          >
+            <view class="result-main-text">{{item.fullPath}}</view>
+            <view class="result-sub-text">{{item.hint}}</view>
+          </view>
+          <!-- 使用横线分隔每条词条 -->
+          <view wx:for="{{searchResults}}" wx:key="id-separator" class="repair-search-divider"></view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <view class="step-card">
+      <view class="step-title">选择问题大类</view>
+      <view class="step-subtitle">请选择您遇到的问题属于哪个范畴</view>
+      <view class="selection-grid">
+        <view wx:for="{{categories}}" wx:key="id" class="selection-item" data-id="{{item.id}}" bindtap="onCategorySelect">
+          {{item.name}}
+        </view>
+      </view>
+      <view class="helper-entry" bindtap="goToCategoryMap">
+        <text>不知道自己的维修问题属于哪个类别？</text>
+        <image class="helper-icon" src="{{iconArrowRight}}" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+  
+  <view wx:if="{{currentStep === 1}}">
+    <view class="step-card">
+      <view class="step-title">{{selectedCategory.name}}</view>
+      <view class="step-subtitle">请选择具体的子分类</view>
+      <view class="selection-grid">
+        <view wx:for="{{subcategories}}" wx:key="id" class="selection-item" data-id="{{item.id}}" bindtap="onSubcategorySelect">
+          {{item.name}}
+        </view>
+      </view>
+      <!-- 添加返回按钮 -->
+      <view class="button-group single-button">
+        <button class="btn btn-outline" bindtap="prevStep">返回</button>
+      </view>
+    </view>
+  </view>
+  
+  <view wx:if="{{currentStep === 2}}">
+    <view class="step-card">
+      <view class="step-title">{{selectedSubcategory.name}}</view>
+      <view class="step-subtitle">请选择具体的问题类型</view>
+      <view class="selection-grid">
+        <view wx:for="{{types}}" wx:key="id" class="selection-item {{item.id === selectedTypeId ? 'selected' : ''}}" data-id="{{item.id}}" bindtap="onTypeSelect">
+          {{item.name}}
+        </view>
+      </view>
+      <view class="button-group">
+        <button class="btn btn-outline" bindtap="prevStep">返回</button>
+        <button class="btn btn-primary" bindtap="nextStep" wx:if="{{selectedType}}">下一步</button>
+      </view>
+    </view>
+  </view>
+  
+  <view wx:if="{{currentStep === 3}}">
+    <view class="step-card">
+      <view class="step-title">填写报修详情</view>
+      <view class="step-subtitle">请提供准确的时间和问题描述</view>
+      
+      <!-- 特殊输入字段 -->
+      <view wx:for="{{requiredFields}}" wx:key="key" wx:for-item="field" class="special-field">
+        <view class="field-label">{{field.label}} <text wx:if="{{field.required}}" class="required">*</text></view>
+        <!-- 文本输入框 -->
+        <input wx:if="{{!field.type || field.type === 'text'}}" 
+               class="field-input" 
+               placeholder="{{field.placeholder}}" 
+               value="{{field.key === 'laptopModel' ? laptopModel : (field.key === 'phoneModel' ? phoneModel : (field.key === 'laptopSystem' ? laptopSystem : (field.key === 'softwareInfo' ? softwareInfo : deviceModel)))}}"
+               data-field="{{field.key}}"
+               bindinput="onFieldInput"/>
+        <!-- 下拉选择框 -->
+        <picker wx:if="{{field.type === 'select'}}" 
+                mode="selector" 
+                range="{{field.options}}" 
+                value="{{field.options.indexOf(systemVersion)}}"
+                bindchange="onSystemVersionChange">
+          <view class="picker-item">
+            <view class="picker-value">{{systemVersion || '请选择' + field.label}}</view>
+          </view>
+        </picker>
+      </view>
+      
+
+      
+      <view class="appointment-container">
+        <picker mode="date" value="{{appointmentDate}}" start="{{startDate}}" end="{{endDate}}" bindchange="onDateChange">
+          <view class="picker-item">
+            <view class="picker-label">预约日期</view>
+            <view class="picker-value">{{appointmentDate}}</view>
+          </view>
+        </picker>
+        <picker mode="time" value="{{appointmentTime}}" start="08:00" end="22:00" bindchange="onTimeChange">
+          <view class="picker-item">
+            <view class="picker-label">预约时间</view>
+            <view class="picker-value">{{appointmentTime}}</view>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="urgent-switch-container">
+        <view class="picker-label">是否紧急</view>
+        <switch checked="{{isUrgent}}" bindchange="onUrgentChange" color="{{'var(--secondary-color)'}}"/>
+      </view>
+      
+      <view class="field-label">问题详细描述<text class="optional"> (可选)</text></view>
+      <textarea class="description-textarea" placeholder="请详细描述您遇到的问题（可选）..." maxlength="200" bindinput="onDescriptionInput" value="{{otherDescription}}"></textarea>
+      
+      <view class="button-group">
+        <button class="btn btn-outline" bindtap="prevStep">返回</button>
+        <button class="btn btn-primary" bindtap="nextStep">下一步</button>
+      </view>
+    </view>
+  </view>
+  
+  <view wx:if="{{currentStep === 4}}">
+    <view class="step-card">
+      <view class="step-title">确认报修信息</view>
+      <view class="step-subtitle">请仔细核对您的报修内容</view>
+      <view class="confirm-list">
+        <view class="confirm-item confirm-item-category">
+          <view class="confirm-label">问题类别</view>
+          <view class="confirm-value">{{selectedCategory.name}} > {{selectedSubcategory.name}} > {{selectedType.name}}</view>
+    </view>
+        <view class="confirm-item">
+          <view class="confirm-label">预约时间</view>
+          <view class="confirm-value">{{appointmentDate}} {{appointmentTime}}</view>
+      </view>
+        <view class="confirm-item">
+          <view class="confirm-label">是否紧急</view>
+          <view class="confirm-value">{{isUrgent ? '是' : '否'}}
+          </view>
+      </view>
+        <view wx:if="{{laptopModel || phoneModel || laptopSystem || softwareInfo || systemVersion || deviceModel || mouseModel || keyboardModel || fanModel}}" class="confirm-item confirm-item-category">
+          <view class="confirm-label">详细信息</view>
+          <view class="confirm-value">
+            <text wx:if="{{laptopModel}}">笔记本型号：{{laptopModel}}\n</text>
+            <text wx:if="{{phoneModel}}">手机型号：{{phoneModel}}\n</text>
+            <text wx:if="{{laptopSystem}}">笔记本系统：{{laptopSystem}}\n</text>
+            <text wx:if="{{softwareInfo}}">软件信息：{{softwareInfo}}\n</text>
+            <text wx:if="{{systemVersion}}">系统版本：{{systemVersion}}\n</text>
+            <text wx:if="{{deviceModel}}">设备型号：{{deviceModel}}\n</text>
+            <text wx:if="{{mouseModel}}">鼠标型号：{{mouseModel}}\n</text>
+            <text wx:if="{{keyboardModel}}">键盘型号：{{keyboardModel}}\n</text>
+            <text wx:if="{{fanModel}}">电风扇型号：{{fanModel}}\n</text>
+          </view>
+        </view>
+        <view class="confirm-item confirm-item-category">
+          <view class="confirm-label">问题描述</view>
+          <view class="confirm-value">{{otherDescription || '无'}}</view>
+      </view>
+      </view>
+      <view class="button-group">
+        <button class="btn btn-outline" bindtap="prevStep">返回修改</button>
+        <button class="btn btn-primary" bindtap="submitRepair">确认提交</button>
+      </view>
+    </view>
+      </view>
+      
+  <view wx:if="{{currentStep === 5}}">
+     <view class="step-card" style="text-align: center;">
+      <image src="{{iconCheck}}" style="width: 120rpx; height: 120rpx; margin-bottom: 30rpx;"></image>
+      <view class="step-title success-title">提交成功</view>
+      <view class="step-subtitle">您的报修已提交，请耐心等待维修人员联系</view>
+      <view class="button-group" style="justify-content: center; gap: 20rpx;">
+        <button class="btn btn-outline" bindtap="goToTodo">查看进度</button>
+        <button class="btn btn-primary" bindtap="goToRepair">再次报修</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部步骤进度条 -->
+  <view class="bottom-progress-container" wx:if="{{currentStep < 5}}">
+    <!-- 进度轨道和进度条 -->
+    <view class="progress-track">
+      <!-- 蓝色填充条，从0%开始填充到当前位置 -->
+      <view class="progress-bar" style="width: {{ 15 + (currentStep <= 3 ? (currentStep / 3) * 35 : 70) }}%;"></view>
+      <view class="progress-inner">
+        <!-- 进度指示器图标 -->
+        <image class="progress-indicator" src="{{iconSchedule}}" style="left: {{ (currentStep <= 3 ? (currentStep / 3) * 50 : 100) }}%;"></image>
+      </view>
+    </view>
+    <!-- 步骤标签 -->
+    <view class="progress-steps">
+      <view class="progress-step {{currentStep <= 2 ? 'active' : ''}}">
+        <text class="step-text">选择类别</text>
+      </view>
+      <view class="progress-step {{currentStep === 3 ? 'active' : ''}}">
+        <text class="step-text">预约时间</text>
+      </view>
+      <view class="progress-step {{currentStep === 4 ? 'active' : ''}}">
+        <text class="step-text">确认信息</text>
+      </view>
+    </view>
+  </view>
+
+</view> 

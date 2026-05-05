@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "工作量汇总",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "pie-chart": "/components/charts/pie-chart/index",
+    "bar-chart": "/components/charts/bar-chart/index"
+  }
+}
+
