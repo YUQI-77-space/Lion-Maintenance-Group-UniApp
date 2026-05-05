@@ -1,0 +1,78 @@
+<!--pages/user/message/index.wxml-->
+<view class="page-container">
+  <!-- 固定顶部标题区域 -->
+  <view class="fixed-header">
+    <view class="header-content">
+      <view class="page-title">
+        <text class="title-text">我的消息</text>
+        <view class="unread-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+      </view>
+      <view class="action-btns" wx:if="{{!isEmpty}}">
+        <view class="action-btn secondary" bindtap="markAllAsRead">
+          <text class="btn-text">全部已读</text>
+        </view>
+        <view class="action-btn danger" bindtap="clearAllMessages">
+          <text class="btn-text">清空</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 可滚动内容区域 -->
+  <scroll-view class="scroll-content" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <!-- 加载中 -->
+    <view class="loading-container" wx:if="{{isLoading}}">
+      <loading-animation size="default"></loading-animation>
+    </view>
+    
+    <!-- 无消息时显示 -->
+    <view class="empty-container" wx:if="{{isEmpty && !isLoading}}">
+      <view class="empty-icon">
+        <text class="icon-message">💬</text>
+      </view>
+      <view class="empty-content">
+        <text class="empty-title">暂无消息</text>
+        <text class="empty-desc">您的消息通知将在这里显示</text>
+      </view>
+    </view>
+    
+    <!-- 消息列表 -->
+    <view class="message-list" wx:if="{{!isEmpty && !isLoading}}">
+      <view class="message-item {{item.isRead ? 'read' : 'unread'}}" 
+            wx:for="{{messages}}" 
+            wx:key="index"
+            data-index="{{index}}"
+            bindtap="markAsRead"
+>
+        
+        <!-- 2x2网格布局 -->
+        <view class="message-grid">
+          <!-- 左上：消息标题 -->
+          <view class="grid-title">
+            <text class="message-title {{item.isRead ? 'read-title' : 'unread-title'}}">{{item.title}}</text>
+          </view>
+          
+          <!-- 右上：消息图标 -->
+          <view class="grid-icon">
+            <text class="icon-text {{item.messagetype}}">{{item.typeIcon}}</text>
+            <view class="unread-dot" wx:if="{{!item.isRead}}"></view>
+          </view>
+          
+          <!-- 左下：消息内容 -->
+          <view class="grid-content">
+            <text class="message-content {{item.isRead ? 'read-content' : 'unread-content'}}">{{item.content}}</text>
+          </view>
+          
+          <!-- 右下：消息分类和时间 -->
+          <view class="grid-category">
+            <text class="category-text {{item.messagetype}}">{{item.typeText}}</text>
+            <text class="time-text" wx:if="{{item.timeDisplay}}">{{item.timeDisplay}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view>

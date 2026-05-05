@@ -1,0 +1,46 @@
+<!-- pages/team/home/index.wxml -->
+<!-- 自定义导航栏 -->
+<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
+  <view class="navbar-content">
+    <!-- <image class="navbar-logo" src="/images/icons/logo.png" mode="aspectFit"></image> -->
+    <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
+    <text class="navbar-title">物科院维修组</text>
+  </view>
+</view>
+
+<view class="container" wx:if="{{isMember}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
+  <view class="header">
+    <view class="subtitle">欢迎回来，{{role === 'leader' ? '组长' : '组员'}}</view>
+  </view>
+
+  <!-- 日常功能 -->
+  <view class="section">
+    <view class="section-header">
+      <view class="section-title">日常功能</view>
+    </view>
+    <view class="function-grid">
+      <view class="function-item" wx:for="{{dailyFunctions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}" data-link="{{item.link}}">
+        <image class="function-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <text class="function-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 管理功能，仅组长可见 -->
+  <view class="section" wx:if="{{isLeader}}">
+    <view class="section-header">
+      <view class="section-title">管理功能</view>
+    </view>
+    <view class="function-grid">
+      <view class="function-item" wx:for="{{manageFunctions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}">
+        <image class="function-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <text class="function-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+  
+
+</view>
+
+<!-- 装饰猪猪图标 - 放置在页面下方空白区域 -->
+<!-- <image class="pig-decoration" src="/images/icons/pig.png" mode="aspectFit" />  --> 

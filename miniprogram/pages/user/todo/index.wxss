@@ -1,0 +1,419 @@
+/* pages/user/todo/index.wxss */
+@import "/styles/variables.wxss";
+
+/* 页面容器 - 左右分栏布局 */
+.page-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--background-color);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 左侧分类导航 */
+.sidebar {
+  width: 180rpx;
+  flex-shrink: 0;
+  background: #F5F5F5;
+  border-right: 1rpx solid var(--border-light);
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.sidebar-item {
+  height: 100rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+  position: relative;
+  background: transparent;
+  transition: background-color 0.2s ease;
+  line-height: 1.4;
+}
+
+.sidebar-item:active {
+  opacity: 0.7;
+}
+
+.sidebar-item.active {
+  color: var(--primary-color);
+  background: var(--card-background);
+  font-weight: bold;
+}
+
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 48rpx;
+  background: var(--primary-color);
+  border-radius: 0 3rpx 3rpx 0;
+}
+
+/* 侧边栏徽章 */
+.sidebar-badge {
+  font-size: 20rpx;
+  color: var(--text-white);
+  background-color: var(--danger-color);
+  padding: 2rpx 8rpx;
+  border-radius: 10rpx;
+  margin-top: 4rpx;
+  min-width: 32rpx;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* 右侧内容区域 */
+.content {
+  flex: 1;
+  height: 100vh;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 加载容器样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+  min-height: 300rpx;
+}
+
+/* 任务卡片基础样式 */
+.task-card {
+  margin-bottom: 30rpx;
+  border-radius: 16rpx;
+  background-color: var(--card-background);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  /* 默认隐藏状态 */
+  opacity: 0;
+  transform: translateX(80rpx) translateZ(0);
+  transform-origin: center top;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 卡片入场动画 */
+.task-card.card-animate {
+  animation: cardSlideIn 0.5s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+}
+
+.task-card.card-animate:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(60rpx) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+/* 卡片封面 */
+.card-cover {
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  padding: 0 20rpx;
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+.card-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 10rpx;
+}
+
+.card-type {
+  font-size: 28rpx;
+  color: var(--text-regular);
+  font-weight: 500;
+}
+
+/* 卡片信息 */
+.card-info {
+  padding: 20rpx;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.task-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.title-tags {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.management-tag {
+  background-color: var(--secondary-color);
+  color: var(--text-white);
+  font-size: 20rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}
+
+.task-status {
+  font-size: 24rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.pending {
+  color: var(--warning-color);
+  background-color: var(--status-warning-bg);
+}
+
+.inProgress {
+  color: var(--secondary-color);
+  background-color: var(--status-secondary-bg);
+}
+
+.completed, .ended {
+  color: var(--success-color);
+  background-color: var(--status-success-bg);
+}
+
+.inPreparation {
+  color: var(--warning-color);
+  background-color: var(--status-warning-bg);
+}
+
+.cancelled {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.preselected {
+  color: var(--warning-color);
+  background-color: var(--status-warning-bg);
+}
+
+.confirmed {
+  color: var(--success-color);
+  background-color: var(--status-success-bg);
+}
+
+/* 卡片内容 */
+.card-content {
+  font-size: 28rpx;
+  color: var(--text-regular);
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 10rpx;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  min-width: 140rpx;
+}
+
+.info-value {
+  flex: 1;
+}
+
+/* 任务操作按钮 */
+.task-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 20rpx 20rpx;
+  border-top: 1rpx solid var(--border-light);
+  margin-top: 10rpx;
+}
+
+.text-btn {
+  font-size: 28rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid;
+}
+
+.complete-btn {
+  color: var(--success-color);
+  border-color: var(--success-color);
+  background-color: rgba(103, 194, 58, 0.05);
+}
+
+.cancel-btn {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+  background-color: var(--status-danger-bg);
+  margin-right: 16rpx;
+}
+
+/* 卡片状态边框颜色 */
+.pending-card,
+.inPreparation-card,
+.preselected-card {
+  border: 2rpx solid var(--warning-color);
+}
+
+.inProgress-card,
+.confirmed-card {
+  border: 2rpx solid var(--secondary-color);
+}
+
+.completed-card,
+.ended-card {
+  border: 2rpx solid var(--success-color);
+}
+
+.cancelled-card {
+  border: 2rpx solid var(--text-main);
+}
+
+/* 空状态提示 */
+.empty-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+}
+
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.5;
+}
+
+/* 撤销弹窗 */
+.cancel-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.cancel-modal {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  width: 600rpx;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid var(--border-light);
+  background: var(--gradient-danger);
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-white);
+}
+
+.modal-close {
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36rpx;
+  color: var(--text-white);
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-content {
+  padding: 30rpx;
+}
+
+.modal-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+
+.cancel-reason-input {
+  width: 100%;
+  min-height: 120rpx;
+  background-color: var(--background-color);
+  border: 1rpx solid var(--border-color);
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 10rpx;
+}
+
+.modal-actions {
+  display: flex;
+  padding: 20rpx 30rpx 30rpx;
+  gap: 20rpx;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.modal-btn.cancel-btn {
+  background-color: var(--background-color);
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border-color);
+}
+
+.modal-btn.confirm-btn {
+  background: var(--gradient-danger);
+  color: var(--text-white);
+  box-shadow: var(--shadow-danger);
+}
+
+/* 阻止事件穿透 */
+.noop {}

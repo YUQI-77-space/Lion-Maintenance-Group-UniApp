@@ -1,0 +1,94 @@
+<!--pages/team/ewa/summary/index.wxml-->
+<wxs module="format">
+function formatEW(value) {
+  if (!value && value !== 0) {
+    return '0';
+  }
+  var num = parseFloat(value);
+  if (isNaN(num)) {
+    return '0';
+  }
+  if (Math.floor(num) === num) {
+    return num + '';
+  }
+  var str = num.toFixed(2);
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '.') {
+    str = str.slice(0, -1);
+  }
+  return str;
+}
+
+module.exports = {
+  formatEW: formatEW
+};
+</wxs>
+
+<view class="container">
+  <!-- 顶部统计栏 -->
+  <view class="stats-row">
+    <view class="stat-card card-animate" style="animation-delay: 0.1s">
+      <view class="stat-icon members">👥</view>
+      <view class="stat-info">
+        <text class="stat-label">成员总数</text>
+        <text class="stat-value">{{summaryData.totalUsers || 0}}</text>
+      </view>
+    </view>
+    <view class="stat-card card-animate" style="animation-delay: 0.15s">
+      <view class="stat-icon total">📊</view>
+      <view class="stat-info">
+        <text class="stat-label">总工作量</text>
+        <text class="stat-value primary">{{format.formatEW(summaryData.totalEW)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心数据卡片组 -->
+  <view class="data-cards chart-animate" wx:if="{{showCharts}}" style="animation-delay: 0.2s">
+    <view class="data-card" wx:for="{{ringChartData}}" wx:key="name">
+      <view class="card-top">
+        <text class="card-title">{{item.name}}</text>
+        <text class="card-percent" style="color: {{item.color}}">{{format.formatEW(item.value)}}</text>
+      </view>
+      <view class="card-progress">
+        <view class="progress-bar" style="width: {{item.percentage}}%; background: {{item.color}};"></view>
+      </view>
+      <text class="card-ratio">占比 {{item.percentage.toFixed(1)}}%</text>
+    </view>
+  </view>
+
+  <!-- 图表分析区 -->
+  <view class="charts-container chart-animate" wx:if="{{showCharts}}" style="animation-delay: 0.3s">
+    <!-- 饼图分布 -->
+    <view class="chart-box pie-box" wx:if="{{pieChartData.length > 0}}">
+      <view class="chart-header">
+        <text class="chart-title">工作量分布</text>
+      </view>
+      <pie-chart 
+        chartData="{{pieChartData}}"
+        width="{{240}}"
+        height="{{200}}"
+        legend="{{true}}"
+      ></pie-chart>
+    </view>
+
+    <!-- 柱状对比 -->
+    <view class="chart-box bar-box">
+      <view class="chart-header">
+        <text class="chart-title">数量对比</text>
+      </view>
+      <bar-chart 
+        chartData="{{barChartData}}"
+        width="{{canvasWidth}}"
+        height="{{220}}"
+      ></bar-chart>
+    </view>
+  </view>
+</view>
+
+

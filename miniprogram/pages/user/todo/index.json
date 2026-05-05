@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  },
+  "enablePullDownRefresh": false,
+  "disableScroll": false,
+  "navigationBarTitleText": "待办事项"
+}

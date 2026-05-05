@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "值班表",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f6f6f6",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+} 

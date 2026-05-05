@@ -1,0 +1,196 @@
+/* pages/team/ewa/summary/index.wxss */
+@import '/styles/variables.wxss';
+
+.container {
+  padding: 16rpx;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 动画 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-animate {
+  animation: slideInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.chart-animate {
+  animation: slideInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* 顶部统计栏 */
+.stats-row {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:active {
+  transform: scale(0.98);
+}
+
+.stat-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.stat-icon.members {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-icon.total {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 1rpx;
+}
+
+.stat-value.primary {
+  background: linear-gradient(135deg, #0066FF, #00C9A7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 核心数据卡片组 */
+.data-cards {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.data-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 16rpx 14rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.card-title {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.card-percent {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+.card-progress {
+  height: 8rpx;
+  background: #f0f0f0;
+  border-radius: 4rpx;
+  overflow: hidden;
+  margin-bottom: 8rpx;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4rpx;
+  transition: width 0.6s ease-out;
+}
+
+.card-ratio {
+  font-size: 20rpx;
+  color: #999;
+}
+
+/* 图表分析区 */
+.charts-container {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.chart-box {
+  margin-bottom: 24rpx;
+}
+
+.chart-box:last-child {
+  margin-bottom: 0;
+}
+
+.chart-header {
+  margin-bottom: 12rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.chart-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.pie-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bar-box {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+}
+
+

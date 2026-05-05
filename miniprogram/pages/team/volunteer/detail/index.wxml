@@ -1,0 +1,293 @@
+<!-- pages/team/volunteer/detail/index.wxml -->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <loading-animation size="large"></loading-animation>
+  </view>
+  
+  <block wx:if="{{!loading && activity}}">
+    <!-- 活动标题 -->
+    <view class="header-card">
+      <view class="header-left">
+        <view class="title">{{activity.title}}</view>
+        <view class="activity-id">编号: {{activity.activityId}}</view>
+      </view>
+      <view class="status-tag status-{{activity.activityStatus}}">
+        <view class="status-dot"></view>
+        <text>{{activity.activityStatusText}}</text>
+      </view>
+    </view>
+  
+    <!-- 活动信息 -->
+    <view class="info-section">
+      <view class="info-item">
+        <view class="info-label">活动时间</view>
+        <view class="info-value">{{formattedStartTime}} 至 {{formattedEndTime}}</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">活动地点</view>
+        <view class="info-value">{{activity.location}}</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">活动时长</view>
+        <view class="info-value">{{activity.duration}}小时</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">志愿时长</view>
+        <view class="info-value">{{activity.volunteerHours || activity.duration}}小时</view>
+      </view>
+      <view class="info-item">
+        <view class="info-label">报名人数</view>
+        <view class="info-value">{{activity.numberOfVolunteers}}/{{activity.volunteerCount}}人</view>
+      </view>
+
+      <view class="info-item">
+        <view class="info-label">创建者</view>
+        <view class="info-value">{{activity.creatorName || '未知'}}</view>
+      </view>
+    </view>
+    
+    <!-- 活动描述 -->
+    <view class="description-section">
+      <view class="section-title">活动详情</view>
+      <view class="description-content">{{activity.description || '暂无详细描述'}}</view>
+    </view>
+    
+    <!-- 参与者列表 -->
+    <view class="detail-card participants-section" wx:if="{{userRole === 'leader'}}">
+      <view class="participants-header">
+        <view class="section-title">参与者列表</view>
+        <view class="participant-header-actions" wx:if="{{isFromManagePage}}">
+          <view class="participant-action-btn participant-action-btn--import"
+                wx:if="{{activity.activityStatus !== 'ended'}}"
+                bindtap="showImportVolunteersModal">
+            导入志愿者
+          </view>
+          <view class="participant-action-btn participant-action-btn--export"
+                wx:if="{{activity.numberOfVolunteers > 0}}"
+                bindtap="exportParticipants">
+            导出名单
+          </view>
+          <view class="participant-action-btn participant-action-btn--ew"
+                wx:if="{{activity.activityStatus === 'ended' && participants.length > 0}}"
+                bindtap="openSetPerUserEWModal">
+            设置EW值
+          </view>
+        </view>
+      </view>
+      <view class="participants-list">
+        <block wx:if="{{participants.length > 0}}">
+          <view class="participant-item" wx:for="{{participants}}" wx:key="openid">
+            <!-- Col 1: Avatar -->
+            <avatar-display 
+              userInfo="{{item}}" 
+              openid="{{item.openid}}"
+              size="medium"
+              showBorder="{{true}}"
+              customClass="participant-avatar"
+            />
+            
+            <!-- Col 2: Name & StudentId -->
+            <view class="info-column">
+              <text class="info-text name">{{item.nickName || 'N/A'}}</text>
+              <text class="info-text student-id">{{item.studentId || '未填'}}</text>
+            </view>
+            
+            <!-- Col 3: Division -->
+            <view class="division-column">
+              <text class="info-text division">{{item.feedback || '未填写分工信息'}}</text>
+            </view>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="empty-participants">
+            <text>暂无参与者信息</text>
+          </view>
+        </block>
+      </view>
+    </view>
+    
+  </block>
+  
+  <!-- 活动不存在 -->
+  <view class="not-found" wx:if="{{!loading && !activity}}">
+    <text>活动不存在或已被删除</text>
+  </view>
+</view>
+
+
+
+<!-- 发送消息弹窗 -->
+<!-- <view class="modal" wx:if="{{showMessageModal}}">
+  <view class="modal-mask" bindtap="closeMessageModal"></view>
+  <view class="modal-content">
+    <view class="modal-header">发送消息给参与者</view>
+    <view class="modal-body">
+      <input class="message-input" type="text" value="{{messageTitle}}" bindinput="onMessageTitleInput" placeholder="请输入消息标题"/>
+      <textarea class="message-textarea" value="{{messageContent}}" bindinput="onMessageContentInput" placeholder="请输入消息内容" maxlength="200"/>
+      <view class="textarea-counter">{{messageContent.length}}/200</view>
+    </view>
+    <view class="modal-footer">
+      <button class="modal-btn cancel" bindtap="closeMessageModal">取消</button>
+      <button class="modal-btn confirm" bindtap="sendMessage">发送</button>
+    </view>
+  </view>
+</view> -->
+
+<!-- 导入志愿者底部浮窗 -->
+<view class="import-sheet" wx:if="{{showImportModal}}" catchtouchmove="preventTouch">
+  <view class="import-sheet-mask" bindtap="closeImportModal" catchtouchmove="preventTouch"></view>
+  <view class="import-sheet-panel {{importSheetClosing ? 'closing' : ''}}">
+    <view class="sheet-header">
+      <view class="sheet-handle"></view>
+      <view class="sheet-title-row">
+        <view class="sheet-title-group">
+          <text class="sheet-title">导入志愿者</text>
+          <text class="sheet-subtitle">挑选组员加入活动，支持多选</text>
+        </view>
+        <text class="sheet-count">已选 {{pendingSelectionCount}} 人</text>
+      </view>
+    </view>
+
+    <view class="sheet-capacity">
+      <text>剩余名额：{{((activity && activity.volunteerCount) || 0) - ((activity && activity.numberOfVolunteers) || 0) - selectedMembers.length}} 人</text>
+      <text class="sheet-capacity-tip">已参与 {{(activity && activity.numberOfVolunteers) || 0}} / 目标 {{(activity && activity.volunteerCount) || 0}}</text>
+    </view>
+
+    <scroll-view class="sheet-members" scroll-y="true" enable-flex="true" show-scrollbar="{{false}}" enhanced="true">
+      <view class="import-loading" wx:if="{{importLoading}}">
+        <loading-animation size="default"></loading-animation>
+      </view>
+      <block wx:else>
+        <block wx:if="{{filteredMembers.length > 0}}">
+          <view class="member-card {{item.isSelected ? 'selected' : ''}} {{item.isParticipant ? 'disabled' : ''}}"
+                wx:for="{{filteredMembers}}"
+                wx:key="openid">
+            <avatar-display 
+              userInfo="{{item}}" 
+              openid="{{item.openid}}"
+              size="small"
+              showBorder="{{false}}"
+              customClass="member-card-avatar"
+            />
+            <view class="member-card-info">
+              <view class="member-card-name">
+                {{item.displayName || item.nickName || '未命名'}}
+                <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
+              </view>
+              <view class="member-card-meta">
+                <text class="member-role-text">{{item.role === 'leader' ? '组长' : '成员'}}</text>
+                <text class="member-extra" wx:if="{{item.isParticipant}}">已在活动中</text>
+              </view>
+            </view>
+            <view class="member-card-action {{item.isParticipant ? 'locked' : ''}}">
+              <view class="pill-button {{item.isSelected ? 'selected' : ''}}"
+                    data-openid="{{item.openid}}"
+                    catchtap="toggleMemberSelection">
+                <text>{{item.isSelected ? '✓' : '+'}}</text>
+              </view>
+            </view>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="empty-members modern">
+            <text>暂无可导入的成员</text>
+          </view>
+        </block>
+      </block>
+    </scroll-view>
+  </view>
+
+  <view class="selected-layer {{hasPendingSelections ? 'show' : ''}}">
+    <view class="selected-panel {{showSelectedPanel ? 'show' : ''}}" catchtouchmove="preventTouch">
+      <view class="selected-panel-header">
+        <view class="panel-title">已选志愿者</view>
+        <text class="panel-clear" wx:if="{{selectedMembers.length > 0}}" catchtap="clearAllSelected">清空</text>
+      </view>
+      <view class="selected-list-wrapper">
+        <scroll-view class="selected-list" scroll-y="true" enable-flex="true" show-scrollbar="{{false}}" enhanced="true">
+          <block wx:if="{{selectedMemberList.length > 0}}">
+            <view class="selected-item" wx:for="{{selectedMemberList}}" wx:key="openid">
+              <avatar-display 
+                userInfo="{{item}}" 
+                openid="{{item.openid}}"
+                size="small"
+                showBorder="{{false}}"
+                customClass="selected-avatar"
+              />
+              <view class="selected-item-info">
+                <view class="selected-name">
+                  {{item.displayName || item.nickName || '未命名'}}
+                  <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
+                </view>
+                <view class="selected-meta">
+                  <text>{{item.role === 'leader' ? '组长' : '成员'}}</text>
+                </view>
+              </view>
+              <view class="remove-selected-btn" data-openid="{{item.openid}}" catchtap="removeSelectedMember">
+                <view class="remove-icon"></view>
+              </view>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="empty-selected">
+              <text>还没有选择志愿者</text>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
+    </view>
+
+    <view class="selected-bar" catchtouchmove="preventTouch">
+      <view class="selected-main-area" bindtap="toggleSelectedPanel">
+        <view class="selected-bar-text">
+          <text class="selected-bar-label">已选志愿者</text>
+          <text class="selected-bar-count">{{pendingSelectionCount}} 人待导入</text>
+        </view>
+        <view class="selected-avatars">
+          <block wx:for="{{selectedMemberPreview}}" wx:key="openid">
+            <avatar-display 
+              userInfo="{{item}}" 
+              openid="{{item.openid}}"
+              size="small"
+              showBorder="{{false}}"
+              customClass="selected-avatar"
+            />
+          </block>
+          <view class="selected-extra-pill" wx:if="{{selectedMemberExtraCount > 0}}">
+            +{{selectedMemberExtraCount}}
+          </view>
+        </view>
+        <view class="selected-bar-arrow {{showSelectedPanel ? 'expanded' : ''}}"></view>
+      </view>
+      <view class="selected-confirm-area {{importLoading || !hasPendingSelections ? 'disabled' : ''}}"
+            catchtap="handleSelectedConfirm">
+        {{importLoading ? '导入中...' : '确认'}}
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 新增：按人设置EW的弹窗（全屏遮罩，防止点击穿透） -->
+<view class="per-ew-modal" wx:if="{{showPerUserEWModal}}" catchtouchmove="preventTouch" catchtap="preventTouch">
+  <view class="per-ew-mask" catchtouchmove="preventTouch" catchtap="preventTouch"></view>
+  <view class="per-ew-content" catchtap="preventTouch" catchtouchmove="preventTouch">
+    <view class="per-ew-header">
+      <text>设置本次活动各志愿者EW</text>
+      <view class="per-ew-close" bindtap="closeSetPerUserEWModal">×</view>
+    </view>
+    <scroll-view class="per-ew-list" scroll-y="true">
+      <view class="per-ew-item" wx:for="{{participants}}" wx:key="openid">
+        <view class="per-ew-left">
+          <text class="per-ew-name">{{item.nickName || 'N/A'}}</text>
+
+        </view>
+        <input class="per-ew-input" type="digit" placeholder="0-50" data-openid="{{item.openid}}" value="{{perUserEWMap[item.openid] || ''}}" bindinput="onPerUserEWInput" />
+      </view>
+    </scroll-view>
+    <view class="per-ew-footer">
+      <button class="per-ew-cancel" bindtap="closeSetPerUserEWModal">取消</button>
+      <button class="per-ew-confirm" bindtap="confirmSetPerUserEW">确认提交</button>
+    </view>
+  </view>
+</view>

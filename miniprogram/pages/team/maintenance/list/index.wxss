@@ -1,0 +1,255 @@
+/* pages/team/maintenance/list/index.wxss */
+@import "/styles/variables.wxss";
+
+/* 页面容器 - 左右分栏布局 */
+.page-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--background-color);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* 左侧分类导航 */
+.sidebar {
+  width: 180rpx;
+  flex-shrink: 0;
+  background: #F5F5F5;
+  border-right: 1px solid var(--border-light);
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.sidebar-item {
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  position: relative;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-item:active {
+  opacity: 0.7;
+}
+
+.sidebar-item.active {
+  color: var(--primary-color);
+  background: var(--card-background);
+  font-weight: bold;
+}
+
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 48rpx;
+  background: var(--primary-color);
+  border-radius: 0 3rpx 3rpx 0;
+}
+
+/* 右侧内容区域 */
+.content {
+  flex: 1;
+  height: 100vh;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 加载容器样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+  min-height: 300rpx;
+}
+
+/* 卡片入场动画 - 默认隐藏 */
+.task-card {
+  display: flex;
+  background-color: var(--card-background);
+  border-radius: 10rpx;
+  margin-bottom: 20rpx;
+  padding: 20rpx 20rpx 2rpx 20rpx;
+  box-shadow: var(--box-shadow);
+  border: 1rpx solid var(--border-light);
+  position: relative;
+  /* 默认隐藏状态 */
+  opacity: 0;
+  transform: translateX(80rpx) translateZ(0);
+  transform-origin: center top;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 卡片入场动画 */
+.task-card.card-animate {
+  animation: cardSlideIn 0.6s cubic-bezier(0.25, 0, 0.1, 1) forwards;
+}
+
+.task-card.card-animate:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(80rpx) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+.status-indicator { display: none; }
+
+.task-info {
+  flex: 1;
+}
+
+.task-id {
+  font-size: 28rpx;
+  color: var(--text-regular);
+  margin-bottom: 10rpx;
+}
+
+.task-category {
+  font-size: 30rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+  color: var(--text-main);
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+  flex-wrap: wrap;
+}
+
+.urgent-tag { display: none; }
+
+.urgent-badge {
+  background-color: #FF0000;
+  color: #ffffff;
+  font-size: 24rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  margin-right: 10rpx;
+  font-weight: 600;
+}
+
+.management-tag {
+  background-color: transparent;
+  color: #191970;
+  font-size: 22rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  margin-right: 10rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+  border: 1rpx solid #191970;
+}
+
+.appointment-time {
+  font-size: 24rpx;
+  color: var(--text-regular);
+}
+
+.task-status {
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.task-status.pending {
+  color: var(--warning-color);
+}
+
+.task-status.inProgress {
+  color: var(--secondary-color);
+}
+
+.task-status.completed {
+  color: var(--success-color);
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0;
+  padding: 12rpx 0;
+  border-top: 1rpx solid var(--border-light);
+}
+
+.task-status {
+  padding: 6rpx 14rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  border: 1rpx solid;
+  background-color: transparent;
+}
+
+.status-pending { color: var(--maintenance-pending-color); border-color: var(--maintenance-pending-color); background-color: transparent; }
+
+.status-inProgress { color: var(--maintenance-inProgress-color); border-color: var(--maintenance-inProgress-color); background-color: transparent; }
+
+.status-completed { color: var(--maintenance-completed-color); border-color: var(--maintenance-completed-color); background-color: transparent; }
+
+.status-cancelled { color: var(--maintenance-cancelled-color); border-color: var(--maintenance-cancelled-color); background-color: transparent; }
+
+.pending-card { border-color: var(--maintenance-pending-color); }
+.inProgress-card { border-color: var(--maintenance-inProgress-color); }
+.completed-card { border-color: var(--maintenance-completed-color); }
+.cancelled-card { border-color: var(--maintenance-cancelled-color); }
+
+/* 认领按钮样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  font-size: 28rpx;
+  padding: 10rpx 32rpx;
+  border-radius: 999rpx;
+  line-height: 1.2;
+  border: 1rpx solid;
+  margin: 0;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+.btn-claim {
+  border-color: #191970;
+  background-color: #191970;
+}
+
+.btn:active { transform: scale(0.97); }
+
+/* 无任务提示 */
+.no-task {
+  text-align: center;
+  padding: 100rpx 0;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 24rpx 0;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}

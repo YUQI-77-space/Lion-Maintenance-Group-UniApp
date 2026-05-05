@@ -1,0 +1,110 @@
+/* components/btn/index.wxss */
+@import "../../styles/variables.wxss";
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 32rpx;
+  font-size: var(--font-body);
+  background: transparent;
+  border: 1px solid;
+  border-radius: var(--radius-btn);
+  transition: all 150ms ease;
+  box-sizing: border-box;
+}
+
+.btn::after { border: none; }
+
+/* 类型 */
+.btn-primary {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-secondary {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.btn-success {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.btn-warning {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+/* 尺寸 */
+.btn-small {
+  padding: 12rpx 20rpx;
+  font-size: var(--font-caption);
+}
+
+.btn-large {
+  padding: 24rpx 40rpx;
+  font-size: var(--font-subtitle);
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* 禁用 */
+.btn-disabled {
+  border-color: var(--border) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
+/* 点击效果 */
+.btn-active {
+  opacity: 0.7;
+}
+
+/* 图标 */
+.btn-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 8rpx;
+}
+
+.btn-icon-right {
+  margin-right: 0;
+  margin-left: 8rpx;
+}
+
+/* 文字 */
+.btn-text {
+  /* 文字样式 */
+}
+
+/* 加载 */
+.btn-loading {
+  width: 32rpx;
+  height: 32rpx;
+  margin-left: 8rpx;
+  border: 3rpx solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

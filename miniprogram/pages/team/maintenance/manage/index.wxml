@@ -1,0 +1,194 @@
+<!--pages/team/maintenance/manage/index.wxml-->
+<wxs module="format">
+function formatEW(value) {
+  if (!value && value !== 0) {
+    return '0';
+  }
+  var num = parseFloat(value);
+  if (isNaN(num)) {
+    return '0';
+  }
+  
+  if (Math.floor(num) === num) {
+    return num + '';
+  }
+  
+  var str = num.toFixed(2);
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '0') {
+    str = str.slice(0, -1);
+  }
+  if (str.charAt(str.length - 1) === '.') {
+    str = str.slice(0, -1);
+  }
+  return str;
+}
+
+module.exports = {
+  formatEW: formatEW
+};
+</wxs>
+
+<view class="page-container">
+  <!-- 左侧分类导航 -->
+  <view class="sidebar" style="width: 180rpx;">
+    <view class="{{activeTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="{{activeTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">待认领</view>
+    <view class="{{activeTab === 'inProgress' ? 'active' : ''}}" bindtap="switchTab" data-tab="inProgress">进行中</view>
+    <view class="{{activeTab === 'completed' ? 'active' : ''}}" bindtap="switchTab" data-tab="completed">已完成</view>
+    <view class="{{activeTab === 'cancelled' ? 'active' : ''}}" bindtap="switchTab" data-tab="cancelled">已撤销</view>
+  </view>
+
+  <!-- 右侧内容区域 -->
+  <view class="content-wrapper">
+    <!-- 粘性头部：搜索框固定在页面上方 -->
+    <view class="sticky-header">
+      <!-- 搜索框毛玻璃效果 -->
+      <view class="search-box">
+        <input class="search-input" placeholder="搜索任务..." bindinput="onSearchInput" value="{{searchKeyword}}" confirm-type="search" bindconfirm="onSearch"/>
+        <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearchInput">✕</view>
+        <view class="search-icon" bindtap="onSearch">🔍</view>
+      </view>
+    </view>
+
+    <!-- 列表滚动区域 -->
+    <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+      <!-- 加载动画 -->
+      <view class="loading-container" wx:if="{{loading}}">
+        <loading-animation size="large" />
+      </view>
+
+      <!-- 任务列表 -->
+      <view class="task-list" wx:if="{{!loading && filteredTasks.length > 0}}">
+      <block wx:for="{{filteredTasks}}" wx:key="maintenanceTaskId">
+        <view class="task-card {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
+          <view class="status-indicator {{item.taskStatus}}"></view>
+          <text class="ew-corner" wx:if="{{item.taskStatus === 'completed' && (item.ew || item.ew === 0)}}">{{item.ew}}</text>
+
+          <!-- 任务信息 -->
+          <view class="task-info" bindtap="viewTaskDetail" data-task="{{item}}">
+            <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
+            <view class="task-category">
+              {{item.level1}} > {{item.level2}} > {{item.level3}}
+            </view>
+            <view class="task-meta">
+              <text class="urgent-badge" wx:if="{{item.isUrgent === 1}}">紧急</text>
+              <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
+              <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
+            </view>
+            <view class="task-footer">
+              <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
+              <view class="task-actions">
+                <view class="action-btn ew-btn"
+                      wx:if="{{item.taskStatus === 'completed'}}"
+                      catchtap="setEW"
+                      data-task="{{item}}">
+                  设置EW
+                </view>
+                <view class="action-btn delete-btn"
+                      catchtap="deleteTask"
+                      data-task="{{item}}">
+                  删除
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{filteredTasks.length > 0}}">
+        <text wx:if="{{loadingMore}}">加载中...</text>
+        <text wx:elif="{{!hasMore}}">— 已加载全部 —</text>
+      </view>
+      </view>
+
+      <!-- 无任务提示 -->
+      <view class="no-task" wx:if="{{!loading && filteredTasks.length === 0}}">
+        <text>暂无{{activeTabName}}任务</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- EW设置弹窗 -->
+  <view class="ew-modal" wx:if="{{showEWModal}}" catchtouchmove="preventTouchMove">
+    <view class="modal-content" catchtouchmove="preventTouchMove">
+      <view class="modal-header">设置等效工作量</view>
+      <view class="modal-body">
+        <!-- 任务基本信息 -->
+        <view class="task-info-modal">
+          <text>任务编号: {{currentTask.maintenanceTaskId}}</text>
+          <text>问题类别: {{currentTask.level1}} > {{currentTask.level2}} > {{currentTask.level3}}</text>
+        </view>
+
+        <!-- EW设置说明 -->
+        <view class="ew-description">
+          <text class="ew-tip">💡 设置的EW值为每个受理人的标准值</text>
+        </view>
+
+        <!-- EW值设置 -->
+        <view class="ew-slider">
+          <text>单人EW值: {{format.formatEW(ewValue)}}</text>
+          <view class="ew-slider-row">
+            <slider class="ew-slider-control" min="0.5" max="10" step="0.5" value="{{ewValue}}" show-value="{{false}}" block-size="28"
+              activeColor="#3a86ff" block-color="#3a86ff" bindchanging="onEWSliderChanging" bindchange="onEWSliderChange"/>
+            <input class="ew-input" type="digit" value="{{ewInputText}}" bindinput="onEWInputChange" bindblur="onEWInputBlur"/>
+          </view>
+        </view>
+
+        <!-- 受理人列表 -->
+        <view class="assignees-section">
+          <view class="assignees-title">受理人员</view>
+          <scroll-view class="assignees-list" scroll-y="{{true}}">
+            <!-- 主受理人 -->
+            <view class="assignee-item" wx:if="{{currentTask.assigneeName}}">
+              <text class="assignee-name">{{currentTask.assigneeName}}</text>
+              <text class="assignee-role primary">主受理人</text>
+            </view>
+            <!-- 协助受理人 -->
+            <block wx:if="{{currentTask.additionalAssignees && currentTask.additionalAssignees.length > 0}}">
+              <view class="assignee-item" wx:for="{{currentTask.additionalAssignees}}" wx:key="assigneeId">
+                <text class="assignee-name">{{item.assigneeName}}</text>
+                <text class="assignee-role">协助受理人</text>
+              </view>
+            </block>
+            <!-- 无受理人提示 -->
+            <view class="no-assignees" wx:if="{{!currentTask.assigneeName && (!currentTask.additionalAssignees || currentTask.additionalAssignees.length === 0)}}">
+              <text>暂无受理人</text>
+            </view>
+          </scroll-view>
+        </view>
+      </view>
+
+      <!-- 底部按钮 -->
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="cancelEWSetting">取消</button>
+        <button class="btn-confirm" bindtap="confirmEWSetting">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自定义二次确认弹窗 -->
+  <view class="custom-confirm-modal" wx:if="{{showDeleteConfirmModal}}" catchtouchmove="preventTouchMove">
+    <view class="modal-content" catchtouchmove="preventTouchMove">
+      <view class="modal-header">二次确认</view>
+      <view class="modal-body">
+        <view class="confirm-text">为防止误操作，请输入任务编号"{{taskToDelete.maintenanceTaskId}}"以确认删除</view>
+        <input class="confirm-input" placeholder="请在此输入任务编号" bindinput="onDeleteConfirmInput" value="{{deleteConfirmInput}}"/>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="cancelDeleteConfirm">取消</button>
+        <button class="btn-confirm" bindtap="confirmDelete">确认</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新增任务按钮 -->
+  <view class="create-btn" bindtap="goToCreateTask">
+    <image class="add-icon" src="{{iconAdd}}"></image>
+  </view>
+
+  <!-- 遮罩层 -->
+  <view class="mask" wx:if="{{showEWModal || showDeleteConfirmModal}}" bindtap="{{showEWModal ? 'cancelEWSetting' : 'cancelDeleteConfirm'}}" catchtouchmove="preventTouchMove"></view>
+</view>

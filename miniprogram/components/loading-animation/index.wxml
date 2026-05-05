@@ -1,0 +1,11 @@
+<!-- 加载动画组件 -->
+<view class="loading-animation {{size}} {{customClass}}">
+  <view class="typing-indicator">
+    <view class="typing-circle"></view>
+    <view class="typing-circle"></view>
+    <view class="typing-circle"></view>
+    <view class="typing-shadow"></view>
+    <view class="typing-shadow"></view>
+    <view class="typing-shadow"></view>
+  </view>
+</view>

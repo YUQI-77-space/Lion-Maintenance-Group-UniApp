@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "创建维修任务",
+  "navigationBarBackgroundColor": "#3a86ff",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#f8f9fc",
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+} 

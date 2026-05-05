@@ -1,0 +1,83 @@
+/* components/card/index.wxss */
+@import "../../styles/variables.wxss";
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  overflow: hidden;
+}
+
+.card:last-child { margin-bottom: 0; }
+
+.card-shadow {
+  /* 极简风格，默认不使用阴影 */
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-sm);
+}
+
+.card-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: var(--font-subtitle);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-subtitle {
+  display: block;
+  margin-top: 4rpx;
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+}
+
+.card-header-right {
+  flex-shrink: 0;
+  margin-left: var(--space-sm);
+}
+
+.card-extra {
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+}
+
+/* 卡片内容 */
+.card-body {
+  /* 内容区域 */
+}
+
+/* 卡片底部 */
+.card-footer {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.card-footer-text {
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+}
+
+/* 变体 */
+.card-no-padding {
+  padding: 0;
+}
+
+.card-no-gap {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.card-bordered {
+  border: 1px solid var(--border);
+}

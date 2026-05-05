@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "志愿活动详情",
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+} 

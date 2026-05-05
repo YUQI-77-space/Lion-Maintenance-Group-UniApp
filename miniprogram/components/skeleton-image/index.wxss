@@ -1,0 +1,102 @@
+/* components/skeleton-image/index.wxss */
+
+.skeleton-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.placeholder-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e8ecef 0%, #dde1e4 100%);
+}
+
+.skeleton-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e8ecef 0%, #dde1e4 100%);
+  overflow: hidden;
+}
+
+/* 闪烁动画 */
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 图片样式 */
+.actual-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.actual-image.visible {
+  opacity: 1;
+}
+
+/* 加载失败样式 */
+.error-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+}
+
+.error-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #ccc;
+  color: #fff;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* 加载完成状态 */
+.skeleton-wrapper.loaded .skeleton-placeholder,
+.skeleton-wrapper.loaded .placeholder-bg {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}

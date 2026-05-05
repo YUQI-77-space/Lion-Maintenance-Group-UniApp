@@ -1,0 +1,504 @@
+/* miniprogram/pages/repair/index.wxss */
+@import "/styles/variables.wxss";
+@import "/styles/custom-navbar.wxss";
+
+page {
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--background-color);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+.repair-container {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  padding: 24rpx;
+  padding-bottom: 260rpx; /* 为底部导航栏和进度条预留空间 */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 维修组标语 */
+.repair-slogan {
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  text-align: center;
+  padding: 20rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 10rpx;
+  margin-bottom: 30rpx;
+  box-shadow: var(--box-shadow);
+}
+
+/* 底部步骤进度条 */
+.bottom-progress-container {
+  position: fixed;
+  bottom: 180rpx; /* 在tabbar上方（y轴上移，避免重合） */
+  left: 0;
+  right: 0;
+  background-color: var(--card-background);
+  padding: 24rpx 40rpx 28rpx 40rpx;
+  z-index: 100;
+  border-top: 1rpx solid var(--border-light);
+}
+
+/* 进度轨道 */
+.progress-track {
+  width: 100%;
+  height: 6rpx;
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 8rpx;
+  margin-bottom: 20rpx;
+  position: relative;
+  overflow: visible;
+}
+
+/* 内轨：用于将真实进度限制在 15% - 85% 之间 */
+.progress-inner {
+  position: absolute;
+  left: 15%;
+  width: 70%;
+  top: 0;
+  height: 100%;
+}
+
+/* 进度条 - 从轨道0%开始填充 */
+.progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #191970;
+  border-radius: 8rpx;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 进度指示器图标 */
+.progress-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40rpx;
+  height: 40rpx;
+  transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2rpx 6rpx rgba(64, 158, 255, 0.3));
+}
+
+/* 步骤标签容器 */
+.progress-steps {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  height: 40rpx;
+}
+
+/* 单个步骤 */
+.progress-step {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.progress-step:nth-child(1) {
+  left: 15%;
+}
+
+.progress-step:nth-child(2) {
+  left: 50%;
+}
+
+.progress-step:nth-child(3) {
+  left: 85%;
+}
+
+/* 步骤文字 */
+.step-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  transition: color 0.3s ease, font-weight 0.3s ease;
+  white-space: nowrap;
+}
+
+.progress-step.active .step-text {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+
+/* 内容卡片 */
+.step-card {
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  padding: 40rpx;
+  margin-bottom: 30rpx;
+  box-shadow: var(--box-shadow);
+}
+
+.step-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 10rpx;
+}
+
+.step-title.success-title {
+  color: var(--success-color);
+}
+
+.step-subtitle {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-bottom: 40rpx;
+}
+
+/* 按钮通用样式 */
+.btn {
+  display: inline-block;
+  padding: 18rpx 36rpx;
+  font-size: 28rpx;
+  border-radius: 8rpx;
+  text-align: center;
+  transition: all 0.3s;
+  box-sizing: border-box;
+  line-height: 1;
+  margin: 0; /* 重置默认的button margin */
+}
+
+/* 主按钮（下一步/确认） - 蓝色边框 */
+.btn-primary {
+  background-color: transparent;
+  color: #409EFF;
+  border: 1px solid #409EFF;
+}
+
+.btn-primary:active {
+  background-color: #409EFF;
+  color: white;
+}
+
+/* 次要按钮（上一步/返回） - 黑色边框 */
+.btn-outline {
+  background-color: transparent;
+  color: #333333;
+  border: 1px solid #333333;
+}
+
+.btn-outline:active {
+  background-color: #333333;
+  color: white;
+}
+
+.button-group {
+  margin-top: 60rpx;
+  display: flex;
+  justify-content: space-around; /* 改为 space-around */
+  gap: 40rpx; /* 增加按钮间距 */
+}
+
+/* 为按钮本身也设置一个 flex-basis 来控制宽度 */
+.button-group .btn {
+  flex-basis: 40%; /* 缩小按钮宽度 */
+}
+
+/* 单个按钮时居中显示 */
+.button-group.single-button {
+  justify-content: center;
+}
+
+.button-group.single-button .btn {
+  flex-basis: 60%; /* 单个按钮时适当放大宽度 */
+}
+
+
+/* 选择网格 */
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+}
+
+.selection-item {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 30rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  transition: all 0.2s;
+  font-size: 28rpx;
+}
+
+.selection-item.selected {
+  border-color: var(--secondary-color);
+  background-color: var(--status-secondary-bg);
+  color: var(--secondary-color);
+  font-weight: bold;
+  box-shadow: 0 0 10rpx rgba(64, 158, 255, 0.2);
+}
+
+/* 时间选择 */
+.appointment-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.picker-label {
+  font-size: 30rpx;
+}
+
+.picker-value {
+  font-size: 30rpx;
+  color: var(--text-secondary);
+}
+
+/* 确认页面 */
+.confirm-list {
+  list-style: none;
+  padding: 0;
+}
+
+.confirm-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.confirm-label {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.confirm-value {
+  font-size: 28rpx;
+  color: var(--text-main);
+  text-align: right;
+  max-width: 70%;
+}
+
+.confirm-item-category .confirm-value {
+  text-align: left;
+  margin-top: 10rpx;
+  padding-left: 2em; /* 约等于一个tab的距离 */
+  max-width: 100%;
+}
+
+.confirm-item-category {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 文本域 */
+.description-textarea {
+  width: 100%;
+  height: 200rpx;
+  padding: 20rpx;
+  border: 1px solid var(--border-color);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  margin-top: 20rpx;
+  box-sizing: border-box;
+  background-color: var(--card-background);
+  color: var(--text-main);
+}
+
+/* 紧急开关 */
+.urgent-switch-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30rpx;
+  padding: 20rpx 0;
+}
+
+/* 特殊输入字段样式 */
+.special-field {
+  margin-bottom: 30rpx;
+}
+
+.field-label {
+  font-size: 28rpx;
+  color: var(--text-main);
+  margin-bottom: 10rpx;
+}
+
+.field-label .required {
+  color: var(--danger-color);
+  margin-left: 4rpx;
+}
+
+.field-label .optional {
+  color: var(--text-secondary);
+  margin-left: 4rpx;
+  font-size: 24rpx;
+}
+
+.field-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 20rpx;
+  border: 1px solid var(--border-color);
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background-color: var(--card-background);
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.field-input:focus {
+  border-color: var(--secondary-color);
+}
+
+/* 开发者信息样式 */
+.developer-info {
+  position: fixed;
+  bottom: 20rpx;
+  right: 30rpx;
+  font-size: 24rpx;
+  color: var(--warning-color);
+  font-family: 'KaiTi', '楷体', serif; /* 楷体 */
+  opacity: 0.8;
+}
+
+/* 分类地图入口 */
+.helper-entry {
+  margin-top: 30rpx;
+  padding: 24rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px dashed var(--secondary-color);
+  background-color: var(--status-secondary-bg);
+  color: var(--secondary-color);
+  border-radius: 12rpx;
+}
+
+.helper-entry:active {
+  opacity: 0.85;
+}
+
+.helper-icon {
+  width: 28rpx;
+  height: 28rpx;
+}
+
+/* 搜索相关样式 */
+.repair-search-wrapper {
+  position: relative;
+  margin-bottom: 32rpx;
+  z-index: 120;
+}
+
+.repair-search-bar {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 20rpx;
+  border-radius: 999rpx;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.06);
+}
+
+.repair-search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+  opacity: 0.7;
+}
+
+.repair-search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-main);
+}
+
+.repair-search-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.repair-search-clear {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  padding-left: 16rpx;
+}
+
+.repair-search-result-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 96rpx;
+  background-color: var(--card-background);
+  border-radius: 16rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.16);
+  padding: 12rpx 8rpx;
+}
+
+.repair-search-result-item {
+  padding: 18rpx 20rpx;
+  border-radius: 12rpx;
+}
+
+.repair-search-result-item + .repair-search-result-item {
+  margin-top: 6rpx;
+}
+
+.repair-search-result-item:active {
+  background-color: var(--status-secondary-bg);
+}
+
+.result-main-text {
+  font-size: 26rpx;
+  color: var(--text-main);
+}
+
+.result-sub-text {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+/* 搜索结果分隔线 */
+.repair-search-divider {
+  height: 1rpx;
+  background-color: var(--border-light);
+  margin: 0 12rpx;
+}
+
+/* 快捷关键词面板 */
+.quick-keywords-panel {
+  padding: 20rpx 16rpx 16rpx 16rpx;
+}
+
+.quick-keywords-title {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.quick-keywords-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.quick-keyword-chip {
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background-color: var(--status-secondary-bg);
+  color: var(--secondary-color);
+  font-size: 24rpx;
+}
+
+.quick-keyword-chip:active {
+  opacity: 0.8;
+}

@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "skeleton-image": "/components/skeleton-image/index"
+  },
+  "navigationBarTitleText": "团队风采",
+  "enablePullDownRefresh": true
+}

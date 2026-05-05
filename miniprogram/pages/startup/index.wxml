@@ -1,0 +1,13 @@
+<!--pages/startup/index.wxml-->
+<view class="startup-container {{fadeOut ? 'fade-out' : ''}}">
+  <image 
+    class="startup-background" 
+    src="{{backgroundImage}}" 
+    mode="aspectFill"
+    lazy-load="{{false}}"
+    show-menu-by-longpress="{{false}}"
+    binderror="onImageError"
+    bindload="onImageLoad">
+  </image>
+</view>
+

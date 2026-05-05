@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "维修任务详情",
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+} 

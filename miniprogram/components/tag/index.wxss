@@ -1,0 +1,87 @@
+/* components/tag/index.wxss */
+@import "../../styles/variables.wxss";
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  font-size: var(--font-hint);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-tag);
+  color: var(--text-secondary);
+  box-sizing: border-box;
+}
+
+.tag:active { opacity: 0.7; }
+
+/* 类型 */
+.tag-default {
+  color: var(--text-secondary);
+}
+
+.tag-primary {
+  color: var(--primary);
+}
+
+.tag-success {
+  color: var(--success);
+}
+
+.tag-warning {
+  color: var(--warning);
+}
+
+.tag-danger {
+  color: var(--danger);
+}
+
+/* 填充背景 */
+.tag-filled.tag-primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.tag-filled.tag-success {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
+}
+
+.tag-filled.tag-warning {
+  background: var(--warning);
+  color: #fff;
+  border-color: var(--warning);
+}
+
+.tag-filled.tag-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+/* 尺寸 */
+.tag-small {
+  padding: 2rpx 8rpx;
+  font-size: 20rpx;
+}
+
+.tag-large {
+  padding: 8rpx 16rpx;
+  font-size: var(--font-caption);
+}
+
+/* 文字 */
+.tag-text {
+  /* 文字样式 */
+}
+
+/* 关闭按钮 */
+.tag-close {
+  margin-left: 4rpx;
+  font-size: 18rpx;
+  opacity: 0.6;
+}
+
+.tag-close:active { opacity: 1; }

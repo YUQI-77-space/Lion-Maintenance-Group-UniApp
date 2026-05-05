@@ -1,0 +1,164 @@
+<!--pages/team/duty/roster/index.wxml-->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="header">
+    <view class="title-section">
+      <text class="main-title">第{{currentWeek}}周 值班表</text>
+      <text class="date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
+    </view>
+    
+    <!-- 统计信息 -->
+    <view class="stats-info" wx:if="{{isDataReady}}">
+      <text class="stat-item">可选 {{availableSlots}}</text>
+      <text class="stat-item">已排 {{assignedSlots}}</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <loading-animation size="default"></loading-animation>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:if="{{hasError && !isLoading}}">
+    <image class="error-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
+    <text class="error-text">{{errorMessage}}</text>
+    <button class="retry-btn" bindtap="retryLoadData">重新加载</button>
+  </view>
+
+  <!-- 值班表格 -->
+  <view class="duty-table-container" wx:if="{{isDataReady && !isLoading}}">
+    <view class="duty-table">
+      <!-- 左侧固定列 -->
+      <view class="fixed-column">
+        <!-- 固定表头 -->
+        <view class="fixed-header-cell">
+          <text class="header-text">时间段</text>
+        </view>
+        
+        <!-- 固定时间列 -->
+        <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
+          <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
+          <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
+        </view>
+      </view>
+      
+      <!-- 右侧滚动区域 -->
+      <scroll-view class="scrollable-area" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="scrollable-content">
+          <!-- 滚动表头 -->
+          <view class="scrollable-header-row">
+            <view class="header-cell" wx:for="{{weekDates}}" wx:key="dayOfWeek">
+              <text class="day-name">{{item.dayName}}</text>
+              <text class="day-date">{{item.dateDisplay}}</text>
+            </view>
+          </view>
+          
+          <!-- 滚动内容行 -->
+          <view class="scrollable-content-row" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData" wx:for-index="rowIndex">
+            <view class="duty-cell {{slotData.statusClass}}" 
+                  wx:for="{{timeSlotData.dailySlots}}" wx:key="dayOfWeek" wx:for-item="slotData" wx:for-index="colIndex"
+                  data-row-index="{{rowIndex}}" data-col-index="{{colIndex}}" 
+                  bindtap="onSlotTap">
+              <text class="slot-text">{{slotData.statusText}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 预选区域 -->
+  <view class="selection-container" wx:if="{{isDataReady && !isLoading && userSlots}}">
+    <view class="selection-header">
+      <text class="selection-title">您本周已选择的值班时间段</text>
+      <text class="selection-hint">每周最多选择3个时间段</text>
+    </view>
+    
+    <!-- 当前预选项 -->
+    <view class="pre-selection-area" wx:if="{{selectedSlots.length > 0}}">
+      <view class="section-label">
+        <text class="label-text">当前预选 ({{selectedSlots.length}}/3)</text>
+        <text class="clear-btn" wx:if="{{configData.isEditingEnabled}}" bindtap="clearSelection">清空</text>
+      </view>
+             <view class="selection-list">
+         <view class="selection-item pre-selected" wx:for="{{selectedSlotsDisplay}}" wx:key="dutySlotId">
+           <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
+           <text class="remove-btn" wx:if="{{configData.isEditingEnabled}}" data-slot-id="{{item.dutySlotId}}" data-slot-type="preSelected" bindtap="removeUserSlot">×</text>
+         </view>
+       </view>
+      
+      <!-- 确认按钮 -->
+      <view class="action-buttons" wx:if="{{configData.isEditingEnabled}}">
+        <button class="confirm-btn" bindtap="confirmSelection">确认选择</button>
+      </view>
+    </view>
+    
+    <!-- 已确认的时间段 -->
+    <view class="confirmed-area" wx:if="{{userSlots.confirmedSlots.length > 0}}">
+      <view class="section-label">
+        <text class="label-text">已确认 ({{userSlots.confirmedSlots.length}}个)</text>
+        <text class="confirmed-hint">已确认的时间段不可取消</text>
+      </view>
+      <view class="selection-list">
+        <view class="selection-item confirmed" wx:for="{{userSlots.confirmedSlots}}" wx:key="dutySlotId">
+          <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
+          <!-- 已确认的时间段不显示移除按钮 -->
+        </view>
+      </view>
+    </view>
+    
+    <!-- 之前预选但未确认的时间段 -->
+    <view class="pre-selected-area" wx:if="{{userSlots.preSelectedSlots.length > 0}}">
+      <view class="section-label">
+        <text class="label-text">待确认 ({{userSlots.preSelectedSlots.length}}个)</text>
+      </view>
+      <view class="selection-list">
+        <view class="selection-item pre-selected" wx:for="{{userSlots.preSelectedSlots}}" wx:key="dutySlotId">
+          <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
+          <text class="remove-btn" wx:if="{{configData.isEditingEnabled}}" data-slot-id="{{item.dutySlotId}}" data-slot-type="preSelected" bindtap="removeUserSlot">×</text>
+        </view>
+      </view>
+      
+      <!-- 确认之前预选的按钮 -->
+      <view class="action-buttons" wx:if="{{configData.isEditingEnabled}}">
+        <button class="confirm-btn" bindtap="confirmSelection">确认全部待确认项</button>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view class="empty-selection" wx:if="{{selectedSlots.length === 0 && userSlots.confirmedSlots.length === 0 && userSlots.preSelectedSlots.length === 0}}">
+      <image class="empty-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
+      <text class="empty-text">暂未选择值班时间段</text>
+      <text class="empty-hint" wx:if="{{configData.isEditingEnabled}}">点击表格中的"可选"时间段来预选值班</text>
+      <text class="empty-hint" wx:if="{{!configData.isEditingEnabled}}">当前周编辑权限已关闭，无法进行值班选择</text>
+    </view>
+  </view>
+
+  <!-- 底部说明 -->
+  <view class="legend-container" wx:if="{{isDataReady && !isLoading}}">
+    <view class="legend-title">状态说明</view>
+    <view class="legend-items">
+      <view class="legend-item">
+        <view class="legend-dot can-duty"></view>
+        <text class="legend-text">可选</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot selected"></view>
+        <text class="legend-text">已选</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot assigned"></view>
+        <text class="legend-text">已排</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot no-duty"></view>
+        <text class="legend-text">休假</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot locked"></view>
+        <text class="legend-text">操作中</text>
+      </view>
+    </view>
+  </view>
+</view> 

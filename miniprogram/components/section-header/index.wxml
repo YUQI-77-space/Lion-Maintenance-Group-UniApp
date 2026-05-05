@@ -1,0 +1,13 @@
+<!-- 区块标题组件 -->
+<view class="section-header {{customClass}}">
+  <view class="section-title-wrap">
+    <text class="section-title {{titleClass}}">{{ title }}</text>
+  </view>
+  <view 
+    class="section-more" 
+    wx:if="{{showMore}}" 
+    bindtap="onMoreTap">
+    <text class="more-text">{{ moreText }}</text>
+    <text class="more-arrow" wx:if="{{showArrow}}">></text>
+  </view>
+</view>

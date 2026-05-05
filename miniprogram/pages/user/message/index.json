@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  },
+  "navigationBarTitleText": "我的消息",
+  "backgroundColor": "#f5f5f5",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

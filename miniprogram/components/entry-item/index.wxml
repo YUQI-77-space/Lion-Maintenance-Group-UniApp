@@ -1,0 +1,28 @@
+<!-- 功能入口组件 -->
+<view 
+  class="entry-item {{customClass}}" 
+  style="{{bgColor ? 'background:' + bgColor + ';' : ''}}"
+  bindtap="onTap">
+  
+  <!-- 图标 -->
+  <image 
+    wx:if="{{icon}}" 
+    class="entry-icon" 
+    src="{{icon}}" 
+    mode="aspectFit"
+    lazy-load="{{lazyLoad}}">
+  </image>
+  <view wx:if="{{!icon && iconClass}}" class="entry-icon-text {{iconClass}}"></view>
+  
+  <!-- 标题 -->
+  <text class="entry-title">{{ title }}</text>
+  
+  <!-- 描述 -->
+  <text wx:if="{{desc}}" class="entry-desc">{{ desc }}</text>
+  
+  <!-- 徽章 -->
+  <view wx:if="{{badge}}" class="entry-badge {{badgeClass}}">{{ badge }}</view>
+  
+  <!-- 箭头 -->
+  <text wx:if="{{showArrow}}" class="entry-arrow">></text>
+</view>

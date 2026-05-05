@@ -1,0 +1,27 @@
+<!-- 按钮组件 -->
+<button 
+  class="btn btn-{{type}} {{size}} {{customClass}} {{disabled || loading ? 'btn-disabled' : ''}}"
+  hover-class="{{disabled || loading ? '' : 'btn-active'}}"
+  disabled="{{disabled || loading}}"
+  loading="{{loading}}"
+  form-type="{{formType}}"
+  open-type="{{openType}}"
+  bindtap="onTap"
+  bindgetuserinfo="onGetUserInfo"
+  bindcontact="onContact"
+  bindgetphonenumber="onGetPhoneNumber">
+  
+  <!-- 图标 -->
+  <image 
+    wx:if="{{icon}}" 
+    class="btn-icon" 
+    src="{{icon}}" 
+    mode="aspectFit">
+  </image>
+  
+  <!-- 文字 -->
+  <text class="btn-text"><slot></slot></text>
+  
+  <!-- 加载指示器 -->
+  <view class="btn-loading" wx:if="{{loading}}"></view>
+</button>

@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "avatar-display": "../../../components/avatar-display/index",
+    "feedback-modal": "../../../components/feedback-modal/index"
+  },
+  "navigationBarTitleText": "我的"
+} 

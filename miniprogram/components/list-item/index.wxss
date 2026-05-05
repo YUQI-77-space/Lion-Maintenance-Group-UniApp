@@ -1,0 +1,105 @@
+/* components/list-item/index.wxss */
+@import "../../styles/variables.wxss";
+
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  transition: opacity 150ms ease;
+}
+
+.list-item:active { opacity: 0.7; }
+
+.list-item:first-child {
+  border-top: none;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* 左侧 */
+.list-item-left {
+  margin-right: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.list-item-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.list-item-avatar-small {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.list-item-icon {
+  font-size: 40rpx;
+}
+
+/* 主内容 */
+.list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item-main {
+  display: flex;
+  align-items: center;
+}
+
+.list-item-title {
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-item-label {
+  margin-left: var(--space-xs);
+  padding: 2rpx 8rpx;
+  font-size: var(--font-hint);
+  color: var(--primary);
+  background: rgba(0, 0, 205, 0.1);
+  border-radius: var(--radius-tag);
+}
+
+.list-item-desc {
+  display: block;
+  margin-top: 4rpx;
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧 */
+.list-item-right {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.list-item-value {
+  font-size: var(--font-body);
+  color: var(--text-secondary);
+}
+
+.list-item-arrow {
+  margin-left: var(--space-xs);
+  font-size: var(--font-body);
+  color: var(--text-muted);
+}
+
+/* 开关 */
+.list-item-switch {
+  margin-left: var(--space-sm);
+  transform: scale(0.9);
+}

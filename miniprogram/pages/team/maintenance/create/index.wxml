@@ -1,0 +1,186 @@
+<!--pages/team/maintenance/create/index.wxml-->
+<view class="container">
+  <!-- 顶部介绍区域已移除 -->
+
+  <!-- 表单内容 -->
+  <view class="form-container wide">
+    
+    <!-- 维修分类选择 -->
+    <view class="form-section">
+      <view class="section-header">
+        <view class="section-icon transparent">
+          <image src="{{iconTools}}" class="header-icon-img"></image>
+        </view>
+        <view class="section-title">
+          <text class="title-text">维修分类</text>
+          <text class="title-desc">选择具体的服务类型</text>
+        </view>
+        <text class="required">*</text>
+      </view>
+      
+      <view class="picker-group">
+        <!-- 一级分类 -->
+        <view class="picker-item">
+          <view class="picker-label-wrap">
+            <view class="label-dot"></view>
+            <text class="picker-label">主要类别</text>
+          </view>
+          <picker range="{{level1Array}}" value="{{level1Index}}" bindchange="onLevel1Change" class="category-picker">
+            <view class="picker-display {{selectedLevel1 ? 'selected' : ''}}">
+              <text class="picker-text">{{selectedLevel1 || '请选择类别'}}</text>
+              <text class="picker-arrow">></text>
+            </view>
+          </picker>
+        </view>
+        
+        <!-- 二级分类 -->
+        <view class="picker-item">
+          <view class="picker-label-wrap">
+            <view class="label-dot"></view>
+            <text class="picker-label">设备类型</text>
+          </view>
+          <picker range="{{level2Array}}" value="{{level2Index}}" bindchange="onLevel2Change" class="category-picker">
+            <view class="picker-display {{selectedLevel2 ? 'selected' : ''}}">
+              <text class="picker-text">{{selectedLevel2 || '请选择类型'}}</text>
+              <text class="picker-arrow">></text>
+            </view>
+          </picker>
+        </view>
+        
+        <!-- 三级分类 -->
+        <view class="picker-item">
+          <view class="picker-label-wrap">
+            <view class="label-dot"></view>
+            <text class="picker-label">具体服务</text>
+          </view>
+          <picker range="{{level3Array}}" value="{{level3Index}}" bindchange="onLevel3Change" class="category-picker">
+            <view class="picker-display {{selectedLevel3 ? 'selected' : ''}}">
+              <text class="picker-text">{{selectedLevel3 || '请选择服务'}}</text>
+              <text class="picker-arrow">></text>
+            </view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 预约时间 -->
+    <view class="form-section">
+      <view class="section-header">
+        <view class="section-icon transparent">
+          <image src="{{iconCalendar}}" class="header-icon-img"></image>
+        </view>
+        <view class="section-title">
+          <text class="title-text">预约时间</text>
+          <text class="title-desc">选择合适的服务时间</text>
+        </view>
+        <text class="required">*</text>
+      </view>
+      
+      <view class="time-picker-group">
+        <!-- 日期选择 -->
+        <view class="time-picker-item">
+          <view class="time-label">
+            <image src="{{iconCalendar}}" class="time-icon"></image>
+            <text>预约日期</text>
+          </view>
+          <picker mode="date" bindchange="onDatePickerConfirm" value="{{formData.appointmentDate}}" start="{{startDate}}" end="{{endDate}}">
+            <view class="time-display {{formData.appointmentDate ? 'selected' : ''}}">
+              <text class="time-text">{{formData.appointmentDate || '选择日期'}}</text>
+              <text class="time-arrow">></text>
+            </view>
+          </picker>
+        </view>
+        
+        <!-- 时间选择 -->
+        <view class="time-picker-item">
+          <view class="time-label">
+            <image src="{{iconCalendar}}" class="time-icon"></image>
+            <text>预约时间</text>
+          </view>
+          <picker mode="time" bindchange="onTimePickerConfirm" value="{{formData.appointmentTime}}" start="08:00" end="22:00">
+            <view class="time-display {{formData.appointmentTime ? 'selected' : ''}}">
+              <text class="time-text">{{formData.appointmentTime || '选择时间'}}</text>
+              <text class="time-arrow">></text>
+            </view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 紧急程度 -->
+    <view class="form-section">
+      <view class="section-header">
+        <view class="section-icon transparent">
+          <image src="{{iconUrgent}}" class="header-icon-img"></image>
+        </view>
+        <view class="section-title">
+          <text class="title-text">紧急程度</text>
+          <text class="title-desc">根据问题严重程度选择</text>
+        </view>
+      </view>
+      
+      <view class="urgent-selector">
+        <view class="urgent-option {{formData.isUrgent === 0 ? 'active' : ''}}" bindtap="{{formData.isUrgent === 1 ? 'onUrgentToggle' : ''}}">
+          <view class="option-icon normal">
+            <text class="icon-text">📋</text>
+          </view>
+          <view class="option-content">
+            <text class="option-title">普通</text>
+            <text class="option-desc">一般维修需求</text>
+          </view>
+        </view>
+        <view class="urgent-option {{formData.isUrgent === 1 ? 'active urgent' : ''}}" bindtap="{{formData.isUrgent === 0 ? 'onUrgentToggle' : ''}}">
+          <view class="option-icon urgent">
+            <text class="icon-text">🚨</text>
+          </view>
+          <view class="option-content">
+            <text class="option-title">紧急</text>
+            <text class="option-desc">需要优先处理</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+
+
+    <!-- 问题描述 -->
+    <view class="form-section">
+      <view class="section-header">
+        <view class="section-icon transparent">
+          <image src="{{iconEdit}}" class="header-icon-img"></image>
+        </view>
+        <view class="section-title">
+          <text class="title-text">问题描述</text>
+          <text class="title-desc">详细说明遇到的问题（选填）</text>
+        </view>
+      </view>
+      
+      <view class="textarea-container">
+        <textarea 
+          class="enhanced-textarea" 
+          placeholder="请详细描述遇到的问题或需要的服务，例如：具体故障现象、设备型号、问题发生时间等..."
+          value="{{formData.description}}"
+          data-field="description"
+          bindinput="onInputChange"
+          maxlength="500"
+          show-confirm-bar="{{false}}">
+        </textarea>
+        <view class="textarea-footer">
+          <text class="char-count">{{formData.description.length}}/500</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-container plain">
+    <button class="submit-btn primary {{isSubmitting ? 'submitting' : ''}}" bindtap="submitTask" disabled="{{isSubmitting}}">
+      <view class="btn-content">
+        <text class="btn-text">{{isSubmitting ? '提交中...' : '提交维修任务'}}</text>
+        <loading-animation size="small" wx:if="{{isSubmitting}}"></loading-animation>
+      </view>
+    </button>
+  </view>
+
+</view> 

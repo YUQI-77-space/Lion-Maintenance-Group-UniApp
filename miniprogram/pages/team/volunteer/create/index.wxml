@@ -1,0 +1,122 @@
+<!--pages/team/volunteer/create/index.wxml-->
+<view class="container">
+  <view class="page-title">{{isEdit ? '编辑志愿活动' : '创建志愿活动'}}</view>
+  
+  <form bindsubmit="submitForm">
+    <!-- 活动标题 -->
+    <view class="form-group">
+      <view class="form-label">活动标题<text class="required">*</text></view>
+      <input class="form-input" name="title" value="{{formData.title}}" placeholder="请输入活动标题" maxlength="50"/>
+    </view>
+    
+    <!-- 活动时间 -->
+    <view class="form-group">
+      <view class="form-label">活动时间<text class="required">*</text></view>
+      <view class="time-picker-group">
+        <picker mode="multiSelector"
+                bindchange="bindStartTimeChange"
+                bindcolumnchange="bindTimeColumnChange"
+                value="{{startTimeIndex}}"
+                range="{{timeArray}}"
+                data-type="time"
+                disabled="{{lockTimeFields}}">
+          <view class="picker-item">
+            <view class="picker-label">开始时间:</view>
+            <view class="picker-value">{{formData.startTime || '请选择'}}</view>
+          </view>
+        </picker>
+        <picker mode="multiSelector"
+                bindchange="bindEndTimeChange"
+                bindcolumnchange="bindTimeColumnChange"
+                value="{{endTimeIndex}}"
+                range="{{timeArray}}"
+                data-type="time"
+                disabled="{{lockTimeFields}}">
+          <view class="picker-item">
+            <view class="picker-label">结束时间:</view>
+            <view class="picker-value">{{formData.endTime || '请选择'}}</view>
+          </view>
+        </picker>
+      </view>
+      <view class="time-lock-tip" wx:if="{{lockTimeFields}}">
+        该活动已开始或结束，开始/结束时间不可修改。
+      </view>
+      
+      <!-- 🔥 修改：活动时长改为只读显示，作为时间选择的结果 -->
+      <view class="duration-display" wx:if="{{formData.duration}}">
+        <view class="duration-label">活动时长:</view>
+        <view class="duration-value">{{formData.duration}}小时</view>
+      </view>
+    </view>
+    
+    <!-- 活动地点 -->
+    <view class="form-group">
+      <view class="form-label">活动地点<text class="required">*</text></view>
+      <input class="form-input" name="location" value="{{formData.location}}" placeholder="请输入活动地点" maxlength="100"/>
+    </view>
+    
+    <!-- 志愿时长 -->
+    <view class="form-group">
+      <view class="form-label">志愿时长(小时)</view>
+      <input class="form-input" type="digit" name="volunteerHours" value="{{formData.volunteerHours}}" placeholder="默认等于活动时长({{formData.duration || '0'}}小时)"/>
+      <view class="form-tips">如不填写，默认等于活动时长。志愿时长用于计算志愿者的服务时间。</view>
+    </view>
+    
+    <!-- 🔥 修改：需要志愿者数量改为选择器 -->
+    <view class="form-group">
+      <view class="form-label">需要志愿者数量<text class="required">*</text></view>
+      <picker bindchange="bindVolunteerCountChange" value="{{volunteerCountIndex}}" range="{{volunteerCountArray}}" disabled="{{lockTimeFields}}">
+        <view class="picker-item {{lockTimeFields ? 'picker-disabled' : ''}}">
+          <view class="picker-label">选择人数:</view>
+          <view class="picker-value">{{formData.volunteerCount}}人</view>
+        </view>
+      </picker>
+      <input name="volunteerCount" value="{{formData.volunteerCount}}" hidden/>
+      <view class="time-lock-tip" wx:if="{{lockTimeFields}}">
+        该活动已开始或结束，志愿者数量不可修改。
+      </view>
+    </view>
+    
+    <!-- 活动描述 -->
+    <view class="form-group">
+      <view class="form-label">活动详细描述<text class="required">*</text></view>
+      <textarea class="form-textarea" name="description" value="{{formData.description}}" placeholder="请输入活动详细描述" maxlength="1000" auto-height/>
+      <view class="textarea-counter">{{descriptionLength}}/1000</view>
+    </view>
+    
+    <!-- 定时发布选项 - 仅在创建模式下显示 -->
+    <view class="form-group" wx:if="{{!isEdit}}">
+      <view class="form-label">是否定时发布</view>
+      <view class="scheduled-publish-section">
+        <view class="switch-row">
+          <text class="switch-label">开启定时发布</text>
+          <switch checked="{{formData.scheduledPublish}}" bindchange="bindScheduledPublishChange" color="#191970"/>
+        </view>
+        <view class="publish-time-picker" wx:if="{{formData.scheduledPublish}}">
+      <picker mode="multiSelector" bindchange="bindPublishTimeChange" bindcolumnchange="bindTimeColumnChange" value="{{publishTimeIndex}}" range="{{timeArray}}" data-type="publish">
+            <view class="picker-item">
+              <view class="picker-label">发布时间:</view>
+              <view class="picker-value">{{formData.publishTime || '请选择发布时间'}}</view>
+            </view>
+          </picker>
+          <view class="form-tips">活动将在指定时间自动发布，发布前仅在管理界面可见。发布时间不能早于当前时间。</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 🔥 修改：提交按钮支持点击效果 -->
+    <view class="form-actions">
+      <view class="btn-cancel btn-hover" bindtap="cancelForm" hover-class="btn-cancel-active" hover-stay-time="150">
+        <text>取消</text>
+      </view>
+      <button class="btn-submit btn-hover" form-type="submit" hover-class="btn-submit-active" hover-stay-time="150" disabled="{{loading}}">
+        <text>{{loading ? '处理中...' : (isEdit ? '保存修改' : '创建活动')}}</text>
+      </button>
+    </view>
+  </form>
+</view>
+
+<!-- 加载中 -->
+<view class="loading-mask" wx:if="{{loading}}">
+  <loading-animation size="large"></loading-animation>
+</view>

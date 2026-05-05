@@ -1,0 +1,419 @@
+/* pages/user/message/index.wxss */
+
+/* 页面容器 */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--background-color);
+}
+
+/* 固定顶部标题区域 */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--card-background);
+  border-bottom: 1rpx solid var(--border-lighter);
+  z-index: 1000;
+  padding-top: 0; /* 移除顶部间距 */
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 24rpx; /* 减小上下padding */
+  margin: 0 20rpx;
+}
+
+/* 可滚动内容区域 */
+.scroll-content {
+  flex: 1;
+  /* 缩小顶部间距，让内容更贴近导航栏 */
+  margin-top: 88rpx; /* 减小固定顶部间距 */
+  height: calc(100vh - 88rpx); /* 减小高度以匹配新的顶部高度 */
+  padding-top: 0;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.title-text {
+  font-size: 32rpx; /* 从36rpx减小到32rpx */
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.5rpx;
+}
+
+.unread-badge {
+  background: var(--danger-color);
+  color: var(--text-white);
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  min-width: 32rpx;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* 操作按钮区域 */
+.action-btns {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.action-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1rpx solid transparent;
+}
+
+.action-btn.secondary {
+  background-color: var(--background-color);
+  color: var(--text-regular);
+  border-color: var(--border-color);
+}
+
+.action-btn.secondary:active {
+  background-color: var(--border-light);
+  transform: scale(0.96);
+}
+
+.action-btn.danger {
+  background-color: var(--status-danger-bg);
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.action-btn.danger:active {
+  background-color: var(--danger-color);
+  color: var(--text-white);
+  transform: scale(0.96);
+}
+
+.btn-text {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 加载区域 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300rpx;
+  padding: 40rpx;
+}
+
+/* 空内容区域 */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400rpx;
+  padding: 60rpx 40rpx;
+}
+
+.empty-icon {
+  margin-bottom: 32rpx;
+}
+
+.icon-message {
+  font-size: 120rpx;
+  opacity: 0.3;
+}
+
+.empty-content {
+  text-align: center;
+}
+
+.empty-title {
+  display: block;
+  color: var(--text-main);
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+/* 消息列表 */
+.message-list {
+  padding: 16rpx 20rpx 24rpx;
+}
+
+.message-item {
+  background-color: var(--card-background);
+  margin-bottom: 12rpx;
+  border-radius: 16rpx;
+  box-shadow: var(--box-shadow-light);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1rpx solid var(--border-lighter);
+  /* 增加消息容器高度，确保能容纳两行消息内容 */
+  min-height: 140rpx;
+  width: calc(100% - 4rpx);
+  margin-left: 2rpx;
+  margin-right: 2rpx;
+}
+
+.message-item:active {
+  transform: scale(0.98);
+  box-shadow: var(--box-shadow);
+}
+
+/* 未读消息样式 - 更明显的视觉区分 */
+.message-item.unread {
+  border-left: 8rpx solid var(--primary-color);
+  background-color: #fafbff;
+  box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.15);
+}
+
+/* 已读消息样式 - 较淡的视觉效果 */
+.message-item.read {
+  opacity: 0.75;
+  border-left: 8rpx solid var(--border-light);
+  background-color: #f8f9fa;
+}
+
+/* 2x2网格布局 */
+.message-grid {
+  display: grid;
+  grid-template-columns: 8fr 2fr;
+  grid-template-rows: 4fr 6fr;
+  padding: 18rpx 20rpx;
+  gap: 12rpx;
+  height: 160rpx;
+}
+
+/* 网格左上：消息标题 */
+.grid-title {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* 网格右上：消息图标 */
+.grid-icon {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 网格左下：消息内容 */
+.grid-content {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+/* 网格右下：消息分类和时间 */
+.grid-category {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-top: 8rpx; /* 与消息内容第一行对齐 */
+  gap: 6rpx;
+}
+
+/* 消息图标样式 - 无感容器，只显示图标 */
+.icon-text {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.icon-text.maintenance {
+  color: var(--info-color);
+}
+
+.icon-text.volunteer {
+  color: var(--success-color);
+}
+
+.icon-text.system {
+  color: var(--warning-color);
+}
+
+/* 分类文字样式 */
+.category-text {
+  font-size: 26rpx; /* 从20rpx增大到26rpx */
+  font-weight: 500;
+  padding: 6rpx 10rpx; /* 适当增大内边距以匹配更大的字体 */
+  border-radius: 10rpx; /* 稍微增大圆角以保持比例 */
+  line-height: 1;
+}
+
+.category-text.maintenance {
+  color: var(--info-color);
+  background-color: rgba(24, 144, 255, 0.1);
+}
+
+.category-text.volunteer {
+  color: var(--success-color);
+  background-color: rgba(82, 196, 26, 0.1);
+}
+
+.category-text.system {
+  color: var(--warning-color);
+  background-color: rgba(250, 173, 20, 0.1);
+}
+
+.category-text.duty {
+  color: var(--primary-color);
+  background-color: rgba(24, 144, 255, 0.1);
+}
+
+/* 时间文字样式 */
+.time-text {
+  font-size: 20rpx;
+  color: var(--text-placeholder);
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -4rpx;
+  right: -4rpx;
+  width: 12rpx;
+  height: 12rpx;
+  background-color: var(--danger-color);
+  border-radius: 50%;
+  border: 1rpx solid var(--card-background);
+}
+
+
+
+/* 消息标题样式 */
+.message-title.unread-title {
+  font-size: 28rpx;
+  color: var(--text-main);
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-title.read-title {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+
+/* 消息内容样式 */
+.message-content.unread-content {
+  font-size: 24rpx;
+  color: var(--text-main);
+  font-weight: 400;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  max-height: 67rpx; /* 24rpx * 1.4 * 2 ≈ 67rpx */
+}
+
+.message-content.read-content {
+  font-size: 24rpx;
+  color: var(--text-regular);
+  font-weight: 400;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  max-height: 67rpx; /* 24rpx * 1.4 * 2 ≈ 67rpx */
+}
+
+
+
+
+
+/* 底部安全区域 - 为保持和Android一致，禁用iOS安全区域适配 */
+.safe-area-bottom {
+  /* height: env(safe-area-inset-bottom); */
+  height: 0;
+  padding-bottom: 40rpx;
+}
+
+/* 确保固定头部与消息容器视觉统一 */
+.fixed-header .header-content {
+  width: calc(100% - 48rpx);
+  max-width: none;
+}
+
+/* 优化未读消息图标 */
+.message-item.unread .unread-dot {
+  background-color: var(--primary-color);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6rpx rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}
+
+/* 已读消息图标样式调整 */
+.message-item.read .avatar-icon {
+  opacity: 0.6;
+  border-color: var(--border-light);
+}
+
+.message-item.read .message-type {
+  opacity: 0.7;
+}
+
+.message-item.read .icon-text {
+  opacity: 0.7;
+}
+

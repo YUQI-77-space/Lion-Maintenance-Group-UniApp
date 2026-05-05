@@ -1,0 +1,163 @@
+<!--pages/user/todo/index.wxml-->
+<view class="page-container">
+  <!-- 左侧分类导航 -->
+  <view class="sidebar" style="width: 180rpx;">
+    <view 
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="sidebar-item {{activeCategory === item.key ? 'active' : ''}}"
+      bindtap="onCategoryChange"
+      data-key="{{item.key}}"
+    >
+      {{item.label}}
+      <view class="sidebar-badge" wx:if="{{item.count > 0}}">{{item.count > 99 ? '99+' : item.count}}</view>
+    </view>
+  </view>
+
+  <!-- 右侧内容区域 -->
+  <scroll-view 
+    class="content" 
+    scroll-y 
+    refresher-enabled 
+    bindrefresherrefresh="onRefresherRefresh" 
+    refresher-triggered="{{refresherTriggered}}"
+  >
+    <view class="container">
+      <!-- 加载动画 -->
+      <view class="loading-container" wx:if="{{loading}}">
+        <loading-animation size="large" />
+      </view>
+      
+      <!-- 维修任务列表 -->
+      <block wx:if="{{activeCategory === 'maintenance'}}">
+        <block wx:if="{{maintenanceTasks.length > 0 && !loading}}">
+          <block wx:for="{{maintenanceTasks}}" wx:key="taskId">
+            <view class="task-card {{item.taskStatus}}-card {{maintenanceDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{maintenanceDelays[index] || 0}}ms;">
+              <view class="card-cover">
+                <image class="card-icon" src="{{iconRepair}}"></image>
+                <text class="card-type">维修任务</text>
+              </view>
+              <view class="card-info" bindtap="viewMaintenanceDetail" data-id="{{item.taskId}}">
+                <view class="card-header">
+                  <text class="task-title">{{item.level3}}</text>
+                  <view class="title-tags">
+                    <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
+                    <view class="task-status {{item.taskStatus}}">
+                      {{item.taskStatus === 'pending' ? '待受理' : (item.taskStatus === 'inProgress' ? '处理中' : (item.taskStatus === 'completed' ? '已完成' : '已撤销'))}}
+                    </view>
+                  </view>
+                </view>
+                <view class="card-content">
+                  <view class="info-row"><text class="info-label">问题类别:</text><text class="info-value">{{item.level1}} > {{item.level2}}</text></view>
+                  <view class="info-row"><text class="info-label">预约时间:</text><text class="info-value">{{item.appointmentTime}}</text></view>
+                  <view class="info-row"><text class="info-label">申请人:</text><text class="info-value">{{item.applicantName}}</text></view>
+                  <view class="info-row" wx:if="{{item.assigneeName}}"><text class="info-label">受理人:</text><text class="info-value">{{item.assigneeName}}</text></view>
+                </view>
+              </view>
+              <view class="task-actions" wx:if="{{item.applicantId === item.toDoListUserId && item.taskStatus !== 'completed' && item.taskStatus !== 'cancelled'}}">
+                <view class="text-btn cancel-btn" catchtap="openCancelModalFromList" data-id="{{item.taskId}}">撤销任务</view>
+                <view class="text-btn complete-btn" wx:if="{{item.taskStatus === 'inProgress'}}" catchtap="confirmCompleteTask" data-id="{{item.taskId}}" data-is-applicant="true">确认完成</view>
+              </view>
+            </view>
+          </block>
+        </block>
+        <!-- 空状态提示 -->
+        <view class="empty-tip" wx:if="{{!loading && maintenanceTasks.length === 0}}">
+          <image class="empty-icon" src="{{iconEmpty}}"></image>
+          <text>暂无维修任务</text>
+        </view>
+      </block>
+
+      <!-- 志愿活动列表 -->
+      <block wx:if="{{activeCategory === 'volunteer'}}">
+        <block wx:if="{{volunteerTasks.length > 0 && !loading}}">
+          <block wx:for="{{volunteerTasks}}" wx:key="taskId">
+            <view class="task-card {{item.activityStatus}}-card {{volunteerDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{volunteerDelays[index] || 0}}ms;">
+              <view class="card-cover">
+                <image class="card-icon" src="{{iconVolunteer}}"></image>
+                <text class="card-type">志愿活动</text>
+              </view>
+              <view class="card-info" bindtap="viewVolunteerDetail" data-taskid="{{item.taskId}}">
+                <view class="card-header">
+                  <text class="task-title">{{item.title}}</text>
+                  <view class="task-status {{item.activityStatus}}">
+                    {{item.activityStatus === 'inPreparation' ? '筹备中' : (item.activityStatus === 'inProgress' ? '进行中' : '已结束')}}
+                  </view>
+                </view>
+                <view class="card-content">
+                  <view class="info-row"><text class="info-label">编号:</text><text class="info-value">{{item.taskId}}</text></view>
+                  <view class="info-row"><text class="info-label">时间:</text><text class="info-value">{{item.startTime}} 至 {{item.endTime}}</text></view>
+                  <view class="info-row"><text class="info-label">地点:</text><text class="info-value">{{item.location}}</text></view>
+                </view>
+              </view>
+            </view>
+          </block>
+        </block>
+        <!-- 空状态提示 -->
+        <view class="empty-tip" wx:if="{{!loading && volunteerTasks.length === 0}}">
+          <image class="empty-icon" src="{{iconEmpty}}"></image>
+          <text>暂无志愿活动</text>
+        </view>
+      </block>
+
+      <!-- 值班任务列表 -->
+      <block wx:if="{{activeCategory === 'duty'}}">
+        <block wx:if="{{dutyTasks.length > 0 && !loading}}">
+          <block wx:for="{{dutyTasks}}" wx:key="dutySlotId">
+            <view class="task-card {{item.dutyStatus}}-card {{dutyDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{dutyDelays[index] || 0}}ms;">
+              <view class="card-cover">
+                <image class="card-icon" src="{{iconCalendar}}"></image>
+                <text class="card-type">值班任务</text>
+              </view>
+              <view class="card-info">
+                <view class="card-header">
+                  <text class="task-title">{{item.title}}</text>
+                  <view class="task-status {{item.dutyStatus}}">
+                    {{item.dutyStatusText}}
+                  </view>
+                </view>
+                <view class="card-content">
+                  <view class="info-row"><text class="info-label">值班日期:</text><text class="info-value">{{item.date}}</text></view>
+                  <view class="info-row"><text class="info-label">值班时段:</text><text class="info-value">{{item.timeSlot}}</text></view>
+                  <view class="info-row"><text class="info-label">时间:</text><text class="info-value">{{item.startTime}}-{{item.endTime}}</text></view>
+                  <view class="info-row"><text class="info-label">周次:</text><text class="info-value">第{{item.weekNumber}}周</text></view>
+                </view>
+              </view>
+            </view>
+          </block>
+        </block>
+        <!-- 空状态提示 -->
+        <view class="empty-tip" wx:if="{{!loading && dutyTasks.length === 0}}">
+          <image class="empty-icon" src="{{iconEmpty}}"></image>
+          <text>暂无值班任务</text>
+        </view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 撤销任务弹窗 -->
+  <view class="cancel-modal-overlay" wx:if="{{showCancelModal}}" catchtouchmove="noop">
+    <view class="cancel-modal" catchtap="">
+      <view class="modal-header">
+        <text class="modal-title">撤销任务</text>
+        <view class="modal-close" bindtap="closeCancelModal">×</view>
+      </view>
+      <view class="modal-content">
+        <view class="modal-label">请说明撤销原因：</view>
+        <textarea 
+          class="cancel-reason-input" 
+          placeholder="请输入撤销原因..." 
+          value="{{cancelReason}}"
+          bindinput="onCancelReasonInput"
+          maxlength="200"
+          auto-height
+        ></textarea>
+        <view class="char-count">{{cancelReason ? cancelReason.length : 0}}/200</view>
+      </view>
+      <view class="modal-actions">
+        <button class="modal-btn cancel-btn" bindtap="closeCancelModal">取消</button>
+        <button class="modal-btn confirm-btn" bindtap="confirmCancelTaskFromList">确认撤销</button>
+      </view>
+    </view>
+  </view>
+</view>
