@@ -1,7 +1,0 @@
-<!-- 标签组件 -->
-<view 
-  class="tag tag-{{type}} {{size}} {{customClass}}" 
-  bindtap="onTap">
-  <text class="tag-text"><slot></slot></text>
-  <text class="tag-close" wx:if="{{closable}}" catchtap="onClose">×</text>
-</view>

@@ -85,40 +85,44 @@ App({
 		// 让用户在音乐播放器页面手动控制播放
 	},
 
-	// 版本更新检查
+	// 版本更新检查（修复版）
+	// 核心修复：onCheckForUpdate 的 hasUpdate === true 即意味着下载已完成
+	// 解决了新版本在 onLaunch 之前就下载好、onUpdateReady 监听器注册时事件已错过的问题
 	checkForUpdate: function() {
 		if (!wx.canIUse('getUpdateManager')) return;
 
 		const updateManager = wx.getUpdateManager();
 
-		updateManager.onCheckForUpdate(function(res) {
+		updateManager.onCheckForUpdate((res) => {
 			if (res.hasUpdate) {
-				console.log('发现新版本，等待下载...');
+				// 新版本已下载完成（微信会在后台静默下载完成后才触发此回调）
+				// 此时 onUpdateReady 可能已错过，直接弹窗引导重启
+				wx.showModal({
+					title: '更新提示',
+					content: '小维已经有了新的版本，吃个蛋挞然后赶紧更新吧！',
+					showCancel: false,
+					confirmText: '知道了',
+					success: () => {
+						updateManager.applyUpdate();
+					}
+				});
 			}
 		});
 
-		updateManager.onUpdateReady(function() {
-			wx.showModal({
-				title: '更新提示',
-				content: '小维已经有了新的版本，吃个蛋挞然后赶紧更新吧！',
-				showCancel: false,
-				confirmText: '知道了',
-				success: function() {
-					updateManager.applyUpdate();
-				}
-			});
+		// 作为补充：正常路径下（新版本在 onLaunch 之后才下载完）也会触发此回调
+		updateManager.onUpdateReady(() => {
+			// 此处不重复弹窗（避免弹两次），仅做容错兜底
 		});
 
-		updateManager.onUpdateFailed(function() {
-			var self = this;
+		updateManager.onUpdateFailed(() => {
 			wx.showModal({
 				title: '更新失败',
 				content: '新版本下载失败，请检查网络后重试',
 				confirmText: '重试',
 				cancelText: '取消',
-				success: function(res) {
+				success: (res) => {
 					if (res.confirm) {
-						self.checkForUpdate();
+						this.checkForUpdate();
 					}
 				}
 			});

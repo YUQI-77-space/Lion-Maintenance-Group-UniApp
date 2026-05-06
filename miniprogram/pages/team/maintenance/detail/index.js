@@ -12,7 +12,6 @@ Page({
   data: {
     taskId: '', // 任务ID
     taskDetail: {}, // 任务详情
-    taskStatus: 'pending', // 任务状态
     userRole: '', // 用户角色
     userOpenid: '', // 用户openid
     fromManage: false, // 是否从管理界面进入
@@ -68,13 +67,11 @@ Page({
     // 获取是否从管理界面进入
     const fromManage = options.fromManage === 'true';
 
-    // 确保app.globalData存在
+    // 确保app.globalData存在（app是页面顶层变量，同步可用）
     if (!app || !app.globalData) {
       console.error('app或app.globalData不存在');
-      // 延迟重试
-      setTimeout(() => {
-        this.onLoad(options);
-      }, 500);
+      wx.showToast({ title: '系统异常，请重启小程序', icon: 'none', duration: 2000 });
+      setTimeout(() => { wx.navigateBack(); }, 2000);
       return;
     }
 
@@ -194,7 +191,6 @@ Page({
         const nextStatus = safeTaskDetail.taskStatus || 'pending';
         this.setData({ 
           taskDetail: safeTaskDetail, 
-          taskStatus: nextStatus,
           canManageAssignees: this.shouldEnableAssigneeManagement(nextStatus)
         });
       } else {
@@ -247,6 +243,10 @@ Page({
       // 授权异常不影响认领流程
     }
     
+    // 在 showModal 前再次读取取消模板的最新授权状态，确保基于用户最新选择
+    const latestCancelAuth = SubscriptionAuth.getAuthStatus(SubscriptionAuth.TEMPLATES.TASK_CANCELLED);
+    needReAuthCancel = !latestCancelAuth.hasAuth || latestCancelAuth.status !== 'accept';
+
     wx.showModal({
       title: '确认认领',
       content: '确定要认领此维修任务吗？',
@@ -869,7 +869,7 @@ Page({
   },
 
   shouldEnableAssigneeManagement: function(status) {
-    const currentStatus = status || this.data.taskStatus;
+    const currentStatus = status || 'pending';
     return this.data.fromManage && this.data.userRole === 'leader' && currentStatus === 'inProgress';
   },
 

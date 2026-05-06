@@ -234,7 +234,7 @@ Page({
     
     if (startTimeMs >= endTimeMs) {
       // 结束时间设为开始时间后1小时
-      const newEndTime = new Date(startTime + 60 * 60 * 1000)
+      const newEndTime = new Date(startTimeMs + 60 * 60 * 1000)
       const endTimeIndex = [
         this.data.startTimeIndex[0],
         this.data.startTimeIndex[1],
@@ -941,8 +941,7 @@ Page({
       return false
     }
     
-    // 检查计算出的活动时长是否有效
-    const calculatedDuration = ((endTime - startTime) / (1000 * 60 * 60))
+    const calculatedDuration = ((formEndTime3 && formStartTime3) ? (formEndTime3.getTime() - formStartTime3.getTime()) / (1000 * 60 * 60) : 0)
     if (calculatedDuration <= 0) {
       wx.showToast({
         title: '活动时长必须大于0小时',

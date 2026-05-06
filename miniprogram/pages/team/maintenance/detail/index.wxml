@@ -1,97 +1,4 @@
 <!--pages/team/maintenance/detail/index.wxml-->
-<view class="container">
-  <!-- 加载中状态 -->
-  <view class="loading-container" wx:if="{{loading}}">
-    <loading-animation size="large" />
-  </view>
-  
-  <!-- 页面内容 -->
-  <view wx:if="{{!loading}}">
-    <!-- 页面标题：任务详情 -->
-    <view class="section-title">任务详情</view>
-    
-    <!-- 任务基本信息（边框颜色按状态） -->
-    <view class="task-info status-{{taskStatus}}">
-      <view class="info-item">
-        <view class="info-label">任务编号</view>
-        <view class="info-value">{{taskDetail.maintenanceTaskId}}</view>
-      </view>
-      
-          <view class="info-item">
-        <view class="info-label">问题类别</view>
-        <view class="info-value">
-          {{taskDetail.level1}} > {{taskDetail.level2}} > {{taskDetail.level3}}
-        </view>
-      </view>
-    
-    <!-- 特殊字段信息 -->
-    <view wx:if="{{taskDetail.specialFields && (taskDetail.specialFields.laptopModel || taskDetail.specialFields.phoneModel || taskDetail.specialFields.laptopSystem || taskDetail.specialFields.softwareInfo || taskDetail.specialFields.systemVersion || taskDetail.specialFields.deviceModel || taskDetail.specialFields.mouseModel || taskDetail.specialFields.keyboardModel || taskDetail.specialFields.fanModel)}}">
-      <view class="info-item" wx:if="{{taskDetail.specialFields.laptopModel}}">
-        <view class="info-label">笔记本型号</view>
-        <view class="info-value">{{taskDetail.specialFields.laptopModel}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.phoneModel}}">
-        <view class="info-label">手机型号</view>
-        <view class="info-value">{{taskDetail.specialFields.phoneModel}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.laptopSystem}}">
-        <view class="info-label">笔记本系统</view>
-        <view class="info-value">{{taskDetail.specialFields.laptopSystem}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.softwareInfo}}">
-        <view class="info-label">软件信息</view>
-        <view class="info-value">{{taskDetail.specialFields.softwareInfo}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.systemVersion}}">
-        <view class="info-label">系统版本</view>
-        <view class="info-value">{{taskDetail.specialFields.systemVersion}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.deviceModel}}">
-        <view class="info-label">设备型号</view>
-        <view class="info-value">{{taskDetail.specialFields.deviceModel}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.mouseModel}}">
-        <view class="info-label">鼠标型号</view>
-        <view class="info-value">{{taskDetail.specialFields.mouseModel}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.keyboardModel}}">
-        <view class="info-label">键盘型号</view>
-        <view class="info-value">{{taskDetail.specialFields.keyboardModel}}</view>
-      </view>
-      
-      <view class="info-item" wx:if="{{taskDetail.specialFields.fanModel}}">
-        <view class="info-label">电风扇型号</view>
-        <view class="info-value">{{taskDetail.specialFields.fanModel}}</view>
-      </view>
-    </view>
-    
-    <view class="info-item" wx:if="{{taskDetail.otherDescription}}">
-      <view class="info-label">详细描述</view>
-      <view class="info-value">{{taskDetail.otherDescription}}</view>
-    </view>
-    
-    <view class="info-item">
-      <view class="info-label">预约时间</view>
-      <view class="info-value">{{taskDetail.appointmentTime}}</view>
-    </view>
-    
-    <view class="info-item" wx:if="{{taskDetail.comments}}">
-      <view class="info-label">备注</view>
-      <view class="info-value">{{taskDetail.comments}}</view>
-    </view>
-    
-    <view class="info-item" wx:if="{{taskDetail.cost}}">
-      <view class="info-label">所需费用</view>
-      <view class="info-value">¥{{taskDetail.cost}}</view>
-    </view>
-    
 <wxs module="format">
 function formatEW(value) {
   if (!value && value !== 0) {
@@ -101,11 +8,11 @@ function formatEW(value) {
   if (isNaN(num)) {
     return '0';
   }
-  
+
   if (Math.floor(num) === num) {
     return num + '';
   }
-  
+
   var str = num.toFixed(2);
   if (str.charAt(str.length - 1) === '0') {
     str = str.slice(0, -1);
@@ -124,136 +31,223 @@ module.exports = {
 };
 </wxs>
 
-    <view class="info-item" wx:if="{{fromManage}}">
-      <view class="info-label">等效工作量</view>
-      <view class="info-value">{{format.formatEW(taskDetail.ew)}}</view>
-    </view>
-    
+<view class="container">
+  <!-- 加载中状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <loading-animation size="large" />
+  </view>
 
-    
-    <view class="info-item" wx:if="{{taskStatus === 'cancelled' && taskDetail.cancelReason}}">
-      <view class="info-label">撤销原因</view>
-      <view class="info-value cancel-reason">{{taskDetail.cancelReason}}</view>
-    </view>
-  </view>
-  
-  <!-- 申请人信息 -->
-  <view class="section-title">申请人信息</view>
-  <view class="applicant-info">
-    <view class="info-item">
-      <view class="info-label">姓名</view>
-      <view class="info-value">{{taskDetail.applicantName}}</view>
-    </view>
-    
-    <view class="info-item">
-      <view class="info-label">学号</view>
-      <view class="info-value">{{taskDetail.applicantStudentId || '未填'}}</view>
-    </view>
-    
-    <!-- QQ号 - 仅管理界面显示 -->
-    <view class="info-item" wx:if="{{taskDetail.applicantQqId && fromManage}}">
-      <view class="info-label">QQ号</view>
-      <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">
-        {{taskDetail.applicantQqId}}
-        <text class="copy-hint">（长按复制）</text>
+  <!-- 页面内容 -->
+  <view wx:if="{{!loading}}">
+    <!-- 页面标题：任务详情 -->
+    <view class="section-title">任务详情</view>
+
+    <!-- 任务基本信息（边框颜色按状态） -->
+    <view class="task-info status-{{taskDetail.taskStatus}}">
+      <view class="info-item">
+        <view class="info-label">任务编号</view>
+        <view class="info-value">{{taskDetail.maintenanceTaskId}}</view>
+      </view>
+
+      <view class="info-item">
+        <view class="info-label">问题类别</view>
+        <view class="info-value">
+          {{taskDetail.level1}} > {{taskDetail.level2}} > {{taskDetail.level3}}
+        </view>
+      </view>
+
+      <!-- 特殊字段：平铺展示，不再嵌套额外 wrapper -->
+      <view class="info-item" wx:if="{{taskDetail.specialFields.laptopModel}}">
+        <view class="info-label">笔记本型号</view>
+        <view class="info-value">{{taskDetail.specialFields.laptopModel}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.phoneModel}}">
+        <view class="info-label">手机型号</view>
+        <view class="info-value">{{taskDetail.specialFields.phoneModel}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.laptopSystem}}">
+        <view class="info-label">笔记本系统</view>
+        <view class="info-value">{{taskDetail.specialFields.laptopSystem}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.softwareInfo}}">
+        <view class="info-label">软件信息</view>
+        <view class="info-value">{{taskDetail.specialFields.softwareInfo}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.systemVersion}}">
+        <view class="info-label">系统版本</view>
+        <view class="info-value">{{taskDetail.specialFields.systemVersion}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.deviceModel}}">
+        <view class="info-label">设备型号</view>
+        <view class="info-value">{{taskDetail.specialFields.deviceModel}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.mouseModel}}">
+        <view class="info-label">鼠标型号</view>
+        <view class="info-value">{{taskDetail.specialFields.mouseModel}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.keyboardModel}}">
+        <view class="info-label">键盘型号</view>
+        <view class="info-value">{{taskDetail.specialFields.keyboardModel}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.specialFields.fanModel}}">
+        <view class="info-label">电风扇型号</view>
+        <view class="info-value">{{taskDetail.specialFields.fanModel}}</view>
+      </view>
+
+      <!-- 普通字段 -->
+      <view class="info-item" wx:if="{{taskDetail.otherDescription}}">
+        <view class="info-label">详细描述</view>
+        <view class="info-value">{{taskDetail.otherDescription}}</view>
+      </view>
+
+      <view class="info-item">
+        <view class="info-label">预约时间</view>
+        <view class="info-value">{{taskDetail.appointmentTime}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.comments}}">
+        <view class="info-label">备注</view>
+        <view class="info-value">{{taskDetail.comments}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.cost}}">
+        <view class="info-label">所需费用</view>
+        <view class="info-value">¥{{taskDetail.cost}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{fromManage}}">
+        <view class="info-label">等效工作量</view>
+        <view class="info-value">{{format.formatEW(taskDetail.ew)}}</view>
+      </view>
+
+      <view class="info-item" wx:if="{{taskDetail.taskStatus === 'cancelled' && taskDetail.cancelReason}}">
+        <view class="info-label">撤销原因</view>
+        <view class="info-value cancel-reason">{{taskDetail.cancelReason}}</view>
       </view>
     </view>
-    
-    <view class="info-item">
-      <view class="info-label">申请时间</view>
-      <view class="info-value">{{taskDetail.applicantTime}}</view>
-    </view>
-  </view>
-  
-  <!-- 受理人信息 -->
-  <view class="section-header" wx:if="{{taskDetail.assigneeId}}">
-    <text class="section-title">受理人信息</text>
-    <view class="section-action-btn" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal">
-      添加协助受理人
-    </view>
-  </view>
-  <view class="assignees-container" wx:if="{{taskDetail.assigneeId}}">
-    <!-- 主受理人 -->
-    <view class="assignee-info main-assignee">
-      <view class="assignee-header">
-        <text class="assignee-title">主受理人</text>
-      </view>
+
+    <!-- 申请人信息 -->
+    <view class="section-title">申请人信息</view>
+    <view class="applicant-info">
       <view class="info-item">
         <view class="info-label">姓名</view>
-        <view class="info-value">{{taskDetail.assigneeName}}</view>
+        <view class="info-value">{{taskDetail.applicantName}}</view>
       </view>
-      
+
       <view class="info-item">
         <view class="info-label">学号</view>
-        <view class="info-value">{{taskDetail.assigneeStudentId || '未填'}}</view>
+        <view class="info-value">{{taskDetail.applicantStudentId || '未填'}}</view>
       </view>
-      
+
       <!-- QQ号 - 仅管理界面显示 -->
-      <view class="info-item" wx:if="{{taskDetail.assigneeQqId && fromManage}}">
+      <view class="info-item" wx:if="{{taskDetail.applicantQqId && fromManage}}">
         <view class="info-label">QQ号</view>
-        <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="受理人">
-          {{taskDetail.assigneeQqId}}
+        <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">
+          {{taskDetail.applicantQqId}}
           <text class="copy-hint">（长按复制）</text>
         </view>
       </view>
-      
+
       <view class="info-item">
-        <view class="info-label">受理时间</view>
-        <view class="info-value">{{taskDetail.assigneeTime}}</view>
+        <view class="info-label">申请时间</view>
+        <view class="info-value">{{taskDetail.applicantTime}}</view>
       </view>
     </view>
-    
-    <!-- 额外受理人 -->
-    <block wx:if="{{taskDetail.additionalAssignees && taskDetail.additionalAssignees.length > 0}}">
-      <view class="assignee-info additional-assignee" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
+
+    <!-- 受理人信息 -->
+    <view class="section-header" wx:if="{{taskDetail.assigneeId}}">
+      <text class="section-title">受理人信息</text>
+      <view class="section-action-btn" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal">
+        添加协助受理人
+      </view>
+    </view>
+    <view class="assignees-container" wx:if="{{taskDetail.assigneeId}}">
+      <!-- 主受理人 -->
+      <view class="assignee-info main-assignee">
         <view class="assignee-header">
-          <text class="assignee-title">协助受理人 {{index + 1}}</text>
-          <view class="assignee-actions" wx:if="{{canManageAssignees}}">
-            <view class="assignee-remove-btn"
-                  data-openid="{{item.assigneeId}}"
-                  data-name="{{item.assigneeName || '该协助受理人'}}"
-                  bindtap="handleRemoveAdditionalAssignee">
-              移除
-            </view>
-          </view>
+          <text class="assignee-title">主受理人</text>
         </view>
         <view class="info-item">
           <view class="info-label">姓名</view>
-          <view class="info-value">{{item.assigneeName}}</view>
+          <view class="info-value">{{taskDetail.assigneeName}}</view>
         </view>
-        
+
         <view class="info-item">
           <view class="info-label">学号</view>
-          <view class="info-value">{{item.assigneeStudentId || '未填'}}</view>
+          <view class="info-value">{{taskDetail.assigneeStudentId || '未填'}}</view>
         </view>
-        
+
         <!-- QQ号 - 仅管理界面显示 -->
-        <view class="info-item" wx:if="{{item.assigneeQqId && fromManage}}">
+        <view class="info-item" wx:if="{{taskDetail.assigneeQqId && fromManage}}">
           <view class="info-label">QQ号</view>
-          <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{item.assigneeQqId}}" data-type="受理人">
-            {{item.assigneeQqId}}
+          <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="受理人">
+            {{taskDetail.assigneeQqId}}
             <text class="copy-hint">（长按复制）</text>
           </view>
         </view>
-        
+
         <view class="info-item">
           <view class="info-label">受理时间</view>
-          <view class="info-value">{{item.assigneeTime}}</view>
+          <view class="info-value">{{taskDetail.assigneeTime}}</view>
         </view>
       </view>
-    </block>
-  </view>
-  
-  
-  
-  <!-- 按钮区域 -->
-  <view class="action-area">
-    <!-- 待受理状态下显示"认领"（不在管理页） -->
-    <block wx:if="{{taskStatus === 'pending' && (userRole === 'member' || userRole === 'leader') && !fromManage}}">
-      <view class="btn btn-claim" bindtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
-    </block>
-    
-  </view>
+
+      <!-- 额外受理人 -->
+      <block wx:if="{{taskDetail.additionalAssignees && taskDetail.additionalAssignees.length > 0}}">
+        <view class="assignee-info additional-assignee" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
+          <view class="assignee-header">
+            <text class="assignee-title">协助受理人 {{index + 1}}</text>
+            <view class="assignee-actions" wx:if="{{canManageAssignees}}">
+              <view class="assignee-remove-btn"
+                    data-openid="{{item.assigneeId}}"
+                    data-name="{{item.assigneeName || '该协助受理人'}}"
+                    bindtap="handleRemoveAdditionalAssignee">
+                移除
+              </view>
+            </view>
+          </view>
+          <view class="info-item">
+            <view class="info-label">姓名</view>
+            <view class="info-value">{{item.assigneeName}}</view>
+          </view>
+
+          <view class="info-item">
+            <view class="info-label">学号</view>
+            <view class="info-value">{{item.assigneeStudentId || '未填'}}</view>
+          </view>
+
+          <!-- QQ号 - 仅管理界面显示 -->
+          <view class="info-item" wx:if="{{item.assigneeQqId && fromManage}}">
+            <view class="info-label">QQ号</view>
+            <view class="info-value contact-link" bindlongpress="copyQQ" data-qq="{{item.assigneeQqId}}" data-type="受理人">
+              {{item.assigneeQqId}}
+              <text class="copy-hint">（长按复制）</text>
+            </view>
+          </view>
+
+          <view class="info-item">
+            <view class="info-label">受理时间</view>
+            <view class="info-value">{{item.assigneeTime}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 按钮区域 -->
+    <view class="action-area">
+      <!-- 待受理状态下显示"认领"（不在管理页） -->
+      <block wx:if="{{taskDetail.taskStatus === 'pending' && (userRole === 'member' || userRole === 'leader') && !fromManage}}">
+        <view class="btn btn-claim" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
+      </block>
+    </view>
   </view>
 </view>
 
@@ -276,22 +270,22 @@ module.exports = {
     <view class="drawer-body">
       <!-- 部门筛选导航栏 -->
       <view class="department-filter-nav">
-        <view class="filter-item {{departmentFilter === 'all' ? 'active' : ''}}" 
+        <view class="filter-item {{departmentFilter === 'all' ? 'active' : ''}}"
               data-index="0"
               bindtap="switchDepartmentFilter">
           全部
         </view>
-        <view class="filter-item {{departmentFilter === '电子技术部' ? 'active' : ''}}" 
+        <view class="filter-item {{departmentFilter === '电子技术部' ? 'active' : ''}}"
               data-index="1"
               bindtap="switchDepartmentFilter">
           电子技术部
         </view>
-        <view class="filter-item {{departmentFilter === '机电维修部' ? 'active' : ''}}" 
+        <view class="filter-item {{departmentFilter === '机电维修部' ? 'active' : ''}}"
               data-index="2"
               bindtap="switchDepartmentFilter">
           机电维修部
         </view>
-        <view class="filter-item {{departmentFilter === '运营管理部' ? 'active' : ''}}" 
+        <view class="filter-item {{departmentFilter === '运营管理部' ? 'active' : ''}}"
               data-index="3"
               bindtap="switchDepartmentFilter">
           运营管理部
@@ -299,104 +293,104 @@ module.exports = {
       </view>
 
       <scroll-view class="members-scroll-modern" scroll-y="true" enable-flex="true" show-scrollbar="{{false}}" enhanced="true">
-      <view class="assignee-loading" wx:if="{{assigneeLoading}}">
-        <loading-animation size="default"></loading-animation>
-      </view>
-      <block wx:else>
-        <block wx:if="{{filteredMembers.length > 0}}">
-          <view class="member-card {{item.isSelected ? 'selected' : ''}} {{item.isCurrentAssignee ? 'disabled' : ''}}" 
-                wx:for="{{filteredMembers}}" 
-                wx:key="openid"
-                data-openid="{{item.openid}}">
-            <avatar-display 
-              userInfo="{{item}}" 
-              openid="{{item.openid}}"
-              size="small"
-              showBorder="{{false}}"
-              customClass="member-card-avatar"
-            />
-
-            <view class="member-card-info">
-              <view class="member-card-name">
-                {{item.displayName || item.nickName}}
-                <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
-              </view>
-              <view class="member-card-meta">
-                <text class="member-role-text">{{item.role === 'leader' ? '组长' : '成员'}}</text>
-                <text class="member-extra" wx:if="{{item.isCurrentAssignee}}">已在受理列表</text>
-              </view>
-            </view>
-
-            <view class="member-dept-pill" wx:if="{{item.department}}">
-              <view class="member-department-tag department-{{item.department === '运营管理部' ? 'management' : (item.department === '电子技术部' ? 'tech' : (item.department === '机电维修部' ? 'maintenance' : 'none'))}}">
-                {{item.department}}
-              </view>
-            </view>
-
-            <view class="member-action" wx:if="{{!item.isCurrentAssignee}}">
-              <view class="member-check {{item.isSelected ? 'selected' : ''}}" 
-                    data-openid="{{item.openid}}"
-                    catchtap="addMemberToSelection">
-                <text>{{item.isSelected ? '✓' : '+'}}</text>
-              </view>
-            </view>
-
-            <view class="member-action disabled" wx:if="{{item.isCurrentAssignee}}">
-              <view class="member-check disabled">✓</view>
-            </view>
-          </view>
-        </block>
+        <view class="assignee-loading" wx:if="{{assigneeLoading}}">
+          <loading-animation size="default"></loading-animation>
+        </view>
         <block wx:else>
-          <view class="empty-members modern">
-            <text>暂无可添加的成员</text>
-          </view>
+          <block wx:if="{{filteredMembers.length > 0}}">
+            <view class="member-card {{item.isSelected ? 'selected' : ''}} {{item.isCurrentAssignee ? 'disabled' : ''}}"
+                  wx:for="{{filteredMembers}}"
+                  wx:key="openid"
+                  data-openid="{{item.openid}}">
+              <avatar-display
+                userInfo="{{item}}"
+                openid="{{item.openid}}"
+                size="small"
+                showBorder="{{false}}"
+                customClass="member-card-avatar"
+              />
+
+              <view class="member-card-info">
+                <view class="member-card-name">
+                  {{item.displayName || item.nickName}}
+                  <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
+                </view>
+                <view class="member-card-meta">
+                  <text class="member-role-text">{{item.role === 'leader' ? '组长' : '成员'}}</text>
+                  <text class="member-extra" wx:if="{{item.isCurrentAssignee}}">已在受理列表</text>
+                </view>
+              </view>
+
+              <view class="member-dept-pill" wx:if="{{item.department}}">
+                <view class="member-department-tag department-{{item.department === '运营管理部' ? 'management' : (item.department === '电子技术部' ? 'tech' : (item.department === '机电维修部' ? 'maintenance' : 'none'))}}">
+                  {{item.department}}
+                </view>
+              </view>
+
+              <view class="member-action" wx:if="{{!item.isCurrentAssignee}}">
+                <view class="member-check {{item.isSelected ? 'selected' : ''}}"
+                      data-openid="{{item.openid}}"
+                      catchtap="addMemberToSelection">
+                  <text>{{item.isSelected ? '✓' : '+'}}</text>
+                </view>
+              </view>
+
+              <view class="member-action disabled" wx:if="{{item.isCurrentAssignee}}">
+                <view class="member-check disabled">✓</view>
+              </view>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="empty-members modern">
+              <text>暂无可添加的成员</text>
+            </view>
+          </block>
         </block>
-      </block>
       </scroll-view>
     </view>
   </view>
 
   <view class="selected-layer {{hasPendingChanges ? 'show' : ''}} {{showSelectedPanel ? 'expanded' : ''}}">
-      <view class="selected-panel {{showSelectedPanel ? 'show' : ''}}" catchtouchmove="preventScrollThrough">
+    <view class="selected-panel {{showSelectedPanel ? 'show' : ''}}" catchtouchmove="preventScrollThrough">
       <view class="selected-panel-header">
         <view class="panel-title">已选协助受理人</view>
         <text class="panel-clear" wx:if="{{selectedMemberList.length > 0}}" catchtap="clearAllSelected">清空</text>
       </view>
 
-        <view class="selected-list-wrapper">
-          <scroll-view class="selected-list" scroll-y="true" show-scrollbar="{{false}}" enable-flex="true" enhanced="true">
-            <block wx:if="{{selectedMemberList.length > 0}}">
-              <view class="selected-section-title">待添加的协助受理人</view>
-              <view class="selected-item" wx:for="{{selectedMemberList}}" wx:key="openid">
-                <avatar-display 
-                  userInfo="{{item}}" 
-                  openid="{{item.openid}}"
-                  size="small"
-                  showBorder="{{false}}"
-                  customClass="member-card-avatar"
-                />
-                <view class="selected-item-info">
-                  <view class="selected-name">
-                    {{item.displayName || item.nickName}}
-                    <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
-                  </view>
-                  <view class="selected-meta">
-                    <text>{{item.role === 'leader' ? '组长' : '成员'}}</text>
-                  </view>
+      <view class="selected-list-wrapper">
+        <scroll-view class="selected-list" scroll-y="true" show-scrollbar="{{false}}" enable-flex="true" enhanced="true">
+          <block wx:if="{{selectedMemberList.length > 0}}">
+            <view class="selected-section-title">待添加的协助受理人</view>
+            <view class="selected-item" wx:for="{{selectedMemberList}}" wx:key="openid">
+              <avatar-display
+                userInfo="{{item}}"
+                openid="{{item.openid}}"
+                size="small"
+                showBorder="{{false}}"
+                customClass="member-card-avatar"
+              />
+              <view class="selected-item-info">
+                <view class="selected-name">
+                  {{item.displayName || item.nickName}}
+                  <text class="member-role-tag" wx:if="{{item.role === 'leader'}}">组长</text>
                 </view>
-                <view class="remove-selected-btn" data-openid="{{item.openid}}" catchtap="removeSelectedMember">
-                  <view class="remove-icon"></view>
+                <view class="selected-meta">
+                  <text>{{item.role === 'leader' ? '组长' : '成员'}}</text>
                 </view>
               </view>
-            </block>
+              <view class="remove-selected-btn" data-openid="{{item.openid}}" catchtap="removeSelectedMember">
+                <view class="remove-icon"></view>
+              </view>
+            </view>
+          </block>
 
-            <block wx:else>
-              <view class="empty-selected">
-                <text>还没有选择协助受理人</text>
-              </view>
-            </block>
-          </scroll-view>
-        </view>
+          <block wx:else>
+            <view class="empty-selected">
+              <text>还没有选择协助受理人</text>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
     </view>
 
     <view class="selected-bar unified" catchtouchmove="preventScrollThrough">
@@ -407,8 +401,8 @@ module.exports = {
         </view>
         <view class="selected-avatars">
           <block wx:for="{{selectedMemberPreview}}" wx:key="openid">
-            <avatar-display 
-              userInfo="{{item}}" 
+            <avatar-display
+              userInfo="{{item}}"
               openid="{{item.openid}}"
               size="small"
               showBorder="{{false}}"
