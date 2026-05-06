@@ -5,6 +5,13 @@ const swr = require('../../../../utils/swrCache');
 const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
 
+const STATUS_MAP = {
+  pending: '待受理',
+  inProgress: '处理中',
+  completed: '已完成',
+  cancelled: '已撤销'
+};
+
 // const theme = require('../../../../utils/theme');
 
 Page({
@@ -47,7 +54,7 @@ Page({
   onLoad(options) {
     // 获取用户角色，只有组长才能访问此页面
     const userRole = app.globalData.role || '';
-    
+
     if (userRole !== 'leader') {
       wx.showToast({
         title: '权限不足',
@@ -63,7 +70,7 @@ Page({
       userRole: userRole,
       activeTabName: '全部'
     });
-    
+
     // 加载任务列表：首次进入强制走「加载中 → 数据就绪」流程
     this._isFirstLoad = true;
     this.setData({ page: 1, hasMore: true, allTasks: [] });
@@ -145,13 +152,13 @@ onRefresherRefresh: function() {
       'completed': '已完成',
       'cancelled': '已撤销'
     };
-    
+
     this.setData({
       activeTab: tab,
       activeTabName: tabNameMap[tab],
       searchKeyword: '' // 切换选项卡时重置搜索关键词
     });
-    
+
     // 根据选项卡过滤任务
     this.filterTasksByStatus(tab);
   },
@@ -186,7 +193,7 @@ onRefresherRefresh: function() {
     const role = app.globalData.role || wx.getStorageSync('role') || 'user';
     const userInfo = wx.getStorageSync('userInfo') || {};
     const openid = app.globalData.openid || userInfo.openid || 'anon';
-    const cacheKey = `maint:manage:list:${openid}:${role}:1`;
+    const cacheKey = `maint:manage:list:${openid}:${role}:page1:sz${this.data.pageSize}`;
     const TTL_SEC = 60;
 
     const cached = swr.get(cacheKey);
@@ -214,17 +221,11 @@ onRefresherRefresh: function() {
         params: { page: 1, pageSize: this.data.pageSize }
       });
       if (result.success) {
-        const statusMap = {
-          pending: '待受理',
-          inProgress: '处理中',
-          completed: '已完成',
-          cancelled: '已撤销'
-        };
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
         const tasks = tasksData.map(task => ({
           ...task,
-          taskStatusText: statusMap[task.taskStatus] || '未知状态'
+          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
         }));
         const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : tasks.length >= this.data.pageSize;
         this.setData({
@@ -267,17 +268,11 @@ onRefresherRefresh: function() {
         params: { page: this.data.page, pageSize: this.data.pageSize }
       });
       if (result.success) {
-        const statusMap = {
-          pending: '待受理',
-          inProgress: '处理中',
-          completed: '已完成',
-          cancelled: '已撤销'
-        };
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
         const newTasks = tasksData.map(task => ({
           ...task,
-          taskStatusText: statusMap[task.taskStatus] || '未知状态'
+          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
         }));
         if (newTasks.length > 0) {
           const merged = [...this.data.allTasks, ...newTasks];
@@ -296,6 +291,7 @@ onRefresherRefresh: function() {
       }
     } catch (err) {
       console.error('加载更多失败', err);
+      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none', duration: 2000 });
     } finally {
       this._fetchingMaintManageMore = false;
       this.setData({ loadingMore: false });
@@ -344,7 +340,7 @@ onRefresherRefresh: function() {
     this.setData({
       searchKeyword: e.detail.value
     });
-    
+
     // 如果输入框为空，恢复原始筛选结果
     if (!e.detail.value) {
       this.setData({
@@ -411,7 +407,7 @@ onRefresherRefresh: function() {
   // 查看任务详情
   viewTaskDetail: function(e) {
     const task = e.currentTarget.dataset.task;
-    
+
     // 导航到任务详情页面，添加fromManage参数标识来源
     wx.navigateTo({
       url: '../detail/index?taskId=' + task.maintenanceTaskId + '&fromManage=true'
@@ -421,7 +417,7 @@ onRefresherRefresh: function() {
   // 设置EW值
   setEW: function(e) {
     const task = e.currentTarget.dataset.task;
-    
+
     const ew = Number(task.ew || 0.5);
     this.setData({
       currentTask: task,
@@ -483,7 +479,7 @@ onRefresherRefresh: function() {
     wx.showLoading({
       title: '保存中...',
     });
-    
+
     try {
       // 离线处理逻辑保持不变
       const network = require('../../../../utils/network');
@@ -524,10 +520,10 @@ onRefresherRefresh: function() {
       });
 
       wx.hideLoading();
-      
+
       // 先关闭弹窗，再显示成功提示
       this.cancelEWSetting();
-      
+
       // 延迟显示成功提示，确保弹窗关闭完成
       setTimeout(() => {
         wx.showToast({
@@ -541,7 +537,7 @@ onRefresherRefresh: function() {
       console.error('设置EW失败', err);
       wx.hideLoading();
       this.cancelEWSetting();
-      
+
       wx.showToast({
         title: err.message || '网络错误，请重试',
         icon: 'none',
@@ -553,7 +549,7 @@ onRefresherRefresh: function() {
   // 更新本地任务的EW值
   updateLocalTaskEW: function(taskId, ewValue) {
     if (!taskId) return;
-    
+
     // 使用路径更新，避免整表写回
     const updates = {};
     const updateIndex = (list, listName) => {
@@ -562,11 +558,11 @@ onRefresherRefresh: function() {
         updates[`${listName}[${idx}].ew`] = ewValue;
       }
     };
-    
+
     updateIndex(this.data.allTasks, 'allTasks');
     updateIndex(this.data.filteredTasks, 'filteredTasks');
     updateIndex(this.data.originalFilteredTasks, 'originalFilteredTasks');
-    
+
     if (Object.keys(updates).length > 0) {
       this.setData(updates);
     }
@@ -576,7 +572,7 @@ onRefresherRefresh: function() {
   deleteTask: function(e) {
     const task = e.currentTarget.dataset.task;
     if (!task || !task.maintenanceTaskId) return;
-    
+
     // 第一次确认
     wx.showModal({
       title: '确认删除',
@@ -593,14 +589,14 @@ onRefresherRefresh: function() {
       }
     });
   },
-  
+
   // 删除确认输入事件
   onDeleteConfirmInput: function(e) {
     this.setData({
       deleteConfirmInput: e.detail.value
     });
   },
-  
+
   // 取消删除确认
   cancelDeleteConfirm: function() {
     this.setData({
@@ -609,12 +605,20 @@ onRefresherRefresh: function() {
       deleteConfirmInput: ''
     });
   },
-  
+
   // 确认删除
   confirmDelete: async function() {
-    const taskId = this.data.taskToDelete.maintenanceTaskId;
+    // 防御性检查：立即读取并清空，避免竞态
+    const task = this.data.taskToDelete;
+    const taskId = task ? task.maintenanceTaskId : undefined;
+
+    if (!task || !taskId) {
+      this.cancelDeleteConfirm();
+      return;
+    }
+
     const input = this.data.deleteConfirmInput;
-    
+
     // 验证输入的任务ID是否正确
     if (input !== taskId) {
       wx.showToast({
@@ -624,13 +628,13 @@ onRefresherRefresh: function() {
       });
       return;
     }
-    
+
     this.setData({ showDeleteConfirmModal: false });
-    
+
     wx.showLoading({
       title: '删除中...',
     });
-    
+
     try {
       // 离线处理逻辑保持不变
       const network = require('../../../../utils/network');
@@ -651,17 +655,17 @@ onRefresherRefresh: function() {
       if (res.success) {
         // 立即从本地列表移除，让用户看到即时效果
         this.removeLocalTask(taskId);
-        
+
         wx.showToast({
           title: '删除成功',
           icon: 'success'
         });
-        
+
         // 异步全量刷新，确保后端状态与本地完全一致
         setTimeout(() => {
           this.loadMaintenanceTasks();
         }, 500);
-        
+
         app.getTodoTotalCount && app.getTodoTotalCount();
       } else {
         wx.showToast({
@@ -680,20 +684,20 @@ onRefresherRefresh: function() {
       this.cancelDeleteConfirm();
     }
   },
-  
+
   // 从本地列表中移除任务
   removeLocalTask: function(taskId) {
     if (!taskId) return;
-    
+
     // 从allTasks中移除
     const allTasks = this.data.allTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-    
+
     // 从filteredTasks中移除
     const filteredTasks = this.data.filteredTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-    
+
     // 从originalFilteredTasks中移除
     const originalFilteredTasks = this.data.originalFilteredTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-    
+
     // 更新数据
     this.setData({
       allTasks,

@@ -3,10 +3,6 @@
   "usingComponents": {
     "section-header": "/components/section-header/index",
     "entry-item": "/components/entry-item/index",
-    "card": "/components/card/index",
-    "btn": "/components/btn/index",
-    "loading-animation": "/components/loading-animation/index",
-    "empty-state": "/components/empty-state/index",
-    "list-item": "/components/list-item/index"
+    "loading-animation": "/components/loading-animation/index"
   }
 }

@@ -3,6 +3,13 @@ const api = require('../../../../utils/apiAdapter');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const swr = require('../../../../utils/swrCache');
 
+const STATUS_MAP = {
+  pending: '待受理',
+  inProgress: '处理中',
+  completed: '已完成',
+  cancelled: '已撤销'
+};
+
 Page({
   data: {
     // 分类配置
@@ -85,7 +92,7 @@ Page({
     const userInfo = wx.getStorageSync('userInfo') || {};
     const openid = app.globalData.openid || userInfo.openid || 'anon';
     const { activeCategory } = this.data;
-    const cacheKey = `maint:list:${openid}:${role}:${activeCategory}:1`;
+    const cacheKey = `maint:list:${openid}:${role}:${activeCategory}:page1:sz${this.data.pageSize}`;
     const TTL_SEC = 60;
 
     const cached = swr.get(cacheKey);
@@ -112,17 +119,11 @@ Page({
         params: { page: 1, pageSize: this.data.pageSize, category: activeCategory }
       });
       if (result.success) {
-        const statusMap = {
-          pending: '待受理',
-          inProgress: '处理中',
-          completed: '已完成',
-          cancelled: '已撤销'
-        };
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
         const tasks = tasksData.map(task => ({
           ...task,
-          taskStatusText: statusMap[task.taskStatus] || '未知状态'
+          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
         }));
         const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : tasks.length >= this.data.pageSize;
         this.setData({
@@ -165,17 +166,11 @@ Page({
         params: { page: this.data.page, pageSize: this.data.pageSize, category: this.data.activeCategory }
       });
       if (result.success) {
-        const statusMap = {
-          pending: '待受理',
-          inProgress: '处理中',
-          completed: '已完成',
-          cancelled: '已撤销'
-        };
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
         const newTasks = tasksData.map(task => ({
           ...task,
-          taskStatusText: statusMap[task.taskStatus] || '未知状态'
+          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
         }));
         if (newTasks.length > 0) {
           const merged = [...this.data.allTasks, ...newTasks];
@@ -193,6 +188,7 @@ Page({
       }
     } catch (err) {
       console.error('加载更多失败', err);
+      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none', duration: 2000 });
     } finally {
       this._fetchingMaintListMore = false;
       this.setData({ loadingMore: false });
@@ -267,6 +263,10 @@ Page({
     } catch (error) {
       console.error('订阅授权异常:', error);
     }
+
+    // 在 showModal 前再次读取取消模板的最新授权状态，确保基于用户最新选择
+    const latestCancelAuth = SubscriptionAuth.getAuthStatus(SubscriptionAuth.TEMPLATES.TASK_CANCELLED);
+    needReAuthCancel = !latestCancelAuth.hasAuth || latestCancelAuth.status !== 'accept';
 
     wx.showModal({
       title: '确认认领',

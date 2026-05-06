@@ -1,4 +1,0 @@
-<!-- 页面容器组件 -->
-<view class="page-wrapper {{customClass}}" style="{{paddingStyle}}">
-  <slot></slot>
-</view>

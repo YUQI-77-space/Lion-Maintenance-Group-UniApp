@@ -336,11 +336,11 @@ Page({
 	/**
 	 * 验证选择的日期时间是否合法
 	 */
-	validateSelectedDateTime(date, time) {
-		if (!date || !time) return;
+	validateSelectedDateTime(date, timeStr) {
+		if (!date || !timeStr) return;
 		
 		// 使用 time.js 的 toDate 确保 iOS 兼容
-		const selectedDateTime = time.toDate(`${date} ${time}`);
+		const selectedDateTime = time.toDate(`${date} ${timeStr}`);
 		const now = new Date();
 		
 		// 如果选择的时间早于当前时间，自动调整到最早可预约时间
