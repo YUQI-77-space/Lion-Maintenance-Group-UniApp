@@ -25,16 +25,9 @@ Page({
     activeTabName: '', // 当前选项卡名称
     allTasks: [], // 所有任务
     filteredTasks: [], // 筛选后的任务
-    showEWModal: false, // 是否显示EW设置弹窗
-    currentTask: null, // 当前操作的任务
-    ewValue: 0.5, // EW值
-    ewInputText: '0.5', // EW输入框的受控文本
     userRole: '', // 用户角色
     searchKeyword: '', // 搜索关键词
     originalFilteredTasks: [], // 搜索前的筛选任务，用于重置搜索
-    showDeleteConfirmModal: false, // 是否显示删除确认弹窗
-    taskToDelete: null, // 要删除的任务
-    deleteConfirmInput: '', // 删除确认输入
     loading: false, // 加载状态
     refresherTriggered: false,
     // 卡片入场动画延迟（毫秒）
@@ -397,12 +390,14 @@ onRefresherRefresh: function() {
   viewTaskDetail: function(e) {
     const task = e.currentTarget.dataset.task;
 
+    // 管理列表只负责浏览与跳转，设置EW、删除、完成任务等操作统一在管理详情页底部展示
     // 导航到任务详情页面，添加fromManage参数标识来源
     wx.navigateTo({
       url: '../detail/index?taskId=' + task.maintenanceTaskId + '&fromManage=true'
     });
   },
 
+  // 旧版管理列表操作（已迁移至管理详情页，页面不再调用）
   // 设置EW值
   setEW: function(e) {
     const task = e.currentTarget.dataset.task;

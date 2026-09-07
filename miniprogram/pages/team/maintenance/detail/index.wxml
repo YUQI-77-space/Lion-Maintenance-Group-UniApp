@@ -113,6 +113,11 @@ module.exports = {
         <view class="info-value">{{taskDetail.appointmentTime}}</view>
       </view>
 
+      <view class="info-item" wx:if="{{taskDetail.completeTime}}">
+        <view class="info-label">完成时间</view>
+        <view class="info-value">{{taskDetail.completeTime}}</view>
+      </view>
+
       <view class="info-item" wx:if="{{taskDetail.comments}}">
         <view class="info-label">备注</view>
         <view class="info-value">{{taskDetail.comments}}</view>
@@ -241,15 +246,95 @@ module.exports = {
       </block>
     </view>
 
-    <!-- 按钮区域 -->
-    <view class="action-area">
-      <!-- 待受理状态下显示"认领"（不在管理页） -->
-      <block wx:if="{{taskDetail.taskStatus === 'pending' && (userRole === 'member' || userRole === 'leader') && !fromManage}}">
-        <view class="btn btn-claim" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
-      </block>
+    <!-- 管理操作按钮：仅在管理详情页展示 -->
+    <view class="action-area management-action-area" wx:if="{{fromManage && userRole === 'leader'}}">
+      <view class="btn btn-complete {{completing ? 'btn-disabled' : ''}}"
+            wx:if="{{taskDetail.taskStatus === 'inProgress'}}"
+            bindtap="completeTask">
+        {{completing ? '处理中...' : '完成'}}
+      </view>
+      <view class="btn btn-ew"
+            wx:if="{{taskDetail.taskStatus === 'completed'}}"
+            catchtap="setEW">
+        设置EW
+      </view>
+      <view class="btn btn-delete {{completing ? 'btn-disabled' : ''}}" catchtap="deleteTask">删除</view>
+    </view>
+
+    <!-- 待受理状态下显示"认领"（组员详情页，不在管理详情页） -->
+    <view class="action-area" wx:elif="{{taskDetail.taskStatus === 'pending' && (userRole === 'member' || userRole === 'leader') && !fromManage}}">
+      <view class="btn btn-claim" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
     </view>
   </view>
 </view>
+
+<!-- EW设置弹窗（管理详情页） -->
+<view class="ew-modal" wx:if="{{showEWModal}}" catchtouchmove="preventScrollThrough">
+  <view class="modal-content" catchtouchmove="preventScrollThrough">
+    <view class="modal-header">设置等效工作量</view>
+    <view class="modal-body">
+      <view class="task-info-modal">
+        <text>任务编号: {{currentTask.maintenanceTaskId}}</text>
+        <text>问题类别: {{currentTask.level1}} > {{currentTask.level2}} > {{currentTask.level3}}</text>
+      </view>
+
+      <view class="ew-description">
+        <text class="ew-tip">💡 设置的EW值为每个受理人的标准值</text>
+      </view>
+
+      <view class="ew-slider">
+        <text>单人EW值: {{format.formatEW(ewValue)}}</text>
+        <view class="ew-slider-row">
+          <slider class="ew-slider-control" min="0.5" max="10" step="0.5" value="{{ewValue}}" show-value="{{false}}" block-size="28"
+            activeColor="#3a86ff" block-color="#3a86ff" bindchanging="onEWSliderChanging" bindchange="onEWSliderChange"/>
+          <input class="ew-input" type="digit" value="{{ewInputText}}" bindinput="onEWInputChange" bindblur="onEWInputBlur"/>
+        </view>
+      </view>
+
+      <view class="assignees-section">
+        <view class="assignees-title">受理人员</view>
+        <scroll-view class="assignees-list" scroll-y="{{true}}">
+          <view class="assignee-item" wx:if="{{currentTask.assigneeName}}">
+            <text class="assignee-name">{{currentTask.assigneeName}}</text>
+            <text class="assignee-role primary">主受理人</text>
+          </view>
+          <block wx:if="{{currentTask.additionalAssignees && currentTask.additionalAssignees.length > 0}}">
+            <view class="assignee-item" wx:for="{{currentTask.additionalAssignees}}" wx:key="assigneeId">
+              <text class="assignee-name">{{item.assigneeName}}</text>
+              <text class="assignee-role">协助受理人</text>
+            </view>
+          </block>
+          <view class="no-assignees" wx:if="{{!currentTask.assigneeName && (!currentTask.additionalAssignees || currentTask.additionalAssignees.length === 0)}}">
+            <text>暂无受理人</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="cancelEWSetting">取消</button>
+      <button class="btn-confirm" bindtap="confirmEWSetting">确认</button>
+    </view>
+  </view>
+</view>
+
+<!-- 删除任务二次确认弹窗（管理详情页） -->
+<view class="custom-confirm-modal" wx:if="{{showDeleteConfirmModal}}" catchtouchmove="preventScrollThrough">
+  <view class="modal-content" catchtouchmove="preventScrollThrough">
+    <view class="modal-header">二次确认</view>
+    <view class="modal-body">
+      <view class="confirm-text">为防止误操作，请输入任务编号"{{taskToDelete.maintenanceTaskId}}"以确认删除</view>
+      <input class="confirm-input" placeholder="请在此输入任务编号" bindinput="onDeleteConfirmInput" value="{{deleteConfirmInput}}"/>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-cancel" bindtap="cancelDeleteConfirm">取消</button>
+      <button class="btn-confirm" bindtap="confirmDelete">确认</button>
+    </view>
+  </view>
+</view>
+
+<!-- 遮罩层 -->
+<view class="mask" wx:if="{{showEWModal || showDeleteConfirmModal}}" bindtap="{{showEWModal ? 'cancelEWSetting' : 'cancelDeleteConfirm'}}" catchtouchmove="preventScrollThrough"></view>
 
 <!-- 编辑受理人抽屉 - 只在管理界面显示 -->
 <view class="assignee-drawer" wx:if="{{showAssigneeDrawer && fromManage}}" catchtouchmove="preventScrollThrough">

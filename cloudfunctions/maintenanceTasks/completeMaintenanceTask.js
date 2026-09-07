@@ -4,7 +4,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
 /**
- * 完成维修任务
+ * 完成维修任务（申请人或组长可操作，仅进行中状态允许）
  * @param {Object} params - 参数对象
  * @param {string} params.maintenanceTaskId - 维修任务ID
  * @param {string} params.completeTime - 完成时间
@@ -69,14 +69,26 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       }
     }
     
-    // 检查是否为申请人
-    if (task.applicantId !== OPENID) {
-      // 如果不是申请人，则返回错误
-      console.log('用户不是申请人, 申请人ID:', task.applicantId, '用户ID:', OPENID);
+    const user = userResult.data[0]
+
+    // 检查权限：申请人和组长都可以确认任务完成
+    const isApplicant = task.applicantId === OPENID
+    let isLeader = user.role === 'leader'
+
+    // 组长身份以 users / proUsers 任一来源为准，避免权限同步延迟导致误拒绝
+    if (!isLeader) {
+      const proUserResult = await db.collection('proUsers').where({
+        openid: OPENID
+      }).get()
+      isLeader = proUserResult.data.length > 0 && proUserResult.data[0].role === 'leader'
+    }
+
+    if (!isApplicant && !isLeader) {
+      console.log('用户无权确认任务完成, 申请人ID:', task.applicantId, '用户ID:', OPENID, '用户角色:', user.role);
       return {
         code: 403,
         data: null,
-        message: '只有申请人可以确认任务完成'
+        message: '只有申请人和组长可以确认任务完成'
       }
     }
     
@@ -87,8 +99,9 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
     try {
       // 更新任务状态为已完成
       console.log('更新维修任务状态为已完成');
-      await db.collection('maintenance_tasks').where({
-        maintenanceTaskId: params.maintenanceTaskId
+      const updateResult = await db.collection('maintenance_tasks').where({
+        maintenanceTaskId: params.maintenanceTaskId,
+        taskStatus: 'inProgress' // 原子校验：只有进行中的任务才能完成
       }).update({
         data: {
           taskStatus: 'completed',
@@ -96,6 +109,14 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
           updateTime: now
         }
       })
+
+      if (updateResult.stats.updated === 0) {
+        return {
+          code: 400,
+          data: null,
+          message: '该任务当前状态不允许标记为完成'
+        }
+      }
       
       // 更新申请人待办事项
       console.log('更新申请人待办事项状态');
@@ -114,7 +135,10 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       console.log('更新受理人待办事项状态');
       
       // 收集所有受理人ID
-      const allAssigneeIds = [task.assigneeId];
+      const allAssigneeIds = [];
+      if (task.assigneeId) {
+        allAssigneeIds.push(task.assigneeId);
+      }
       if (task.additionalAssignees && task.additionalAssignees.length > 0) {
         task.additionalAssignees.forEach(assignee => {
           if (assignee.assigneeId) {
@@ -165,7 +189,10 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       console.log('已发送消息给申请人:', task.applicantId);
       
       // 通知所有受理人任务已完成
-      const allAssigneeIds = [task.assigneeId];
+      const allAssigneeIds = [];
+      if (task.assigneeId) {
+        allAssigneeIds.push(task.assigneeId);
+      }
       if (task.additionalAssignees && task.additionalAssignees.length > 0) {
         task.additionalAssignees.forEach(assignee => {
           if (assignee.assigneeId) {
@@ -194,9 +221,16 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       const leaderResult = await db.collection('proUsers').where({
         role: 'leader'
       }).get();
-      
+
+      const operatorName = isApplicant
+        ? (task.applicantName || '申请人')
+        : (user.nickName || '组长')
+
       if (leaderResult.data.length > 0) {
         for (const leader of leaderResult.data) {
+          // 不重复通知发起操作的组长
+          if (leader.openid === OPENID) continue
+
           await cloud.callFunction({
             name: 'messages',
             data: {
@@ -204,7 +238,7 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
               params: {
                 messageUserId: leader.openid,
                 title: '维修任务已完成',
-                content: `维修任务"${task.level1} > ${task.level2} > ${task.level3}"已由${task.assigneeName}完成，请及时设置EW值。`,
+                content: `维修任务"${task.level1} > ${task.level2} > ${task.level3}"已由${operatorName}完成，请及时设置EW值。`,
                 messagetype: 'maintenance'
               }
             }
@@ -223,7 +257,10 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       console.log('开始发送订阅消息通知');
       
       // 收集所有受理人ID
-      const allAssigneeIds = [task.assigneeId];
+      const allAssigneeIds = [];
+      if (task.assigneeId) {
+        allAssigneeIds.push(task.assigneeId);
+      }
       if (task.additionalAssignees && task.additionalAssignees.length > 0) {
         task.additionalAssignees.forEach(assignee => {
           if (assignee.assigneeId) {
@@ -283,4 +320,4 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
       message: err.message || '完成维修任务失败'
     }
   }
-} 
+}

@@ -79,19 +79,6 @@ module.exports = {
             </view>
             <view class="task-footer">
               <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
-              <view class="task-actions">
-                <view class="action-btn ew-btn"
-                      wx:if="{{item.taskStatus === 'completed'}}"
-                      catchtap="setEW"
-                      data-task="{{item}}">
-                  设置EW
-                </view>
-                <view class="action-btn delete-btn"
-                      catchtap="deleteTask"
-                      data-task="{{item}}">
-                  删除
-                </view>
-              </view>
             </view>
           </view>
         </view>
@@ -110,84 +97,8 @@ module.exports = {
     </scroll-view>
   </view>
 
-  <!-- EW设置弹窗 -->
-  <view class="ew-modal" wx:if="{{showEWModal}}" catchtouchmove="preventTouchMove">
-    <view class="modal-content" catchtouchmove="preventTouchMove">
-      <view class="modal-header">设置等效工作量</view>
-      <view class="modal-body">
-        <!-- 任务基本信息 -->
-        <view class="task-info-modal">
-          <text>任务编号: {{currentTask.maintenanceTaskId}}</text>
-          <text>问题类别: {{currentTask.level1}} > {{currentTask.level2}} > {{currentTask.level3}}</text>
-        </view>
-
-        <!-- EW设置说明 -->
-        <view class="ew-description">
-          <text class="ew-tip">💡 设置的EW值为每个受理人的标准值</text>
-        </view>
-
-        <!-- EW值设置 -->
-        <view class="ew-slider">
-          <text>单人EW值: {{format.formatEW(ewValue)}}</text>
-          <view class="ew-slider-row">
-            <slider class="ew-slider-control" min="0.5" max="10" step="0.5" value="{{ewValue}}" show-value="{{false}}" block-size="28"
-              activeColor="#3a86ff" block-color="#3a86ff" bindchanging="onEWSliderChanging" bindchange="onEWSliderChange"/>
-            <input class="ew-input" type="digit" value="{{ewInputText}}" bindinput="onEWInputChange" bindblur="onEWInputBlur"/>
-          </view>
-        </view>
-
-        <!-- 受理人列表 -->
-        <view class="assignees-section">
-          <view class="assignees-title">受理人员</view>
-          <scroll-view class="assignees-list" scroll-y="{{true}}">
-            <!-- 主受理人 -->
-            <view class="assignee-item" wx:if="{{currentTask.assigneeName}}">
-              <text class="assignee-name">{{currentTask.assigneeName}}</text>
-              <text class="assignee-role primary">主受理人</text>
-            </view>
-            <!-- 协助受理人 -->
-            <block wx:if="{{currentTask.additionalAssignees && currentTask.additionalAssignees.length > 0}}">
-              <view class="assignee-item" wx:for="{{currentTask.additionalAssignees}}" wx:key="assigneeId">
-                <text class="assignee-name">{{item.assigneeName}}</text>
-                <text class="assignee-role">协助受理人</text>
-              </view>
-            </block>
-            <!-- 无受理人提示 -->
-            <view class="no-assignees" wx:if="{{!currentTask.assigneeName && (!currentTask.additionalAssignees || currentTask.additionalAssignees.length === 0)}}">
-              <text>暂无受理人</text>
-            </view>
-          </scroll-view>
-        </view>
-      </view>
-
-      <!-- 底部按钮 -->
-      <view class="modal-footer">
-        <button class="btn-cancel" bindtap="cancelEWSetting">取消</button>
-        <button class="btn-confirm" bindtap="confirmEWSetting">确认</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- 自定义二次确认弹窗 -->
-  <view class="custom-confirm-modal" wx:if="{{showDeleteConfirmModal}}" catchtouchmove="preventTouchMove">
-    <view class="modal-content" catchtouchmove="preventTouchMove">
-      <view class="modal-header">二次确认</view>
-      <view class="modal-body">
-        <view class="confirm-text">为防止误操作，请输入任务编号"{{taskToDelete.maintenanceTaskId}}"以确认删除</view>
-        <input class="confirm-input" placeholder="请在此输入任务编号" bindinput="onDeleteConfirmInput" value="{{deleteConfirmInput}}"/>
-      </view>
-      <view class="modal-footer">
-        <button class="btn-cancel" bindtap="cancelDeleteConfirm">取消</button>
-        <button class="btn-confirm" bindtap="confirmDelete">确认</button>
-      </view>
-    </view>
-  </view>
-
   <!-- 新增任务按钮 -->
   <view class="create-btn" bindtap="goToCreateTask">
     <image class="add-icon" src="{{iconAdd}}"></image>
   </view>
-
-  <!-- 遮罩层 -->
-  <view class="mask" wx:if="{{showEWModal || showDeleteConfirmModal}}" bindtap="{{showEWModal ? 'cancelEWSetting' : 'cancelDeleteConfirm'}}" catchtouchmove="preventTouchMove"></view>
 </view>

@@ -30,6 +30,17 @@ Page({
     memberLookup: {},
     assigneeDrawerClosing: false,
     canManageAssignees: false,
+    // 管理操作（设置EW / 删除 / 完成）
+    showEWModal: false,
+    currentTask: null,
+    ewValue: 0.5,
+    ewInputText: '0.5',
+    ewSaving: false,
+    showDeleteConfirmModal: false,
+    taskToDelete: null,
+    deleteConfirmInput: '',
+    deleting: false,
+    completing: false,
     loading: false, // 加载状态
     // 部门筛选相关
     departmentFilter: 'all', // 当前筛选的部门：'all', '运营管理部', '电子技术部', '机电维修部'
@@ -85,8 +96,17 @@ Page({
       fromManage: fromManage
     });
 
-    
-    
+    // 管理入口只允许组长访问，避免组员通过直链看到管理信息或操作按钮
+    if (fromManage && userRole !== 'leader') {
+      wx.showToast({
+        title: '权限不足',
+        icon: 'none'
+      });
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 1500);
+      return;
+    }
 
     // 获取任务详情
     this.getTaskDetail();
@@ -155,6 +175,7 @@ Page({
         const taskDetail = result.data || {};
         // 格式化时间字段
         if (taskDetail.applicantTime) taskDetail.applicantTime = this.formatTime(taskDetail.applicantTime);
+        if (taskDetail.completeTime) taskDetail.completeTime = this.formatTime(taskDetail.completeTime);
         if (taskDetail.assigneeTime) taskDetail.assigneeTime = this.formatTime(taskDetail.assigneeTime);
         if (taskDetail.additionalAssignees && taskDetail.additionalAssignees.length > 0) {
           taskDetail.additionalAssignees.forEach(assignee => {
@@ -172,6 +193,7 @@ Page({
           comments: '',
           cost: 0,
           ew: 0,
+          completeTime: '',
           applicantName: '',
           applicantStudentId: '', // 添加申请人学号字段
           applicantQqId: '',
@@ -320,6 +342,367 @@ Page({
   // 返回上一页
   goBack: function() {
     wx.navigateBack();
+  },
+  // 是否为管理详情页的组长操作
+  canManageTask: function() {
+    return this.data.fromManage && this.data.userRole === 'leader';
+  },
+
+  // 组长完成维修任务：仅进行中的任务可走此路径
+  completeTask: async function() {
+    console.log('[完成任务] 点击，taskId=', this.data.taskId, 'status=', (this.data.taskDetail || {}).taskStatus, 'fromManage=', this.data.fromManage, 'role=', this.data.userRole);
+
+    if (!this.canManageTask()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.completing) return;
+
+    const task = this.data.taskDetail || {};
+    if (task.taskStatus !== 'inProgress') {
+      wx.showToast({ title: '仅进行中的任务可以完成', icon: 'none' });
+      return;
+    }
+
+    const modalRes = await new Promise(resolve => {
+      wx.showModal({
+        title: '确认完成',
+        content: '确认此维修任务已完成吗？',
+        success: resolve,
+        fail: () => resolve({ confirm: false })
+      });
+    });
+    if (!modalRes || !modalRes.confirm) return;
+
+    this.setData({ completing: true });
+    wx.showLoading({ title: '处理中...' });
+
+    try {
+      // 离线处理：进入队列，等网络恢复后由服务端校验状态与权限
+      const network = require('../../../../utils/network');
+      if (!network.isOnline()) {
+        const outbox = require('../../../../utils/outbox');
+        outbox.add('maintenanceTasks', 'completeMaintenanceTask', {
+          maintenanceTaskId: this.data.taskId,
+          completeTime: this.formatTime(new Date())
+        });
+        wx.hideLoading();
+        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        return;
+      }
+
+      const completeTime = this.formatTime(new Date());
+      const res = await api.call('maintenanceTasks', {
+        action: 'completeMaintenanceTask',
+        params: {
+          maintenanceTaskId: this.data.taskId,
+          completeTime: completeTime
+        }
+      });
+
+      if (res.success) {
+        const updatedTask = {
+          ...this.data.taskDetail,
+          taskStatus: 'completed',
+          completeTime: completeTime
+        };
+        this.setData({
+          taskDetail: updatedTask,
+          canManageAssignees: false
+        });
+        this.handleTaskCompleted();
+        // 强制重新拉取详情，确保界面以服务端最新状态为准
+        setTimeout(() => { this.getTaskDetail(); }, 300);
+      } else {
+        console.warn('[完成任务] 服务端拒绝:', res);
+        wx.showModal({
+          title: '无法完成任务',
+          content: res.message || '操作失败，请稍后重试',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+      }
+    } catch (err) {
+      console.error('组长完成任务失败', err);
+      wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ completing: false });
+    }
+  },
+
+  // 打开EW设置弹窗
+  setEW: function() {
+    if (!this.canManageTask()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.completing) return;
+
+    const task = this.data.taskDetail || {};
+    if (task.taskStatus !== 'completed') {
+      wx.showToast({ title: '任务完成后才能设置EW', icon: 'none' });
+      return;
+    }
+
+    const ew = Number(task.ew || 0.5);
+    this.setData({
+      currentTask: task,
+      ewValue: ew,
+      ewInputText: ew % 1 === 0 ? ew.toString() : Number(ew.toFixed(2)).toString(),
+      showEWModal: true
+    });
+  },
+
+  // EW滑块实时变化
+  onEWSliderChanging: function(e) {
+    const value = Number(e.detail.value) || 0.5;
+    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() });
+  },
+
+  // EW滑块值变化（最终）
+  onEWSliderChange: function(e) {
+    const value = Number(e.detail.value) || 0.5;
+    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() });
+  },
+
+  // EW文本输入变化
+  onEWInputChange: function(e) {
+    this.setData({ ewInputText: e.detail.value });
+  },
+
+  // EW文本框失焦时归一化
+  onEWInputBlur: function() {
+    let value = parseFloat(this.data.ewInputText);
+    if (isNaN(value)) value = 0.5;
+    value = Math.min(10, Math.max(0.5, value));
+    value = Math.round(value / 0.5) * 0.5;
+    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() });
+  },
+
+  // 取消设置EW
+  cancelEWSetting: function() {
+    this.setData({
+      showEWModal: false,
+      currentTask: null,
+      ewValue: 0.5,
+      ewInputText: '0.5',
+      ewSaving: false
+    });
+  },
+
+  // 确认设置EW
+  confirmEWSetting: async function() {
+    if (!this.canManageTask()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.ewSaving || !this.data.currentTask) return;
+
+    const taskId = this.data.currentTask.maintenanceTaskId;
+    const ewValue = this.data.ewValue;
+    this.setData({ ewSaving: true });
+    wx.showLoading({ title: '保存中...' });
+
+    try {
+      const network = require('../../../../utils/network');
+      if (!network.isOnline()) {
+        const outbox = require('../../../../utils/outbox');
+        outbox.add('maintenanceTasks', 'updateMaintenanceTasks', {
+          maintenanceTaskId: taskId,
+          updateData: { ew: ewValue }
+        });
+        outbox.add('equivalentWorkloadAssessment', 'updateTasksEW', {
+          maintenanceTaskId: taskId,
+          ew: ewValue
+        });
+        this.updateLocalTaskEW(taskId, ewValue);
+        this.refreshPreviousPage(true);
+        wx.hideLoading();
+        this.cancelEWSetting();
+        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        return;
+      }
+
+      // 第一步：更新任务本身的EW值
+      const updateTaskRes = await api.call('maintenanceTasks', {
+        action: 'updateMaintenanceTasks',
+        params: {
+          maintenanceTaskId: taskId,
+          updateData: { ew: ewValue }
+        }
+      });
+      if (!updateTaskRes.success) {
+        throw new Error(updateTaskRes.message || '设置EW失败');
+      }
+
+      // 第二步：更新等效工作量汇总
+      const updateEwaRes = await api.call('equivalentWorkloadAssessment', {
+        action: 'updateTasksEW',
+        params: {
+          maintenanceTaskId: taskId,
+          ew: ewValue
+        }
+      });
+      if (!updateEwaRes.success) {
+        throw new Error(updateEwaRes.message || '更新等效工作量汇总失败');
+      }
+
+      this.updateLocalTaskEW(taskId, ewValue);
+      this.refreshPreviousPage(true);
+      wx.hideLoading();
+      this.cancelEWSetting();
+      setTimeout(() => {
+        wx.showToast({ title: 'EW值设置成功', icon: 'success', duration: 2000 });
+      }, 100);
+    } catch (err) {
+      console.error('设置EW失败', err);
+      wx.hideLoading();
+      this.cancelEWSetting();
+      wx.showToast({ title: err.message || '网络错误，请重试', icon: 'none', duration: 3000 });
+    } finally {
+      wx.hideLoading();
+      this.setData({ ewSaving: false });
+    }
+  },
+
+  // 更新当前详情页的EW值
+  updateLocalTaskEW: function(taskId, ewValue) {
+    if (!taskId) return;
+    const currentTask = this.data.taskDetail || {};
+    if (currentTask.maintenanceTaskId !== taskId) return;
+    const updatedTask = { ...currentTask, ew: ewValue };
+    this.setData({
+      taskDetail: updatedTask,
+      currentTask: updatedTask
+    });
+  },
+
+  // 删除任务（管理详情页）
+  deleteTask: function() {
+    if (!this.canManageTask()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.completing) return;
+
+    const task = this.data.taskDetail || {};
+    if (!task || !task.maintenanceTaskId) {
+      wx.showToast({ title: '无法获取任务信息', icon: 'none' });
+      return;
+    }
+
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除此维修任务吗？删除后无法恢复。',
+      success: res => {
+        if (res.confirm) {
+          this.setData({
+            showDeleteConfirmModal: true,
+            taskToDelete: task,
+            deleteConfirmInput: ''
+          });
+        }
+      }
+    });
+  },
+
+  // 删除确认输入事件
+  onDeleteConfirmInput: function(e) {
+    this.setData({ deleteConfirmInput: e.detail.value });
+  },
+
+  // 取消删除确认
+  cancelDeleteConfirm: function() {
+    this.setData({
+      showDeleteConfirmModal: false,
+      taskToDelete: null,
+      deleteConfirmInput: ''
+    });
+  },
+
+  // 确认删除任务
+  confirmDelete: async function() {
+    if (!this.canManageTask()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.deleting) return;
+
+    const task = this.data.taskToDelete;
+    const taskId = task ? task.maintenanceTaskId : undefined;
+    if (!task || !taskId) {
+      this.cancelDeleteConfirm();
+      return;
+    }
+
+    const input = this.data.deleteConfirmInput;
+    if (input !== taskId) {
+      wx.showToast({ title: '任务编号不匹配，请重新输入', icon: 'none', duration: 2000 });
+      return;
+    }
+
+    this.setData({ deleting: true, showDeleteConfirmModal: false });
+    wx.showLoading({ title: '删除中...' });
+
+    try {
+      const network = require('../../../../utils/network');
+      if (!network.isOnline()) {
+        const outbox = require('../../../../utils/outbox');
+        outbox.add('maintenanceTasks', 'deleteMaintenanceTask', { maintenanceTaskId: taskId });
+        wx.hideLoading();
+        this.cancelDeleteConfirm();
+        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        return;
+      }
+
+      const res = await api.call('maintenanceTasks', {
+        action: 'deleteMaintenanceTask',
+        params: { maintenanceTaskId: taskId }
+      });
+
+      if (res.success) {
+        wx.showToast({ title: '删除成功', icon: 'success' });
+        app.getTodoTotalCount && app.getTodoTotalCount();
+        this.refreshPreviousPage(true);
+        setTimeout(() => { wx.navigateBack(); }, 500);
+      } else {
+        wx.showToast({ title: res.message || '删除失败', icon: 'none' });
+      }
+    } catch (err) {
+      console.error('删除任务失败', err);
+      wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.cancelDeleteConfirm();
+      this.setData({ deleting: false });
+    }
+  },
+
+  // 任务完成后刷新前一页与全局待办/消息计数
+  handleTaskCompleted: function() {
+    wx.showToast({ title: '任务已完成', icon: 'success', duration: 1500 });
+    this.refreshPreviousPage(true);
+    app.getUnreadMessageCount && app.getUnreadMessageCount();
+    app.getTodoTotalCount && app.getTodoTotalCount();
+  },
+
+  // 刷新上一页（管理列表），避免返回后看到旧数据
+  refreshPreviousPage: function(force = false) {
+    const pages = getCurrentPages();
+    const prevPage = pages && pages.length >= 2 ? pages[pages.length - 2] : null;
+    if (!prevPage) return;
+    setTimeout(() => {
+      try {
+        if (typeof prevPage.loadMaintenanceTasks === 'function') {
+          prevPage.loadMaintenanceTasks(force);
+        } else if (typeof prevPage.onShow === 'function') {
+          prevPage.onShow();
+        }
+      } catch (err) {
+        console.error('刷新上一页失败', err);
+      }
+    }, 200);
   },
 
 
