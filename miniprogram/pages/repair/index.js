@@ -64,8 +64,9 @@ Page({
     // 用户信息
     userInfo: {},
     
+    // 紧急联系人信息
+    emergencyContacts: [],
 
-    
     // 临时状态，用于在步骤间传递数据
     tempState: {},
 
@@ -91,6 +92,7 @@ Page({
     this.initAnimation();
     this.initAppointmentDate();
     this.loadUserInfo();
+    this.loadEmergencyContacts();
   },
 
   onTouchStart(e) {
@@ -124,6 +126,11 @@ Page({
     this.initAnimation();
     const tab = this.getTabBar && this.getTabBar();
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+
+    // 若此前加载失败导致列表为空，重新尝试获取紧急联系人
+    if (!this.data.emergencyContacts.length) {
+      this.loadEmergencyContacts();
+    }
 
     // 如果是从维修分类地图返回，并且带有快速定位信息，则直接跳转到对应问题的填写详情页
     try {
@@ -257,6 +264,51 @@ Page({
     } else {
       wx.showToast({ title: '请先登录', icon: 'none' });
     }
+  },
+
+  // 加载紧急联系人信息（来自 proUsers 中 isEmergencyContact 为 true 的成员）
+  loadEmergencyContacts() {
+    if (this._emergencyLoading) return;
+    this._emergencyLoading = true;
+
+    api.call('users', {
+      action: 'getEmergencyContacts',
+      timeout: 5000,
+      config: { retries: 1 }
+    }).then((res) => {
+      const list = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+      this.setData({
+        emergencyContacts: list.filter(item => item && item.nickName && item.qqId)
+      });
+      this._emergencyLoading = false;
+    }).catch(() => {
+      // 拉取失败不阻塞报修流程，保持列表为空
+      this._emergencyLoading = false;
+    });
+  },
+
+  // 单击复制紧急联系人QQ号
+  onCopyEmergencyQQ(e) {
+    const qq = e.currentTarget.dataset.qq;
+    const name = e.currentTarget.dataset.name || '';
+    if (!qq) return;
+
+    wx.setClipboardData({
+      data: String(qq),
+      success: () => {
+        wx.showToast({
+          title: name ? `${name}的QQ号已复制` : 'QQ号已复制',
+          icon: 'success',
+          duration: 2000
+        });
+      },
+      fail: () => {
+        wx.showToast({
+          title: '复制失败，请重试',
+          icon: 'none'
+        });
+      }
+    });
   },
 
   // 搜索输入

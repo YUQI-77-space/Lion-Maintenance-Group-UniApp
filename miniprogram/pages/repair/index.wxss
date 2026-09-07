@@ -313,6 +313,89 @@ page {
   color: var(--text-main);
 }
 
+/* 紧急联系人信息 */
+.emergency-section {
+  margin-top: 40rpx;
+  padding-top: 30rpx;
+  border-top: 1px solid var(--border-light);
+}
+
+.emergency-section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.emergency-section-subtitle {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.emergency-contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border: 1px solid var(--border-light);
+  border-radius: 12rpx;
+  background-color: var(--card-background);
+}
+
+.emergency-contact-name-col {
+  flex: 1;
+  min-width: 0;
+  padding-right: 24rpx;
+}
+
+.emergency-contact-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-bottom: 6rpx;
+}
+
+.emergency-contact-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emergency-contact-qq-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  max-width: 62%;
+}
+
+.emergency-contact-qq-col--hover {
+  opacity: 0.7;
+}
+
+.emergency-contact-qq-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.emergency-contact-qq {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--secondary-color);
+  word-break: break-all;
+}
+
+.emergency-contact-copy {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: var(--text-muted);
+}
+
 /* 特殊输入字段样式 */
 .special-field {
   margin-bottom: 30rpx;
