@@ -43,9 +43,10 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
     
     const task = taskResult.data[0]
     console.log('找到任务:', task.maintenanceTaskId, '当前状态:', task.taskStatus);
-    
+
     // 检查任务状态
-    if (task.taskStatus !== 'inProgress') {
+    // 只允许 inProgress 完成；为避免超时重试误报，completed 会在权限校验后幂等返回成功
+    if (task.taskStatus !== 'inProgress' && task.taskStatus !== 'completed') {
       console.log('任务状态不允许标记为完成, 当前状态:', task.taskStatus);
       return {
         code: 400,
@@ -89,6 +90,21 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
         code: 403,
         data: null,
         message: '只有申请人和组长可以确认任务完成'
+      }
+    }
+
+    // 幂等处理：若上次调用已成功完成任务（超时后重试），直接返回成功，
+    // 避免“状态不允许”误报，也避免重复更新/通知。
+    if (task.taskStatus === 'completed') {
+      console.log('任务已处于完成状态，幂等返回成功:', params.maintenanceTaskId);
+      return {
+        code: 200,
+        data: {
+          maintenanceTaskId: params.maintenanceTaskId,
+          taskStatus: 'completed',
+          completeTime: task.completeTime || ''
+        },
+        message: '任务已标记为完成'
       }
     }
     
@@ -201,8 +217,8 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
         });
       }
       
-      for (const assigneeId of allAssigneeIds) {
-        await cloud.callFunction({
+      await Promise.all(allAssigneeIds.map(assigneeId =>
+        cloud.callFunction({
           name: 'messages',
           data: {
             action: 'createMessage',
@@ -213,9 +229,12 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
               messagetype: 'maintenance'
             }
           }
-        });
-        console.log('已发送消息给受理人:', assigneeId);
-      }
+        }).then(() => {
+          console.log('已发送消息给受理人:', assigneeId);
+        }).catch(err => {
+          console.error('通知受理人消息发送失败', assigneeId, err);
+        })
+      ));
       
       // 查询并通知组长（从 proUsers 集合）
       const leaderResult = await db.collection('proUsers').where({
@@ -227,24 +246,26 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
         : (user.nickName || '组长')
 
       if (leaderResult.data.length > 0) {
-        for (const leader of leaderResult.data) {
-          // 不重复通知发起操作的组长
-          if (leader.openid === OPENID) continue
-
-          await cloud.callFunction({
-            name: 'messages',
-            data: {
-              action: 'createMessage',
-              params: {
-                messageUserId: leader.openid,
-                title: '维修任务已完成',
-                content: `维修任务"${task.level1} > ${task.level2} > ${task.level3}"已由${operatorName}完成，请及时设置EW值。`,
-                messagetype: 'maintenance'
+        await Promise.all(leaderResult.data
+          .filter(leader => leader.openid !== OPENID) // 不重复通知发起操作的组长
+          .map(leader =>
+            cloud.callFunction({
+              name: 'messages',
+              data: {
+                action: 'createMessage',
+                params: {
+                  messageUserId: leader.openid,
+                  title: '维修任务已完成',
+                  content: `维修任务"${task.level1} > ${task.level2} > ${task.level3}"已由${operatorName}完成，请及时设置EW值。`,
+                  messagetype: 'maintenance'
+                }
               }
-            }
-          });
-          console.log('已发送消息给组长:', leader.openid);
-        }
+            }).then(() => {
+              console.log('已发送消息给组长:', leader.openid);
+            }).catch(err => {
+              console.error('通知组长消息发送失败', leader.openid, err);
+            })
+          ));
       }
       console.log('所有消息发送完成');
     } catch (messageErr) {
@@ -269,29 +290,33 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
         });
       }
       
-      // 向所有受理人发送任务完成订阅消息
-      for (const assigneeId of allAssigneeIds) {
-        try {
-          await cloud.callFunction({
-            name: 'subscriptionMessage',
-            data: {
-              action: 'sendTaskCompletedNotification',
-              params: {
-                assigneeOpenid: assigneeId,
-                taskId: params.maintenanceTaskId,
-                taskCategory: task.level3,
-                applicantName: task.applicantName,
+      // 向所有受理人发送任务完成订阅消息（并行发送，且做超时保护）
+      const subscriptionPromises = allAssigneeIds.map(assigneeId =>
+        cloud.callFunction({
+          name: 'subscriptionMessage',
+          data: {
+            action: 'sendTaskCompletedNotification',
+            params: {
+              assigneeOpenid: assigneeId,
+              taskId: params.maintenanceTaskId,
+              taskCategory: task.level3,
+              applicantName: task.applicantName,
 
-                maintenanceTaskId: params.maintenanceTaskId
-              }
+              maintenanceTaskId: params.maintenanceTaskId
             }
-          });
+          }
+        }).then(() => {
           console.log('任务完成订阅消息发送成功给受理人:', assigneeId);
-        } catch (subscriptionErr) {
+        }).catch(subscriptionErr => {
           console.error('发送任务完成订阅消息失败给受理人', assigneeId, ':', subscriptionErr);
-          // 单个用户发送失败不影响其他用户
-        }
-      }
+        })
+      );
+
+      // 最多等 1.5 秒：订阅消息失败/超时不阻塞主流程，保证云函数在 3s 内返回
+      await Promise.race([
+        Promise.all(subscriptionPromises),
+        new Promise(resolve => setTimeout(resolve, 1500))
+      ]);
       
       console.log('所有任务完成订阅消息发送完成');
     } catch (subscriptionErr) {
