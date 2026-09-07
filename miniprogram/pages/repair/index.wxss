@@ -418,6 +418,10 @@ page {
   font-size: 24rpx;
 }
 
+.description-label {
+  margin-top: 30rpx;
+}
+
 .field-input {
   width: 100%;
   height: 80rpx;

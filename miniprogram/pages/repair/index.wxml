@@ -155,7 +155,7 @@
         </picker>
       </view>
       
-      <view class="field-label">问题详细描述<text class="optional"> (可选)</text></view>
+      <view class="field-label description-label">问题详细描述<text class="optional"> (可选)</text></view>
       <textarea class="description-textarea" placeholder="请详细描述您遇到的问题（可选）..." maxlength="200" bindinput="onDescriptionInput" value="{{otherDescription}}"></textarea>
       
       <!-- 紧急联系人信息：用于替代已下线的“是否紧急”开关，供有紧急需求的用户直接复制QQ联系 -->
