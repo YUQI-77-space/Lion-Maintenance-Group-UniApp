@@ -138,18 +138,6 @@
   flex-wrap: wrap;
 }
 
-.urgent-tag { display: none; }
-
-.urgent-badge {
-  background-color: #FF0000;
-  color: #ffffff;
-  font-size: 24rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 20rpx;
-  margin-right: 10rpx;
-  font-weight: 600;
-}
-
 .management-tag {
   background-color: transparent;
   color: #191970;

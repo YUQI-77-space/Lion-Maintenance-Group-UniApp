@@ -107,42 +107,6 @@
       </view>
     </view>
 
-    <!-- 紧急程度 -->
-    <view class="form-section">
-      <view class="section-header">
-        <view class="section-icon transparent">
-          <image src="{{iconUrgent}}" class="header-icon-img"></image>
-        </view>
-        <view class="section-title">
-          <text class="title-text">紧急程度</text>
-          <text class="title-desc">根据问题严重程度选择</text>
-        </view>
-      </view>
-      
-      <view class="urgent-selector">
-        <view class="urgent-option {{formData.isUrgent === 0 ? 'active' : ''}}" bindtap="{{formData.isUrgent === 1 ? 'onUrgentToggle' : ''}}">
-          <view class="option-icon normal">
-            <text class="icon-text">📋</text>
-          </view>
-          <view class="option-content">
-            <text class="option-title">普通</text>
-            <text class="option-desc">一般维修需求</text>
-          </view>
-        </view>
-        <view class="urgent-option {{formData.isUrgent === 1 ? 'active urgent' : ''}}" bindtap="{{formData.isUrgent === 0 ? 'onUrgentToggle' : ''}}">
-          <view class="option-icon urgent">
-            <text class="icon-text">🚨</text>
-          </view>
-          <view class="option-content">
-            <text class="option-title">紧急</text>
-            <text class="option-desc">需要优先处理</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-
-
     <!-- 问题描述 -->
     <view class="form-section">
       <view class="section-header">
@@ -183,4 +147,4 @@
     </button>
   </view>
 
-</view> 
+</view>

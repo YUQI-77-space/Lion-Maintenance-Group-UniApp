@@ -4,7 +4,7 @@ const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const swr = require('../../../../utils/swrCache');
 
 const STATUS_MAP = {
-  pending: '待受理',
+  pending: '未受理',
   inProgress: '处理中',
   completed: '已完成',
   cancelled: '已撤销'

@@ -17,7 +17,6 @@ Page({
 		// 图标资源
 		iconTools: iconManager.get('biz_tools'),
 		iconCalendar: iconManager.get('team_calendar'),
-		iconUrgent: iconManager.get('biz_urgent'),
 		iconEdit: iconManager.get('common_edit'),
 		
 		// 3级分类数据
@@ -107,7 +106,6 @@ Page({
 		formData: {
 			appointmentDate: '',
 			appointmentTime: '', // 将由 initDateRange 动态设置
-			isUrgent: 0,
 			description: ''
 		},
 		
@@ -372,15 +370,6 @@ Page({
 	},
 
 	/**
-	 * 紧急程度切换
-	 */
-	onUrgentToggle() {
-		this.setData({
-			'formData.isUrgent': this.data.formData.isUrgent === 1 ? 0 : 1
-		});
-	},
-
-	/**
 	 * 表单验证
 	 */
 	validateForm() {
@@ -468,7 +457,6 @@ Page({
 				level2: selectedLevel2,
 				level3: selectedLevel3,
 				appointmentTime: fullAppointmentTime,
-				isUrgent: formData.isUrgent,
 				description: formData.description,
 				applicantInfo: {
 					nickName: userInfo.nickName || '维修组组长',
@@ -521,4 +509,4 @@ Page({
 			this.setData({ isSubmitting: false });
 		}
 	}
-}); 
+});

@@ -299,89 +299,6 @@
 
 .time-display.selected .time-arrow { color: var(--primary-color); }
 
-/* 紧急程度选择器 - 卡片式设计 */
-.urgent-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-}
-
-.urgent-option {
-  background: var(--background-color);
-  border: 2rpx solid var(--border-color);
-  border-radius: 20rpx;
-  padding: 32rpx 24rpx;
-  text-align: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.urgent-option::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.urgent-option.active { border-color: var(--primary-color); background: var(--card-background); transform: translateY(-4rpx); box-shadow: 0 8rpx 25rpx rgba(58, 117, 251, 0.15); }
-
-.urgent-option.active::before { opacity: 0.06; }
-
-.urgent-option.urgent.active { border-color: var(--danger-color); box-shadow: 0 8rpx 25rpx rgba(239, 68, 68, 0.15); }
-
-.urgent-option.urgent.active::before {
-  background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
-}
-
-.option-icon {
-  width: 60rpx;
-  height: 60rpx;
-  margin: 0 auto 16rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
-  position: relative;
-  z-index: 1;
-}
-
-.option-icon.normal, .option-icon.urgent { background: transparent; }
-
-.option-content {
-  position: relative;
-  z-index: 1;
-}
-
-.option-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 8rpx;
-}
-
-.urgent-option.active .option-title {
-  color: #667eea;
-}
-
-.urgent-option.urgent.active .option-title {
-  color: var(--danger-color);
-}
-
-.option-desc {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  font-weight: 400;
-}
-
 /* 文本域容器 - 优化设计 */
 .textarea-container {
   background: var(--background-color);
@@ -505,8 +422,7 @@
 
 /* 无障碍和交互优化 */
 .picker-display:hover,
-.time-display:hover,
-.urgent-option:hover {
+.time-display:hover {
   opacity: 0.8;
 }
 
@@ -515,4 +431,4 @@
   cursor: not-allowed;
 }
 
-/* 深色模式支持移除 */ 
+/* 深色模式支持移除 */

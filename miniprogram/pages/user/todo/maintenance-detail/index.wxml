@@ -23,10 +23,6 @@
             <text class="info-label">问题类别:</text>
             <text class="info-value">{{taskDetail.level1}} > {{taskDetail.level2}}</text>
           </view>
-          <view class="info-row">
-            <text class="info-label">是否紧急:</text>
-            <text class="info-value">{{taskDetail.isUrgent === 1 ? '紧急' : '不紧急'}}</text>
-      </view>
     </view>
     
         <!-- 特殊字段信息 -->
@@ -251,4 +247,4 @@
     </view>
 
 
-</view> 
+</view>

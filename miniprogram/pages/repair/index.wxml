@@ -155,11 +155,6 @@
         </picker>
       </view>
       
-      <view class="urgent-switch-container">
-        <view class="picker-label">是否紧急</view>
-        <switch checked="{{isUrgent}}" bindchange="onUrgentChange" color="{{'var(--secondary-color)'}}"/>
-      </view>
-      
       <view class="field-label">问题详细描述<text class="optional"> (可选)</text></view>
       <textarea class="description-textarea" placeholder="请详细描述您遇到的问题（可选）..." maxlength="200" bindinput="onDescriptionInput" value="{{otherDescription}}"></textarea>
       
@@ -182,11 +177,6 @@
         <view class="confirm-item">
           <view class="confirm-label">预约时间</view>
           <view class="confirm-value">{{appointmentDate}} {{appointmentTime}}</view>
-      </view>
-        <view class="confirm-item">
-          <view class="confirm-label">是否紧急</view>
-          <view class="confirm-value">{{isUrgent ? '是' : '否'}}
-          </view>
       </view>
         <view wx:if="{{laptopModel || phoneModel || laptopSystem || softwareInfo || systemVersion || deviceModel || mouseModel || keyboardModel || fanModel}}" class="confirm-item confirm-item-category">
           <view class="confirm-label">详细信息</view>
@@ -251,4 +241,4 @@
     </view>
   </view>
 
-</view> 
+</view>

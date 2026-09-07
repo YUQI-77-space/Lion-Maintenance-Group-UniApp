@@ -19,14 +19,6 @@
 
 /* 移除顶部任务状态栏，改为标题 + 描边表达 */
 
-.urgent-tag {
-  background-color: var(--danger-color);
-  color: white;
-  font-size: 24rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 20rpx;
-}
-
 /* 任务信息样式 */
 .task-info, .applicant-info, .assignee-info {
   background-color: var(--card-background);

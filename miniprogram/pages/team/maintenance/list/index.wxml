@@ -32,7 +32,6 @@
                 {{item.level1}} > {{item.level2}} > {{item.level3}}
               </view>
               <view class="task-meta">
-                <text class="urgent-badge" wx:if="{{item.isUrgent === 1}}">紧急</text>
                 <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
                 <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
               </view>

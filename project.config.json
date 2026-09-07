@@ -33,5 +33,5 @@
   "editorSetting": {},
   "cloudfunctionRoot": "cloudfunctions/",
   "miniprogramRoot": "miniprogram/",
-  "libVersion": "3.11.0"
+  "libVersion": "3.14.2"
 }

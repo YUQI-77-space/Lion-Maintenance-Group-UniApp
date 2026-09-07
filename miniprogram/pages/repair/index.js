@@ -47,7 +47,6 @@ Page({
     appointmentTime: '',
     startDate: '',
     endDate: '',
-    isUrgent: false,
     otherDescription: '',
     
     // 特殊输入字段
@@ -155,7 +154,7 @@ Page({
           if (type.id === 111) {
             wx.showModal({
               title: '温馨提醒',
-              content: '笔记本清灰需收费30元人工费',
+              content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
               showCancel: false,
               confirmText: '我知道了',
               confirmColor: '#4A90E2',
@@ -362,7 +361,7 @@ Page({
     if (type.id === 111) {
       wx.showModal({
         title: '温馨提醒',
-        content: '笔记本清灰需收费30元人工费',
+        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
         confirmColor: '#4A90E2',
@@ -455,7 +454,7 @@ Page({
     if (type.id === 111) {
       wx.showModal({
         title: '温馨提醒',
-        content: '笔记本清灰需收费30元人工费',
+        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
         confirmColor: '#4A90E2',
@@ -602,7 +601,7 @@ Page({
     if (id === 111) {
       wx.showModal({
         title: '温馨提醒',
-        content: '笔记本清灰需收费30元人工费',
+        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
         confirmColor: '#4A90E2'
@@ -649,9 +648,6 @@ Page({
         duration: 2000
       });
     }
-  },
-  onUrgentChange(e) {
-    this.setData({ isUrgent: e.detail.value });
   },
   onDescriptionInput(e) {
     this.setData({ otherDescription: e.detail.value });
@@ -714,9 +710,9 @@ Page({
   getRequiredFieldsById(typeId) {
     const fields = [];
     
-    // 笔记本清灰、电池更换、加装固态、故障检修、卡顿掉帧需要型号
+    // 笔记本清灰的型号选填；其余列出的笔记本服务需要型号
     if ([111, 112, 113, 117, 118].includes(typeId)) {
-      fields.push({ key: 'laptopModel', label: '笔记本型号', placeholder: '请填写具体的机型（如拯救者r9000p 2025）', required: true });
+      fields.push({ key: 'laptopModel', label: '笔记本型号', placeholder: '请填写具体的机型（如拯救者r9000p 2025）', required: typeId !== 111 });
     }
     
     // 笔记本C盘清理等需要系统信息
@@ -836,7 +832,7 @@ Page({
     try {
       const { 
         selectedCategory, selectedSubcategory,
-        appointmentDate, appointmentTime, isUrgent, otherDescription,
+        appointmentDate, appointmentTime, otherDescription,
         userInfo, tempState,
         laptopModel, phoneModel, laptopSystem, softwareInfo, systemVersion, deviceModel,
         mouseModel, keyboardModel, fanModel
@@ -874,7 +870,6 @@ Page({
           level2: selectedSubcategory.name,
           level3: selectedType.name,
           appointmentTime: `${appointmentDate} ${appointmentTime}`,
-          isUrgent: isUrgent ? 1 : 0,
           otherDescription: otherDescription,
           // 特殊字段信息
           specialFields: {
@@ -933,7 +928,6 @@ Page({
       selectedSubcategory: null,
       selectedType: null,
       selectedTypeId: null,
-      isUrgent: false,
       otherDescription: '',
       tempState: {},
       // 清理特殊字段
@@ -962,4 +956,4 @@ Page({
       url: '/pages/repair/map/index'
     });
   }
-}); 
+});

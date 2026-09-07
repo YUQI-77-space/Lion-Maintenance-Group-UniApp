@@ -172,7 +172,6 @@ Page({
           comments: '',
           cost: 0,
           ew: 0,
-          isUrgent: 0,
           applicantName: '',
           applicantStudentId: '', // 添加申请人学号字段
           applicantQqId: '',

@@ -313,15 +313,6 @@ page {
   color: var(--text-main);
 }
 
-/* 紧急开关 */
-.urgent-switch-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 30rpx;
-  padding: 20rpx 0;
-}
-
 /* 特殊输入字段样式 */
 .special-field {
   margin-bottom: 30rpx;

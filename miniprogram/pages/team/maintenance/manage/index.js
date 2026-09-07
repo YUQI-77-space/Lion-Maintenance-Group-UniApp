@@ -6,7 +6,7 @@ const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
 
 const STATUS_MAP = {
-  pending: '待受理',
+  pending: '未受理',
   inProgress: '处理中',
   completed: '已完成',
   cancelled: '已撤销'
@@ -309,19 +309,8 @@ onRefresherRefresh: function() {
       filteredTasks = this.data.allTasks.filter(task => task.taskStatus === status);
     }
 
-    // 置顶：紧急且待受理/进行中
-    const isPinnedUrgent = t => t.isUrgent === 1 && (t.taskStatus === 'pending' || t.taskStatus === 'inProgress');
-
-    const pinnedUrgent = filteredTasks
-      .filter(isPinnedUrgent)
+    const ordered = filteredTasks
       .sort((a, b) => (time.toDate(b.createTime) || 0) - (time.toDate(a.createTime) || 0));
-
-    const pinnedIds = new Set(pinnedUrgent.map(t => t.maintenanceTaskId));
-    const rest = filteredTasks
-      .filter(t => !pinnedIds.has(t.maintenanceTaskId))
-      .sort((a, b) => (time.toDate(b.createTime) || 0) - (time.toDate(a.createTime) || 0));
-
-    const ordered = pinnedUrgent.concat(rest);
 
     this.setData({
       filteredTasks: ordered,
