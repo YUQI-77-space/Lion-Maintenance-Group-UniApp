@@ -1,0 +1,16 @@
+{
+  "name": "equivalentWorkloadAssessment",
+  "version": "1.0.0",
+  "description": "等效工作量考核管理云函数",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "node-xlsx": "^0.21.2",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

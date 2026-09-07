@@ -1,0 +1,24 @@
+{
+  "name": "volunteerActivities",
+  "version": "1.0.0",
+  "description": "志愿活动管理云函数 - 包含定时状态更新功能",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Maintenance Group",
+  "license": "MIT",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "wx-server-sdk": "~2.6.3"
+  },
+  "cloudbase": {
+    "triggers": [
+      {
+        "name": "statusUpdateTrigger",
+        "type": "timer",
+        "config": "0 */10 * * * * *"
+      }
+    ]
+  }
+}
