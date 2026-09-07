@@ -162,6 +162,11 @@ onRefresherRefresh: function() {
     const tasks = this.data.filteredTasks;
     if (!tasks || tasks.length === 0) return;
 
+    // 防御：startIndex 可能因筛选/搜索导致为负，或超过列表长度，
+    // 统一钳制到合法范围，避免拼出 cardDelays[-N] 这类非法 data path。
+    if (startIndex < 0) startIndex = 0;
+    if (startIndex >= tasks.length) return;
+
     // 如果不是从头开始，保留已有的动画状态
     if (startIndex === 0) {
       this._animatedCount = 0;
@@ -270,13 +275,16 @@ onRefresherRefresh: function() {
         if (newTasks.length > 0) {
           const merged = [...this.data.allTasks, ...newTasks];
           const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : newTasks.length >= this.data.pageSize;
+          const prevFilteredCount = this.data.filteredTasks.length;
           this.setData({
             allTasks: merged,
             hasMore,
             page: this.data.page + 1
           });
           this.filterTasksByStatus(this.data.activeTab);
-          const startIndex = this.data.filteredTasks.length - newTasks.length;
+          // 以「筛选后列表」的旧有边界作为新卡片动画起点；
+          // 兼容筛选/搜索导致的新增数量与 newTasks.length 不一致的情况，避免负索引。
+          const startIndex = Math.max(0, Math.min(prevFilteredCount, this.data.filteredTasks.length));
           this.triggerCardAnimation(startIndex);
         } else {
           this.setData({ hasMore: false });

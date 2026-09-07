@@ -175,6 +175,10 @@ Page({
 
     if (!tasks || tasks.length === 0) return;
 
+    // 防御：钳制到合法范围，避免拼出 xxxDelays[-N] 这类非法 data path。
+    if (startIndex < 0) startIndex = 0;
+    if (startIndex >= tasks.length) return;
+
     // 如果不是从头开始，保留已有的动画状态
     if (startIndex === 0) {
       this._animatedCount = 0;
