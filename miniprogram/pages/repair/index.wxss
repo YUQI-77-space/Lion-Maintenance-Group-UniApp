@@ -20,6 +20,12 @@ page {
   overflow: hidden;
 }
 
+/* 提交成功页内容可能随紧急联系人增多而超高，允许容器内滚动 */
+.repair-container.repair-success-scroll {
+  height: 100vh;
+  overflow-y: auto;
+}
+
 /* 维修组标语 */
 .repair-slogan {
   background-color: var(--primary-color);
@@ -394,6 +400,11 @@ page {
   flex-shrink: 0;
   font-size: 20rpx;
   color: var(--text-muted);
+}
+
+/* 提交成功页中的紧急联系人板块：取消继承自成功卡片的居中排版，保持内容左对齐 */
+.success-emergency-section {
+  text-align: left;
 }
 
 /* 特殊输入字段样式 */

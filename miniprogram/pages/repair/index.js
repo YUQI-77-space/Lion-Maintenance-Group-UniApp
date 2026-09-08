@@ -762,54 +762,54 @@ Page({
   getRequiredFieldsById(typeId) {
     const fields = [];
     
-    // 笔记本清灰的型号选填；其余列出的笔记本服务需要型号
+    // 所有需要填写型号的字段均为选填（报修人可先提交，具体型号后续补充说明）
     if ([111, 112, 113, 117, 118].includes(typeId)) {
-      fields.push({ key: 'laptopModel', label: '笔记本型号', placeholder: '请填写具体的机型（如拯救者r9000p 2025）', required: typeId !== 111 });
+      fields.push({ key: 'laptopModel', label: '笔记本型号', placeholder: '请填写具体的机型（如拯救者r9000p 2025）', required: false });
     }
     
-    // 笔记本C盘清理等需要系统信息
+    // 笔记本C盘清理等需要系统信息（非型号，仍为必填）
     if ([114].includes(typeId)) {
       fields.push({ key: 'laptopSystem', label: '笔记本系统', placeholder: '请填写笔记本的系统', required: true });
     }
     
-    // 笔记本软件安装需要软件信息
+    // 笔记本软件安装需要软件信息（非型号，仍为必填）
     if ([115].includes(typeId)) {
       fields.push({ key: 'softwareInfo', label: '软件信息', placeholder: '请填写想要安装的软件以及版本', required: true });
     }
     
-    // 笔记本系统重装需要系统版本（下拉选择）
+    // 笔记本系统重装需要系统版本（非型号，仍为必填）
     if ([116].includes(typeId)) {
       fields.push({ key: 'systemVersion', label: '系统版本', type: 'select', options: ['WIN7', 'WIN10', 'WIN11', 'MAC'], required: true });
     }
     
-    // 手机类所有问题需要手机型号
+    // 手机型号选填
     if ([121, 122, 124].includes(typeId)) {
-      fields.push({ key: 'phoneModel', label: '手机型号', placeholder: '请填写手机型号', required: true });
+      fields.push({ key: 'phoneModel', label: '手机型号', placeholder: '请填写手机型号', required: false });
     }
     
-    // 鼠标类需要鼠标型号
+    // 鼠标型号选填
     if ([131].includes(typeId)) {
-      fields.push({ key: 'mouseModel', label: '鼠标型号', placeholder: '请填写鼠标型号', required: true });
+      fields.push({ key: 'mouseModel', label: '鼠标型号', placeholder: '请填写鼠标型号', required: false });
     }
     
-    // 键盘类需要键盘型号
+    // 键盘型号选填
     if ([141].includes(typeId)) {
-      fields.push({ key: 'keyboardModel', label: '键盘型号', placeholder: '请填写键盘型号', required: true });
+      fields.push({ key: 'keyboardModel', label: '键盘型号', placeholder: '请填写键盘型号', required: false });
     }
     
-    // 电路机械类需要对应物件型号
+    // 电路机械类对应物件型号均选填
     if ([211].includes(typeId)) {
-      fields.push({ key: 'deviceModel', label: '吹风机型号', placeholder: '请填写吹风机型号', required: true });
+      fields.push({ key: 'deviceModel', label: '吹风机型号', placeholder: '请填写吹风机型号', required: false });
     } else if ([221].includes(typeId)) {
-      fields.push({ key: 'deviceModel', label: '热水壶型号', placeholder: '请填写热水壶型号', required: true });
+      fields.push({ key: 'deviceModel', label: '热水壶型号', placeholder: '请填写热水壶型号', required: false });
     } else if ([231, 232].includes(typeId)) {
-      fields.push({ key: 'deviceModel', label: '自行车型号', placeholder: '请填写自行车型号', required: true });
+      fields.push({ key: 'deviceModel', label: '自行车型号', placeholder: '请填写自行车型号', required: false });
     } else if ([241].includes(typeId)) {
-      fields.push({ key: 'deviceModel', label: '收音机型号', placeholder: '请填写收音机型号', required: true });
+      fields.push({ key: 'deviceModel', label: '收音机型号', placeholder: '请填写收音机型号', required: false });
     } else if ([251].includes(typeId)) {
-      fields.push({ key: 'fanModel', label: '电风扇型号', placeholder: '请填写电风扇型号', required: true });
+      fields.push({ key: 'fanModel', label: '电风扇型号', placeholder: '请填写电风扇型号', required: false });
     } else if ([261].includes(typeId)) {
-      fields.push({ key: 'deviceModel', label: '设备型号', placeholder: '请填写设备型号', required: true });
+      fields.push({ key: 'deviceModel', label: '设备型号', placeholder: '请填写设备型号', required: false });
     }
     
     return fields;
@@ -833,6 +833,13 @@ Page({
       }
     }
 
+    // 低侵入性注册校验（短超时，不阻塞UI过久）
+    // 提前发起校验，与下方订阅消息授权弹窗并行执行，减少提交时串行等待
+    const app = getApp();
+    const verifyPromise = app && typeof app.verifyUserAccountRemotely === 'function'
+      ? app.verifyUserAccountRemotely(1200).catch(() => false)
+      : Promise.resolve(false);
+
     // 请求订阅消息授权
     try {
       const authResult = await SubscriptionAuth.requestApplicantAuth(
@@ -855,12 +862,9 @@ Page({
       // 授权异常不影响提交流程
     }
 
-    // 低侵入性注册校验（短超时，不阻塞UI过久）
+    // 等待注册校验结果（该校验已在订阅授权弹窗期间开始执行）
     try {
-      const app = getApp();
-      const quickCheck = app && typeof app.verifyUserAccountRemotely === 'function'
-        ? await app.verifyUserAccountRemotely(1200)
-        : false;
+      const quickCheck = await verifyPromise;
       if (!quickCheck) {
         // 再看本地缓存是否完整
         const localUser = wx.getStorageSync('userInfo');

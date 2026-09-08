@@ -7,7 +7,7 @@
   </view>
 </view>
 
-<view class="repair-container" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
+<view class="repair-container {{currentStep === 5 ? 'repair-success-scroll' : ''}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
   <!-- 步骤内容 -->
   <view wx:if="{{currentStep === 0}}">
     <!-- 搜索栏 -->
@@ -118,7 +118,7 @@
       
       <!-- 特殊输入字段 -->
       <view wx:for="{{requiredFields}}" wx:key="key" wx:for-item="field" class="special-field">
-        <view class="field-label">{{field.label}} <text wx:if="{{field.required}}" class="required">*</text></view>
+        <view class="field-label">{{field.label}}<text wx:if="{{field.required}}" class="required"> *</text><text wx:else class="optional"> (选填)</text></view>
         <!-- 文本输入框 -->
         <input wx:if="{{!field.type || field.type === 'text'}}" 
                class="field-input" 
@@ -157,35 +157,6 @@
       
       <view class="field-label description-label">问题详细描述<text class="optional"> (可选)</text></view>
       <textarea class="description-textarea" placeholder="请详细描述您遇到的问题（可选）..." maxlength="200" bindinput="onDescriptionInput" value="{{otherDescription}}"></textarea>
-      
-      <!-- 紧急联系人信息：用于替代已下线的“是否紧急”开关，供有紧急需求的用户直接复制QQ联系 -->
-      <view class="emergency-section" wx:if="{{emergencyContacts.length}}">
-        <view class="emergency-section-title">紧急联系人信息</view>
-        <view class="emergency-section-subtitle">如您的维修需求较为紧急，可直接点击下方 QQ 号复制，前往 QQ 搜索并联系对应的维修人员</view>
-        <view
-          class="emergency-contact-item"
-          wx:for="{{emergencyContacts}}"
-          wx:key="openid"
-        >
-          <view class="emergency-contact-name-col">
-            <view class="emergency-contact-label">昵称</view>
-            <view class="emergency-contact-name">{{item.nickName}}</view>
-          </view>
-          <view
-            class="emergency-contact-qq-col"
-            hover-class="emergency-contact-qq-col--hover"
-            bindtap="onCopyEmergencyQQ"
-            data-qq="{{item.qqId}}"
-            data-name="{{item.nickName}}"
-          >
-            <view class="emergency-contact-label">QQ号</view>
-            <view class="emergency-contact-qq-row">
-              <text class="emergency-contact-qq">{{item.qqId}}</text>
-              <text class="emergency-contact-copy">点击复制</text>
-            </view>
-          </view>
-        </view>
-      </view>
 
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep">返回</button>
@@ -238,6 +209,36 @@
       <image src="{{iconCheck}}" style="width: 120rpx; height: 120rpx; margin-bottom: 30rpx;"></image>
       <view class="step-title success-title">提交成功</view>
       <view class="step-subtitle">您的报修已提交，请耐心等待维修人员联系</view>
+
+      <!-- 紧急联系人信息：原位于“填写报修详情”，现迁移至提交成功页展示，供有紧急需求的用户直接复制QQ联系 -->
+      <view class="emergency-section success-emergency-section" wx:if="{{emergencyContacts.length}}">
+        <view class="emergency-section-title">紧急联系人信息</view>
+        <view class="emergency-section-subtitle">如您的维修需求较为紧急，可直接点击下方 QQ 号复制，前往 QQ 搜索并联系对应的维修人员</view>
+        <view
+          class="emergency-contact-item"
+          wx:for="{{emergencyContacts}}"
+          wx:key="openid"
+        >
+          <view class="emergency-contact-name-col">
+            <view class="emergency-contact-label">昵称</view>
+            <view class="emergency-contact-name">{{item.nickName}}</view>
+          </view>
+          <view
+            class="emergency-contact-qq-col"
+            hover-class="emergency-contact-qq-col--hover"
+            bindtap="onCopyEmergencyQQ"
+            data-qq="{{item.qqId}}"
+            data-name="{{item.nickName}}"
+          >
+            <view class="emergency-contact-label">QQ号</view>
+            <view class="emergency-contact-qq-row">
+              <text class="emergency-contact-qq">{{item.qqId}}</text>
+              <text class="emergency-contact-copy">点击复制</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
       <view class="button-group" style="justify-content: center; gap: 20rpx;">
         <button class="btn btn-outline" bindtap="goToTodo">查看进度</button>
         <button class="btn btn-primary" bindtap="goToRepair">再次报修</button>
