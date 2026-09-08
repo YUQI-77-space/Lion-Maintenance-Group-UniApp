@@ -127,15 +127,15 @@ Page({
   loadDataByCategory(category) {
     switch (category) {
       case 'maintenance':
-        this.loadMaintenanceTasks();
-        break;
+        return this.loadMaintenanceTasks();
       case 'volunteer':
-        if (this.data.isInternal) this.loadVolunteerTasks();
-        break;
+        if (this.data.isInternal) return this.loadVolunteerTasks();
+        return Promise.resolve();
       case 'duty':
-        if (this.data.isInternal) this.loadDutyTasks();
-        break;
+        if (this.data.isInternal) return this.loadDutyTasks();
+        return Promise.resolve();
     }
+    return Promise.resolve();
   },
 
   /**

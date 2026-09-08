@@ -115,7 +115,7 @@ Page({
    * 获取活动列表
    */
   getActivitiesList: async function(force = false) {
-    if (!this.data.hasMore || this.data.loading) return;
+    if (!this.data.hasMore || this.data.loading) return Promise.resolve();
 
     const status = this.data.currentStatus || 'all';
     const role = app.globalData.role || wx.getStorageSync('role') || 'user';
@@ -147,11 +147,11 @@ Page({
     // 去重
     const nowTs = Date.now();
     if (!force) {
-      if (this._fetchingVolList) return;
+      if (this._fetchingVolList) return Promise.resolve();
       // 🔥 关键修改：首次加载时，即使缓存新鲜也要继续请求，确保用户看到加载过程
       if (this._lastVolListFetch && nowTs - this._lastVolListFetch < 800 && cached && cached.fresh && !this.data.initialLoading) {
         this.setData({ loading: false });
-        return;
+        return Promise.resolve();
       }
     }
     this._fetchingVolList = true;
