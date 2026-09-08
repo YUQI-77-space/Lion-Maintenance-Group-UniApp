@@ -180,7 +180,7 @@
   display: flex;
   align-items: flex-start;
   margin-bottom: 20rpx;
-  padding: 26rpx 24rpx;
+  padding: 26rpx 48rpx 26rpx 24rpx;
   border-radius: 20rpx;
   border: 1rpx solid #f0f1f5;
   background: #ffffff;
@@ -338,6 +338,228 @@
 
 .msg-card.is-read .msg-preview {
   color: #9aa1ab;
+}
+
+/* ---- 右侧箭头：提示卡片可点击查看详情 ---- */
+.msg-arrow {
+  position: absolute;
+  top: 50%;
+  right: 20rpx;
+  transform: translateY(-50%);
+  font-size: 34rpx;
+  line-height: 1;
+  color: #c9ced6;
+  transition: color 0.35s ease;
+}
+
+.msg-card.is-read .msg-arrow {
+  color: #d8dce2;
+}
+
+/* ==================== 消息详情浮窗 ==================== */
+.msg-detail-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 56rpx;
+  box-sizing: border-box;
+  background: rgba(15, 18, 24, 0.55);
+  animation: detail-mask-in 0.2s ease both;
+}
+
+@keyframes detail-mask-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.msg-detail-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 76vh;
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 24rpx 64rpx rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  animation: detail-modal-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes detail-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(24rpx) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- 浮窗头部 ---- */
+.detail-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f0f1f5;
+}
+
+.detail-ico {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  margin-right: 20rpx;
+  border-radius: 18rpx;
+  background: rgba(145, 158, 171, 0.16); /* 未知类型兜底：中性灰 */
+}
+
+/* 用双类选择器提高优先级，避免被上面的兜底背景覆盖 */
+.detail-ico.type-maintenance {
+  background: rgba(24, 144, 255, 0.12);
+}
+
+.detail-ico.type-volunteer {
+  background: rgba(82, 196, 26, 0.12);
+}
+
+.detail-ico.type-duty {
+  background: rgba(250, 140, 22, 0.12);
+}
+
+.detail-ico.type-system {
+  background: rgba(145, 158, 171, 0.16);
+}
+
+.detail-ico-glyph {
+  font-size: 38rpx;
+  line-height: 1;
+}
+
+.detail-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-title {
+  display: block;
+  font-size: 32rpx;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+.detail-tag {
+  flex-shrink: 0;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #8c8c8c;
+  background: rgba(145, 158, 171, 0.16);
+}
+
+.detail-tag.tag-maintenance {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.12);
+}
+
+.detail-tag.tag-volunteer {
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.12);
+}
+
+.detail-tag.tag-duty {
+  color: #fa8c16;
+  background: rgba(250, 140, 22, 0.14);
+}
+
+.detail-tag.tag-system {
+  color: #8c8c8c;
+  background: rgba(145, 158, 171, 0.16);
+}
+
+.detail-time {
+  margin-left: 16rpx;
+  font-size: 22rpx;
+  line-height: 1.4;
+  color: #9aa1ab;
+}
+
+/* ---- 浮窗正文 ---- */
+.detail-body {
+  flex: 1;
+  min-height: 0;
+  max-height: 46vh;
+  padding: 28rpx 32rpx 0;
+  box-sizing: border-box;
+}
+
+.detail-content {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  /* 保留消息内容中的换行与空格 */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detail-empty {
+  padding: 20rpx 0;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* 正文底部留白：放在滚动内容里，避免滚动条压到文字 */
+.detail-body-bottom {
+  height: 28rpx;
+}
+
+/* ---- 浮窗底部 ---- */
+.detail-footer {
+  flex-shrink: 0;
+  padding: 24rpx 32rpx 28rpx;
+  border-top: 1rpx solid #f0f1f5;
+  background: #ffffff;
+}
+
+.detail-btn {
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--primary);
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.detail-btn--hover {
+  opacity: 0.88;
+  transform: scale(0.99);
 }
 
 /* ==================== 底部安全区域 ==================== */

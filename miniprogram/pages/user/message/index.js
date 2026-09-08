@@ -16,7 +16,10 @@ Page({
     isLoading: true,
     isEmpty: true,
     userOpenid: '',
-    themeClass: ''
+    themeClass: '',
+    // 消息详情浮窗
+    showDetail: false,
+    detailMessage: null
   },
 
   /**
@@ -85,10 +88,54 @@ Page({
 
 
   /**
+   * 打开消息详情浮窗
+   * 点击卡片任意位置触发；打开的同时把该条消息标记为已读
+   * @param {Object} e - 事件对象，dataset.index 为列表中的显示下标
+   */
+  openMessageDetail: function(e) {
+    const displayIndex = e.currentTarget.dataset.index;
+    const message = this.data.messages[displayIndex];
+
+    if (!message) return;
+
+    this.setData({
+      showDetail: true,
+      detailMessage: {
+        ...message,
+        // 详情里展示精确到分钟的完整时间
+        timeText: time.formatToMinute(message.sendTime) || message.timeDisplay || ''
+      }
+    });
+
+    // 打开详情即视为已读（未读时才走网络请求）
+    if (!message.isRead) {
+      this.markAsRead(e);
+    }
+  },
+
+  /**
+   * 关闭消息详情浮窗（点击遮罩或底部“关闭”按钮）
+   */
+  closeMessageDetail: function() {
+    this.setData({
+      showDetail: false,
+      detailMessage: null
+    });
+  },
+
+  /**
+   * 空操作：用于浮窗遮罩/内容区阻止事件穿透
+   */
+  noop: function() {},
+
+  /**
    * 生命周期函数--监听页面隐藏
    */
   onHide() {
-
+    // 页面隐藏时收起详情浮窗，避免返回页面时仍停留在浮窗
+    if (this.data.showDetail) {
+      this.closeMessageDetail();
+    }
   },
 
   /**

@@ -51,7 +51,7 @@
         data-index="{{index}}"
         hover-class="msg-card--press"
         hover-stay-time="60"
-        bindtap="markAsRead"
+        bindtap="openMessageDetail"
       >
         <!-- 左侧：消息类型图标 -->
         <view class="msg-ico type-{{item.messagetype}}">
@@ -69,10 +69,64 @@
           </view>
           <view class="msg-preview">{{item.content}}</view>
         </view>
+
+        <!-- 右侧：可点击提示箭头 -->
+        <text class="msg-arrow">›</text>
       </view>
     </view>
 
     <!-- 底部安全区域 -->
     <view class="safe-area-bottom"></view>
   </scroll-view>
+
+  <!-- ==================== 消息详情浮窗 ==================== -->
+  <view
+    class="msg-detail-mask"
+    wx:if="{{showDetail}}"
+    bindtap="closeMessageDetail"
+    catchtouchmove="noop"
+  >
+    <view class="msg-detail-modal" catchtap="noop">
+      <!-- 头部：类型图标 + 标题 + 类型/时间 -->
+      <view class="detail-head">
+        <view class="detail-ico type-{{detailMessage.messagetype}}">
+          <text class="detail-ico-glyph">{{detailMessage.typeIcon}}</text>
+        </view>
+        <view class="detail-head-main">
+          <text class="detail-title">{{detailMessage.title}}</text>
+          <view class="detail-meta">
+            <text class="detail-tag tag-{{detailMessage.messagetype}}">{{detailMessage.typeText}}</text>
+            <text class="detail-time">{{detailMessage.timeText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 正文：长内容可滚动 -->
+      <scroll-view
+        class="detail-body"
+        scroll-y="{{true}}"
+        enhanced="{{true}}"
+        show-scrollbar="{{false}}"
+      >
+        <text
+          class="detail-content"
+          wx:if="{{detailMessage.content}}"
+          decode="{{true}}"
+          user-select="{{true}}"
+        >{{detailMessage.content}}</text>
+        <view class="detail-empty" wx:else>该消息暂无更多内容</view>
+        <view class="detail-body-bottom"></view>
+      </scroll-view>
+
+      <!-- 底部：关闭 -->
+      <view class="detail-footer">
+        <view
+          class="detail-btn"
+          hover-class="detail-btn--hover"
+          hover-stay-time="60"
+          bindtap="closeMessageDetail"
+        >关闭</view>
+      </view>
+    </view>
+  </view>
 </view>
