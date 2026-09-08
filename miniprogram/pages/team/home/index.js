@@ -1,16 +1,31 @@
 const iconManager = require('../../../utils/iconManager');
 const linkConfig = require('../../../config/linkConfig');
 
+// 首帧就同步取到导航栏高度与角色，避免 onLoad 里再 setData 造成的内容空档/布局跳动
+const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
+const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
+const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+const INITIAL_ROLE = (() => {
+  try {
+    const app = getApp();
+    return (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
+  } catch (e) {
+    return 'user';
+  }
+})();
+const INITIAL_IS_MEMBER = INITIAL_ROLE === 'member' || INITIAL_ROLE === 'leader' || INITIAL_ROLE === 'admin';
+const INITIAL_IS_LEADER = INITIAL_ROLE === 'leader' || INITIAL_ROLE === 'admin';
+
 Page({
   data: {
     // 导航栏高度
-    statusBarHeight: 0,
-    navBarHeight: 0,
+    statusBarHeight: STATUS_BAR_HEIGHT,
+    navBarHeight: NAV_BAR_HEIGHT,
 
     themeClass: '',
-    role: 'user',
-    isMember: false,
-    isLeader: false,
+    role: INITIAL_ROLE,
+    isMember: INITIAL_IS_MEMBER,
+    isLeader: INITIAL_IS_LEADER,
     // 功能模块配置
     dailyFunctions: [
       {
@@ -68,21 +83,10 @@ Page({
     iconLogo: iconManager.get('common_logo'),
     _touchStartX: 0,
     _touchStartY: 0,
-    pageAnimation: {},
     isAnimating: false
   },
 
   onLoad: function (options) {
-    // 获取系统信息，设置状态栏高度
-    const windowInfo = wx.getWindowInfo();
-    const statusBarHeight = windowInfo.statusBarHeight || 20;
-    const navBarHeight = statusBarHeight + 44; // 状态栏高度 + 导航栏内容高度(44px)
-    
-    this.setData({
-      statusBarHeight: statusBarHeight,
-      navBarHeight: navBarHeight
-    });
-    
     this.checkUserRole();
   },
 
@@ -98,13 +102,19 @@ Page({
     const app = getApp();
     // 使用同步存储作为回退，确保即使 app.globalData 未就绪也能获取角色
     const role = (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
-    this.setData({
-      role: role,
-      isMember: role === 'member' || role === 'leader' || role === 'admin',
-      isLeader: role === 'leader' || role === 'admin'
-    });
+    const isMember = role === 'member' || role === 'leader' || role === 'admin';
+    const isLeader = role === 'leader' || role === 'admin';
 
-    if (!this.data.isMember) {
+    // 角色未变化时不 setData，避免每次切回本页都白白触发一次整页渲染
+    if (role !== this.data.role || isMember !== this.data.isMember || isLeader !== this.data.isLeader) {
+      this.setData({
+        role: role,
+        isMember: isMember,
+        isLeader: isLeader
+      });
+    }
+
+    if (!isMember) {
       wx.showModal({
         title: '提示',
         content: '您不是维修组成员，无法访问此页面',
@@ -144,24 +154,24 @@ Page({
   },
 
   // 页面动画
+  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
   initAnimation: function () {
-    try {
-      const animation = wx.createAnimation({ duration: 0 });
-      animation.opacity(1).translateX(0).step();
-      this.setData({ pageAnimation: animation.export(), isAnimating: false });
-    } catch (e) {}
+    if (this.data.isAnimating) {
+      this.setData({ isAnimating: false });
+    }
   },
 
+  // 滑动切换 Tab：直接切换，不再先把整页淡出
   animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating) return;
+    if (this.data.isAnimating || !url) return;
     this.setData({ isAnimating: true });
-    try {
-      const animation = wx.createAnimation({ duration: 220, timingFunction: 'ease-in-out' });
-      const offset = direction === 'left' ? -40 : 40;
-      animation.translateX(offset).opacity(0.0).step();
-      this.setData({ pageAnimation: animation.export() });
-      setTimeout(() => { wx.switchTab({ url }); }, 230);
-    } catch (e) { wx.switchTab({ url }); }
+    wx.switchTab({ url });
+    // 兜底复位，避免切换失败后标记卡死
+    setTimeout(() => {
+      if (this.data.isAnimating) {
+        this.setData({ isAnimating: false });
+      }
+    }, 400);
   },
 
   // 页面导航

@@ -4,11 +4,70 @@ const repairCategories = require('../../utils/repairCategories');
 const iconManager = require('../../utils/iconManager');
 const time = require('../../utils/time');
 
+// 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
+const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
+const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
+const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+
+// 首帧直出：预约时间、日期区间、用户信息都能同步算出来，直接作为初始 data
+function computeEarliestAppointmentTime() {
+  const now = new Date();
+  const nextHour = new Date(now);
+
+  if (now.getMinutes() > 0 || now.getSeconds() > 0) {
+    nextHour.setHours(now.getHours() + 1);
+  }
+  nextHour.setMinutes(0);
+  nextHour.setSeconds(0);
+  nextHour.setMilliseconds(0);
+
+  const year = nextHour.getFullYear();
+  const month = (`0${nextHour.getMonth() + 1}`).slice(-2);
+  const day = (`0${nextHour.getDate()}`).slice(-2);
+  const hour = (`0${nextHour.getHours()}`).slice(-2);
+
+  return {
+    date: `${year}-${month}-${day}`,
+    time: `${hour}:00`
+  };
+}
+
+function computeAppointmentDateRange() {
+  const now = new Date();
+  const future = new Date();
+  future.setDate(now.getDate() + 30);
+  const pad = (n) => (`0${n}`).slice(-2);
+
+  return {
+    startDate: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+    endDate: `${future.getFullYear()}-${pad(future.getMonth() + 1)}-${pad(future.getDate())}`
+  };
+}
+
+const INITIAL_APPOINTMENT = (() => {
+  const earliest = computeEarliestAppointmentTime();
+  const range = computeAppointmentDateRange();
+  return {
+    date: earliest.date,
+    time: earliest.time,
+    startDate: range.startDate,
+    endDate: range.endDate
+  };
+})();
+
+const INITIAL_USER_INFO = (() => {
+  try {
+    return wx.getStorageSync('userInfo') || {};
+  } catch (e) {
+    return {};
+  }
+})();
+
 Page({
   data: {
     // 导航栏高度
-    statusBarHeight: 0,
-    navBarHeight: 0,
+    statusBarHeight: STATUS_BAR_HEIGHT,
+    navBarHeight: NAV_BAR_HEIGHT,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
@@ -43,10 +102,10 @@ Page({
     selectedTypeId: null,
 
     // 报修详情
-    appointmentDate: '',
-    appointmentTime: '',
-    startDate: '',
-    endDate: '',
+    appointmentDate: INITIAL_APPOINTMENT.date,
+    appointmentTime: INITIAL_APPOINTMENT.time,
+    startDate: INITIAL_APPOINTMENT.startDate,
+    endDate: INITIAL_APPOINTMENT.endDate,
     otherDescription: '',
     
     // 特殊输入字段
@@ -62,7 +121,7 @@ Page({
     requiredFields: [],     // 当前需要的特殊字段
     
     // 用户信息
-    userInfo: {},
+    userInfo: INITIAL_USER_INFO,
     
     // 紧急联系人信息
     emergencyContacts: [],
@@ -73,22 +132,11 @@ Page({
     _touchStartX: 0,
     _touchStartY: 0,
     // 动画相关
-    pageAnimation: {},
     isAnimating: false,
     themeClass: ''
   },
 
   onLoad: function (options) {
-    // 获取系统信息，设置状态栏高度
-    const windowInfo = wx.getWindowInfo();
-    const statusBarHeight = windowInfo.statusBarHeight || 20;
-    const navBarHeight = statusBarHeight + 44; // 状态栏高度 + 导航栏内容高度(44px)
-    
-    this.setData({
-      statusBarHeight: statusBarHeight,
-      navBarHeight: navBarHeight
-    });
-    
     this.initAnimation();
     this.initAppointmentDate();
     this.loadUserInfo();
@@ -192,78 +240,52 @@ Page({
   onUnload() {},
 
   // 页面动画
+  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
   initAnimation: function () {
-    try {
-      const animation = wx.createAnimation({ duration: 0 });
-      animation.opacity(1).translateX(0).step();
-      this.setData({ pageAnimation: animation.export(), isAnimating: false });
-    } catch (e) {}
+    if (this.data.isAnimating) {
+      this.setData({ isAnimating: false });
+    }
   },
 
+  // 滑动切换 Tab：直接切换，不再先把整页淡出
   animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating) return;
+    if (this.data.isAnimating || !url) return;
     this.setData({ isAnimating: true });
-    try {
-      const animation = wx.createAnimation({ duration: 220, timingFunction: 'ease-in-out' });
-      const offset = direction === 'left' ? -40 : 40;
-      animation.translateX(offset).opacity(0.0).step();
-      this.setData({ pageAnimation: animation.export() });
-      setTimeout(() => { wx.switchTab({ url }); }, 230);
-    } catch (e) { wx.switchTab({ url }); }
+    wx.switchTab({ url });
+    // 兜底复位，避免切换失败后标记卡死
+    setTimeout(() => {
+      if (this.data.isAnimating) {
+        this.setData({ isAnimating: false });
+      }
+    }, 400);
   },
 
   initAppointmentDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (`0${now.getMonth() + 1}`).slice(-2);
-    const day = (`0${now.getDate()}`).slice(-2);
-    
-    const future = new Date();
-    future.setDate(now.getDate() + 30);
-    const futureYear = future.getFullYear();
-    const futureMonth = (`0${future.getMonth() + 1}`).slice(-2);
-    const futureDay = (`0${future.getDate()}`).slice(-2);
-    
-    // 计算最早可预约的时间
-    const earliestTime = this.getEarliestAppointmentTime();
-    
+    const earliestTime = computeEarliestAppointmentTime();
+    const range = computeAppointmentDateRange();
+
     this.setData({
       appointmentDate: earliestTime.date,
-      startDate: `${year}-${month}-${day}`,
-      endDate: `${futureYear}-${futureMonth}-${futureDay}`,
+      startDate: range.startDate,
+      endDate: range.endDate,
       appointmentTime: earliestTime.time,
     });
   },
 
   // 获取最早可预约时间
   getEarliestAppointmentTime() {
-    const now = new Date();
-    const nextHour = new Date(now);
-    
-    if (now.getMinutes() > 0 || now.getSeconds() > 0) {
-      nextHour.setHours(now.getHours() + 1);
-    }
-    nextHour.setMinutes(0);
-    nextHour.setSeconds(0);
-    nextHour.setMilliseconds(0);
-    
-    const year = nextHour.getFullYear();
-    const month = (`0${nextHour.getMonth() + 1}`).slice(-2);
-    const day = (`0${nextHour.getDate()}`).slice(-2);
-    const hour = (`0${nextHour.getHours()}`).slice(-2);
-    
-    return {
-      date: `${year}-${month}-${day}`,
-      time: `${hour}:00`
-    };
+    return computeEarliestAppointmentTime();
   },
+
   loadUserInfo() {
     const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo) {
-      this.setData({ userInfo });
-    } else {
+    if (!userInfo) {
       wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
     }
+    // 首帧已用同一份缓存直出，避免这里再触发一次多余渲染
+    if (this.data.userInfo && this.data.userInfo.openid) return;
+    this.setData({ userInfo });
   },
 
   // 加载紧急联系人信息（来自 proUsers 中 isEmergencyContact 为 true 的成员）

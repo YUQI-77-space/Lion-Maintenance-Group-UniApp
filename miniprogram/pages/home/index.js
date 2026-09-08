@@ -1,11 +1,21 @@
 const cloudImageManager = require('../../utils/cloudImageManager');
 const iconManager = require('../../utils/iconManager');
 
+// 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
+const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
+const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
+const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+
+// 首帧直出：启动页已预热临时URL缓存，这里同步取用，避免首屏先渲染一片骨架屏
+const INITIAL_SWIPER_IMAGES = cloudImageManager.resolveCachedTempUrls(cloudImageManager.getHomeSwiperImages());
+const INITIAL_SPECIAL_EVENTS = cloudImageManager.resolveCachedTempUrls(cloudImageManager.getHomeSpecialEvents());
+const INITIAL_TEAM_SPIRIT = cloudImageManager.resolveCachedTempUrls(cloudImageManager.getHomeTeamSpirit());
+
 Page({
   data: {
     // 状态栏高度
-    statusBarHeight: 0,
-    navBarHeight: 0,
+    statusBarHeight: STATUS_BAR_HEIGHT,
+    navBarHeight: NAV_BAR_HEIGHT,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
@@ -13,11 +23,10 @@ Page({
     // 页面滑动与动画
     _touchStartX: 0,
     _touchStartY: 0,
-    pageAnimation: {},
     isAnimating: false,
     
     // 轮播图
-    swiperImages: [],
+    swiperImages: INITIAL_SWIPER_IMAGES,
     swiperCurrent: 0,
     swiperInterval: 3500,
     swiperDuration: 300,
@@ -32,8 +41,8 @@ Page({
     ],
     
     // 内容展示
-    specialEvents: [],
-    teamSpirit: [],
+    specialEvents: INITIAL_SPECIAL_EVENTS,
+    teamSpirit: INITIAL_TEAM_SPIRIT,
     teamHonors: [],
     conveyorDuration: 12000,
     
@@ -54,16 +63,6 @@ Page({
   },
 
   onLoad: function (options) {
-    // 获取系统信息，设置状态栏高度
-    const windowInfo = wx.getWindowInfo();
-    const statusBarHeight = windowInfo.statusBarHeight || 20;
-    const navBarHeight = statusBarHeight + 44; // 状态栏高度 + 导航栏内容高度(44px)
-    
-    this.setData({
-      statusBarHeight: statusBarHeight,
-      navBarHeight: navBarHeight
-    });
-    
     this.initAnimation();
     
     // 记录网络类型，用于自适应加载策略
@@ -232,29 +231,25 @@ Page({
     this.animateAndSwitch(direction, tabOrder[nextIdx]);
   },
 
-  // 页面动画控制
+  // 页面动画
+  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
   initAnimation: function () {
-    try {
-      const animation = wx.createAnimation({ duration: 0 });
-      animation.opacity(1).translateX(0).step();
-      this.setData({ pageAnimation: animation.export(), isAnimating: false });
-    } catch (e) {}
+    if (this.data.isAnimating) {
+      this.setData({ isAnimating: false });
+    }
   },
 
+  // 滑动切换 Tab：直接切换，不再先把整页淡出
   animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating) return;
+    if (this.data.isAnimating || !url) return;
     this.setData({ isAnimating: true });
-    try {
-      const animation = wx.createAnimation({ duration: 220, timingFunction: 'ease-in-out' });
-      const offset = direction === 'left' ? -40 : 40;
-      animation.translateX(offset).opacity(0.0).step();
-      this.setData({ pageAnimation: animation.export() });
-      setTimeout(() => {
-        wx.switchTab({ url });
-      }, 230);
-    } catch (e) {
-      wx.switchTab({ url });
-    }
+    wx.switchTab({ url });
+    // 兜底复位，避免切换失败后标记卡死
+    setTimeout(() => {
+      if (this.data.isAnimating) {
+        this.setData({ isAnimating: false });
+      }
+    }, 400);
   },
 
   // 轮播图数据初始化

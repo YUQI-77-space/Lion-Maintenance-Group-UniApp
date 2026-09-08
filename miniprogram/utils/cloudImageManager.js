@@ -535,6 +535,35 @@ class CloudImageManager {
   }
 
   /**
+   * 同步把 fileID 换成已缓存的临时URL（内存 + 本地持久化缓存），
+   * 用于页面首帧直出：缓存命中时首屏渲染即有图片，不必等网络。
+   * 未命中的项原样返回（<image> 支持直接使用 cloud:// fileID）。
+   * @param {Array<Object>} images - 包含url字段的图片对象数组
+   * @returns {Array<Object>}
+   */
+  resolveCachedTempUrls(images) {
+    if (!Array.isArray(images) || images.length === 0) return images;
+    const now = Date.now();
+    return images.map(img => {
+      const url = img && img.url;
+      if (typeof url !== 'string' || url.indexOf('cloud://') !== 0) return img;
+
+      const cached = this.tempUrlCache.get(url);
+      if (cached && cached.expireAt > now && cached.url) {
+        return { ...img, url: cached.url };
+      }
+
+      const local = this.getLocalStorageTempUrl(url);
+      if (local && local.url && local.expireAt > now) {
+        this.tempUrlCache.set(url, { url: local.url, expireAt: local.expireAt });
+        return { ...img, url: local.url };
+      }
+
+      return img;
+    });
+  }
+
+  /**
    * 预取首页需要的云文件临时URL，减少首页首屏转换开销
    * @param {{includeHonors?:boolean, honorsCount?:number}} options
    */

@@ -7,7 +7,7 @@
   </view>
 </view>
 
-<view class="repair-container {{currentStep === 5 ? 'repair-success-scroll' : ''}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
+<view class="repair-container {{currentStep === 5 ? 'repair-success-scroll' : ''}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" style="padding-top: {{navBarHeight + 20}}px;">
   <!-- 步骤内容 -->
   <view wx:if="{{currentStep === 0}}">
     <!-- 搜索栏 -->

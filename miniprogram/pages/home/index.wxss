@@ -64,7 +64,7 @@
   width: 100%;
   height: 400rpx;
   border-radius: var(--radius-card);
-  background: var(--bg-card);
+  background: #E8ECEF;
 }
 
 /* ============================================
@@ -93,7 +93,7 @@
   width: 100%;
   height: 220rpx;
   border-radius: var(--radius-image);
-  background: var(--bg-card);
+  background: #E8ECEF;
 }
 
 /* ============================================
@@ -141,7 +141,7 @@
   width: 100%;
   height: 100%;
   border-radius: var(--radius-image);
-  background: var(--bg-card);
+  background: #E8ECEF;
 }
 
 @keyframes conveyor-move {
@@ -152,8 +152,9 @@
 /* ============================================
    骨架屏加载动画
    ============================================ */
+/* 骨架屏用浅灰而非纯白：首屏未拿到数据时不再整屏发白 */
 .skeleton-block {
-  background: var(--bg-card);
+  background: #E8ECEF;
 }
 
 @keyframes skeleton-loading {

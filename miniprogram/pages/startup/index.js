@@ -218,15 +218,24 @@ Page({
     const iconManager = require('../../utils/iconManager');
     const tasks = [];
     try {
-      const t = cloudImageManager.prefetchHomeTempUrls && cloudImageManager.prefetchHomeTempUrls({ includeHonors: false });
+      // 首页首屏（含荣誉履带首批）临时URL一次性预热，首页/切换回首页都能首帧直出
+      const t = cloudImageManager.prefetchHomeTempUrls && cloudImageManager.prefetchHomeTempUrls({ includeHonors: true, honorsCount: 15 });
       if (t && typeof t.then === 'function') tasks.push(t.catch(() => {}));
     } catch (e) {}
 
     // 批量预热常用图片
     tasks.push(new Promise((resolve) => {
       const imagesToPreload = [
+        // TabBar 全部图标（4 个普通态 + 4 个激活态），保证切 Tab 时图标不空一帧
+        iconManager.getTab('tab_home'),
         iconManager.getTab('tab_home_active'),
-        iconManager.getTab('tab_home_normal'),
+        iconManager.getTab('tab_team'),
+        iconManager.getTab('tab_team_active'),
+        iconManager.getTab('tab_repair'),
+        iconManager.getTab('tab_repair_active'),
+        iconManager.getTab('tab_profile'),
+        iconManager.getTab('tab_user_active'),
+        // 首页功能入口与常用状态图标
         iconManager.get('status_todo'),
         iconManager.get('status_message'),
         iconManager.get('home_repair'),

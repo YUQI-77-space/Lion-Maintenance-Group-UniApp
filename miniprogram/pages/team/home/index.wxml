@@ -8,7 +8,7 @@
   </view>
 </view>
 
-<view class="container" wx:if="{{isMember}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}" style="padding-top: {{navBarHeight + 20}}px;">
+<view class="container" wx:if="{{isMember}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" style="padding-top: {{navBarHeight + 20}}px;">
   <view class="header">
     <view class="subtitle">欢迎回来，{{role === 'leader' ? '组长' : '组员'}}</view>
   </view>

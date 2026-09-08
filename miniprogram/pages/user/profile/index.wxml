@@ -7,7 +7,7 @@
   </view>
 </view>
 
-<view class="profile-page" style="padding-top: {{navBarHeight}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" animation="{{pageAnimation}}">
+<view class="profile-page" style="padding-top: {{navBarHeight}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
   <!-- 沉浸式头部区域 -->
   <view class="profile-header">
     <!-- 暗纹背景 -->

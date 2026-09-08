@@ -7,7 +7,7 @@
   </view>
 </view>
 
-<view class="home-container" style="padding-top: {{navBarHeight + 20}}px;" animation="{{pageAnimation}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+<view class="home-container" style="padding-top: {{navBarHeight + 20}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
   <!-- 轮播图区域 -->
   <view class="swiper-section">
     <block wx:if="{{swiperImages.length}}">
@@ -66,7 +66,7 @@
       moreText="更多"
       bind:more="onSpecialEventsMore">
     </section-header>
-    <block wx:if="{{isLoadingSpecialEvents || specialEvents.length === 0}}">
+    <block wx:if="{{specialEvents.length === 0}}">
       <view class="grid-container">
         <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
           <view class="skeleton-block grid-image-skeleton"></view>
@@ -99,7 +99,7 @@
       moreText="更多"
       bind:more="onTeamSpiritMore">
     </section-header>
-    <block wx:if="{{isLoadingTeamSpirit || teamSpirit.length === 0}}">
+    <block wx:if="{{teamSpirit.length === 0}}">
       <view class="grid-container">
         <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
           <view class="skeleton-block grid-image-skeleton"></view>

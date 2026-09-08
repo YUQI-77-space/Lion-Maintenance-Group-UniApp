@@ -3,19 +3,68 @@ const avatarManager = require('../../../utils/avatarManager');
 const api = require('../../../utils/apiAdapter');
 const iconManager = require('../../../utils/iconManager');
 
+// 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
+const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
+const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
+const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+
+// 首帧直出：从全局/本地缓存同步取用户信息，避免切到本页时先闪一帧"未登录"
+const INITIAL_USER_INFO = (() => {
+  try {
+    const app = getApp();
+    return (app && app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+  } catch (e) {
+    return {};
+  }
+})();
+const INITIAL_ROLE = (() => {
+  try {
+    const app = getApp();
+    return (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
+  } catch (e) {
+    return 'user';
+  }
+})();
+
+function getRoleName(role) {
+  if (role === 'member') return '维修组成员';
+  if (role === 'leader') return '维修组组长';
+  return '普通用户';
+}
+
+const INITIAL_TODO_COUNT = (() => {
+  try {
+    const cached = wx.getStorageSync('todoTotalCount');
+    if (typeof cached === 'number') return cached;
+    const app = getApp();
+    return (app && app.globalData && typeof app.globalData.todoTotalCount === 'number') ? app.globalData.todoTotalCount : 0;
+  } catch (e) {
+    return 0;
+  }
+})();
+
+const INITIAL_UNREAD_COUNT = (() => {
+  try {
+    const app = getApp();
+    return (app && app.globalData && typeof app.globalData.unreadMessageCount === 'number') ? app.globalData.unreadMessageCount : 0;
+  } catch (e) {
+    return 0;
+  }
+})();
+
 Page({
   data: {
     // 导航栏高度
-    statusBarHeight: 0,
-    navBarHeight: 0,
+    statusBarHeight: STATUS_BAR_HEIGHT,
+    navBarHeight: NAV_BAR_HEIGHT,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
     iconArrowRight: iconManager.get('common_arrow_right'),
 
-    userInfo: {},
-    role: 'user',
-    roleName: '普通用户',
+    userInfo: INITIAL_USER_INFO,
+    role: INITIAL_ROLE,
+    roleName: getRoleName(INITIAL_ROLE),
     functionList: [
       {
         id: 'todo',
@@ -38,11 +87,10 @@ Page({
     ],
     _touchStartX: 0,
     _touchStartY: 0,
-    pageAnimation: {},
     isAnimating: false,
     // 消息与待办计数
-    unreadMessageCount: 0,
-    todoCount: 0,
+    unreadMessageCount: INITIAL_UNREAD_COUNT,
+    todoCount: INITIAL_TODO_COUNT,
     themeClass: '',
     // 待反馈消息
     pendingFeedbackMessages: [],
@@ -56,16 +104,6 @@ Page({
   },
 
   onLoad: function (options) {
-    // 获取系统信息，设置状态栏高度
-    const windowInfo = wx.getWindowInfo();
-    const statusBarHeight = windowInfo.statusBarHeight || 20;
-    const navBarHeight = statusBarHeight + 44; // 状态栏高度 + 导航栏内容高度(44px)
-    
-    this.setData({
-      statusBarHeight: statusBarHeight,
-      navBarHeight: navBarHeight
-    });
-    
     this.getUserInfo();
     // 初始化计数回调
     const app = getApp();
@@ -190,19 +228,16 @@ Page({
     
     if (app.globalData.userInfo) {
       const role = app.globalData.role || 'user';
-      let roleName = '普通用户';
-      
-      if (role === 'member') {
-        roleName = '维修组成员';
-      } else if (role === 'leader') {
-        roleName = '维修组组长';
+      const roleName = getRoleName(role);
+
+      // 引用与角色都未变时不再 setData，避免每次切回本页都把整个 userInfo 回传一次
+      if (this.data.userInfo !== app.globalData.userInfo || this.data.role !== role) {
+        this.setData({
+          userInfo: app.globalData.userInfo,
+          role: role,
+          roleName: roleName
+        });
       }
-      
-      this.setData({
-        userInfo: app.globalData.userInfo,
-        role: role,
-        roleName: roleName
-      });
       
       this.updateAvatarDisplay(app.globalData.userInfo, app.globalData.openid);
       
@@ -217,12 +252,7 @@ Page({
         if (result.success && result.data) {
           const userInfo = result.data;
           const role = app.globalData.role || 'user';
-          let roleName = '普通用户';
-          if (role === 'member') {
-            roleName = '维修组成员';
-          } else if (role === 'leader') {
-            roleName = '维修组组长';
-          }
+          const roleName = getRoleName(role);
           this.setData({ userInfo, role, roleName });
           app.globalData.userInfo = userInfo;
           this.updateAvatarDisplay(userInfo, app.globalData.openid);
@@ -302,31 +332,23 @@ Page({
     }
   },
 
-  // 初始化动画（进入页面或显示时复位）
+  // 初始化动画（仅复位滑动切换的防抖标记，页面根节点不再挂 animation，避免整页合成层与空白帧）
   initAnimation: function () {
-    try {
-      const animation = wx.createAnimation({ duration: 0 });
-      animation.opacity(1).translateX(0).step();
-      this.setData({ pageAnimation: animation.export(), isAnimating: false });
-    } catch (e) {
-      // 忽略不支持动画的环境
+    if (this.data.isAnimating) {
+      this.setData({ isAnimating: false });
     }
   },
-  // 执行动画并在结束后切换Tab
+  // 滑动切换 Tab：直接切换，不再先把整页淡出
   animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating) return;
+    if (this.data.isAnimating || !url) return;
     this.setData({ isAnimating: true });
-    try {
-      const animation = wx.createAnimation({ duration: 220, timingFunction: 'ease-in-out' });
-      const offset = direction === 'left' ? -40 : 40;
-      animation.translateX(offset).opacity(0.0).step();
-      this.setData({ pageAnimation: animation.export() });
-      setTimeout(() => {
-        wx.switchTab({ url });
-      }, 230);
-    } catch (e) {
-      wx.switchTab({ url });
-    }
+    wx.switchTab({ url });
+    // 兜底复位，避免切换失败后标记卡死
+    setTimeout(() => {
+      if (this.data.isAnimating) {
+        this.setData({ isAnimating: false });
+      }
+    }, 400);
   },
 
   // 退出登录
