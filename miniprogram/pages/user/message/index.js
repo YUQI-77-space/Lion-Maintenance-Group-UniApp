@@ -13,8 +13,8 @@ Page({
     messages: [],
     messageNumber: 0,
     unreadCount: 0,
-    isLoading: false,
-    isEmpty: false,
+    isLoading: true,
+    isEmpty: true,
     userOpenid: '',
     themeClass: ''
   },
