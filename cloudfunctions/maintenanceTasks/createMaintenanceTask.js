@@ -58,25 +58,28 @@ async function notifyDepartmentMembers(taskData) {
       '请及时关注并认领。'
     ].join('\n')
 
-    const notifyPromises = members.map(member => {
-      return cloud.callFunction({
+    // 将多位组员合并为一次 messages 云函数批量调用，减少逐人调用带来的额外耗时
+    const messageItems = members.map(member => ({
+      messageUserId: member.openid,
+      title,
+      content,
+      messageType: 'maintenance'
+    }))
+
+    try {
+      await cloud.callFunction({
         name: 'messages',
         data: {
-          action: 'createMessage',
+          action: 'createMessages',
           params: {
-            messageUserId: member.openid,
-            title,
-            content,
-            messageType: 'maintenance'
+            messages: messageItems
           }
         }
-      }).catch(err => {
-        console.error(`通知成员 ${member.openid} 失败:`, err)
       })
-    })
-
-    await Promise.allSettled(notifyPromises)
-    console.log(`已向 ${targetDepartment} 的 ${members.length} 名组员发送任务提醒`)
+      console.log(`已向 ${targetDepartment} 的 ${members.length} 名组员发送任务提醒`)
+    } catch (err) {
+      console.error(`批量通知部门成员失败（共 ${members.length} 人）:`, err)
+    }
   } catch (err) {
     console.error('推送部门任务提醒失败:', err)
   }
@@ -166,14 +169,14 @@ exports.createMaintenanceTask = async (params, OPENID) => {
 
     // 幂等防重：若同一请求已写入则直接返回已有记录，避免客户端重试造成重复任务
     if (requestId) {
-      const existedTaskRes = await db.collection('maintenance_tasks').where({ requestId }).get();
+      const existedTaskRes = await db.collection('maintenance_tasks').where({ requestId }).limit(1).get();
       if (existedTaskRes.data && existedTaskRes.data.length > 0) {
         const existedTask = existedTaskRes.data[0];
         // 确保待办同步存在
         const existedTodo = await db.collection('maintenance_toDo_list').where({
           requestId,
           taskId: existedTask.maintenanceTaskId
-        }).get();
+        }).limit(1).get();
         if (!existedTodo.data || existedTodo.data.length === 0) {
           try {
             await db.collection('maintenance_toDo_list').add({
@@ -217,17 +220,25 @@ exports.createMaintenanceTask = async (params, OPENID) => {
       }
     }
     
-    // 新增：强制校验申请人必须为已注册用户
+    // 强制校验申请人必须为已注册用户，并一次性取回补全申请信息所需的字段（原为两次查询）
     const applicantOpenid = (params && params.applicantId) || OPENID;
+    let applicantUser = null;
     try {
-      const userDoc = await db.collection('users').where({ openid: applicantOpenid }).get();
-      if (!userDoc.data || userDoc.data.length === 0) {
+      const userResult = await db.collection('users').where({
+        openid: applicantOpenid
+      }).field({
+        nickName: true,
+        studentId: true,
+        qqId: true
+      }).get();
+      if (!userResult.data || userResult.data.length === 0) {
         return {
           code: 401,
           data: null,
           message: '用户未注册，无法创建维修任务'
         };
       }
+      applicantUser = userResult.data[0];
     } catch (checkErr) {
       // 数据库异常也不应放过潜在未注册
       console.error('验证用户注册状态失败:', checkErr);
@@ -254,18 +265,11 @@ exports.createMaintenanceTask = async (params, OPENID) => {
     // 如果不是管理员创建，尝试从用户信息中获取学号
     if (!params.isManagementCreated) {
       try {
-        const userResult = await db.collection('users').where({
-          openid: finalApplicantId
-        }).field({
-          nickName: true,
-          studentId: true,
-          qqId: true
-        }).get()
-        if (userResult.data.length > 0) {
-          const u = userResult.data[0]
-          if (!finalApplicantName) finalApplicantName = u.nickName || ''
-          if (!finalApplicantStudentId) finalApplicantStudentId = u.studentId || ''
-          if (!finalApplicantQqId) finalApplicantQqId = u.qqId || ''
+        // 使用上面校验时已取回的用户文档，不再重复查询 users 集合
+        if (applicantUser) {
+          if (!finalApplicantName) finalApplicantName = applicantUser.nickName || ''
+          if (!finalApplicantStudentId) finalApplicantStudentId = applicantUser.studentId || ''
+          if (!finalApplicantQqId) finalApplicantQqId = applicantUser.qqId || ''
         }
       } catch (err) {
         console.warn('补全申请人信息失败:', err)

@@ -3,6 +3,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const { createMessage } = require('./createMessage')
+const { createMessages } = require('./createMessages')
 const { getMessage } = require('./getMessage')
 const { markTheMessageAsRead } = require('./markTheMessageAsRead')
 const { removalMessages } = require('./removalMessages')
@@ -21,6 +22,8 @@ exports.main = async (event, context) => {
 	switch (action) {
 		case 'createMessage':
 			return await createMessage(params, OPENID)
+		case 'createMessages':
+			return await createMessages(params, OPENID)
 		case 'getMessage':
 			return await getMessage(params, OPENID)
 		case 'markTheMessageAsRead':
