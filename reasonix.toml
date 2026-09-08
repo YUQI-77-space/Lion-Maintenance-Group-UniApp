@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash=cd \"F:\\Program\\Maintenance Group APP\" && find cloudfunctions -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 grep -hoE \"collection\\('[^']*'\\)\" | sort | uniq -c | sort -rn | head -20", "Bash=cd \"F:\\Program\\Maintenance Group APP\" && node -e \"const a=require('./miniprogram/app.json'); console.log('pages.length =', a.pages.length, '; tabBar.list =', a.tabBar.list.length)\""]
