@@ -9,6 +9,8 @@
   background-color: var(--background-color);
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top);
+  padding-left: 0;
+  padding-right: 0;
   position: relative;
 }
 

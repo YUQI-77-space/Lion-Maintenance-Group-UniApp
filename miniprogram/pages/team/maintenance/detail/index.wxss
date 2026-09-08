@@ -229,18 +229,8 @@
 }
 
 .assignee-info {
-  background-color: var(--background-color);
   border-radius: 12rpx;
   padding: 30rpx;
-  border-left: 6rpx solid transparent;
-}
-
-.main-assignee {
-  border-left-color: var(--primary-color);
-}
-
-.additional-assignee {
-  border-left-color: var(--success-color);
 }
 
 .assignee-header {

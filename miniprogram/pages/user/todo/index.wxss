@@ -8,6 +8,8 @@
   overflow: hidden;
   background-color: var(--background-color);
   padding-top: env(safe-area-inset-top);
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* 左侧分类导航 */
@@ -243,9 +245,8 @@
 .task-actions {
   display: flex;
   justify-content: flex-end;
-  padding: 0 20rpx 20rpx;
+  padding: 20rpx;
   border-top: 1rpx solid var(--border-light);
-  margin-top: 10rpx;
 }
 
 .text-btn {
