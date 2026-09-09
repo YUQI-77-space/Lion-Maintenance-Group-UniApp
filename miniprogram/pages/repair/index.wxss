@@ -467,20 +467,6 @@ page {
   color: var(--text-primary);
 }
 
-.confirm-edit {
-  flex-shrink: 0;
-  margin-left: 20rpx;
-  padding: 6rpx 20rpx;
-  border: 1rpx solid rgba(0, 0, 205, 0.35);
-  border-radius: 999rpx;
-  font-size: 22rpx;
-  color: var(--primary);
-}
-
-.confirm-edit:active {
-  background: rgba(0, 0, 205, 0.06);
-}
-
 /* ==================== 提交成功页 ==================== */
 .success-card {
   padding: 48rpx 28rpx 36rpx;

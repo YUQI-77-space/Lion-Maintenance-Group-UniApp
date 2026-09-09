@@ -1,6 +1,16 @@
 // pages/team/ewa/summary/index.js
 const api = require('../../../../utils/apiAdapter')
 
+// 图表配色统一到全局设计变量，饼图与柱状图共用同一套，避免同一类工作量出现两种颜色
+// 维修 = 品牌蓝 var(--primary)，志愿 = 警告橙 var(--warning)，值班 = 青绿
+const CHART_COLORS = {
+  maintenance: '#0000CD',
+  volunteer: '#FAAD14',
+  duty: '#00C9A7'
+}
+// 与 barChartData 的顺序（维修 / 志愿 / 值班）保持一致
+const CHART_COLOR_LIST = [CHART_COLORS.maintenance, CHART_COLORS.volunteer, CHART_COLORS.duty]
+
 Page({
   data: {
     loading: true,
@@ -14,9 +24,11 @@ Page({
     pieChartData: [],
     barChartData: [],
     ringChartData: [],
+    chartColors: CHART_COLOR_LIST,
     showCharts: false,
     canvasWidth: 300,
-    canvasHeight: 250
+    pieWidth: 260,
+    pieHeight: 234
   },
 
   onLoad() {
@@ -25,13 +37,15 @@ Page({
   },
 
   calculateCanvasSize() {
-    const windowInfo = wx.getWindowInfo()
-    const screenWidth = windowInfo.windowWidth
-    // 设置合适的canvas尺寸
-    const width = Math.min(screenWidth - 40, 340)
+    const { windowWidth } = wx.getWindowInfo()
+    // 画布宽度要扣掉页面内边距 24rpx 与卡片内边距 28rpx（左右各一份），否则会溢出卡片
+    const horizontalPadding = (24 + 28) * 2 * windowWidth / 750
+    const canvasWidth = Math.max(Math.floor(windowWidth - horizontalPadding), 240)
+    const pieWidth = Math.min(canvasWidth, 260)
     this.setData({
-      canvasWidth: width,
-      canvasHeight: width * 0.75
+      canvasWidth,
+      pieWidth,
+      pieHeight: Math.round(pieWidth * 0.9)
     })
   },
 
@@ -80,19 +94,19 @@ Page({
             name: '维修工作量',
             value: weightedMaintenance,
             rawValue: totalMaintenanceEW,
-            color: '#0066FF'
+            color: CHART_COLORS.maintenance
           },
           {
             name: '志愿工作量',
             value: weightedVolunteer,
             rawValue: totalVolunteerEW,
-            color: '#FFA940'
+            color: CHART_COLORS.volunteer
           },
           {
             name: '值班工作量',
             value: weightedDuty,
             rawValue: totalDutyEW,
-            color: '#00C9A7'
+            color: CHART_COLORS.duty
           }
         ].filter(item => item.rawValue > 0)
 

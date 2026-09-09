@@ -256,7 +256,6 @@
             <text class="confirm-label">问题类别</text>
             <text class="confirm-value">{{selectedCategory.name}} › {{selectedSubcategory.name}} › {{selectedType.name}}</text>
           </view>
-          <view class="confirm-edit" bindtap="onEditStep" data-step="0">修改</view>
         </view>
 
         <view class="confirm-item">
@@ -264,7 +263,6 @@
             <text class="confirm-label">预约时间</text>
             <text class="confirm-value">{{appointmentDate}} {{appointmentTime}}</text>
           </view>
-          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
         </view>
 
         <view class="confirm-item" wx:if="{{detailLines.length}}">
@@ -274,7 +272,6 @@
               <text class="confirm-line" wx:for="{{detailLines}}" wx:key="label">{{item.label}}：{{item.value}}</text>
             </view>
           </view>
-          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
         </view>
 
         <view class="confirm-item">
@@ -282,7 +279,6 @@
             <text class="confirm-label">问题描述</text>
             <text class="confirm-value">{{otherDescription || '无'}}</text>
           </view>
-          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
         </view>
       </view>
 

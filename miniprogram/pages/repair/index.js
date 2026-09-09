@@ -239,11 +239,21 @@ Page({
 
   /**
    * 构建确认页的“设备信息”行；标签取当前类型的字段定义，避免出现“设备型号”这类泛化名称
+   * 笔记本型号为选填，未填写时统一显示“未知”，保证信息单上始终呈现该栏目
    */
   buildDetailLines() {
-    return (this.data.requiredFields || [])
-      .filter(field => this.data[field.key])
-      .map(field => ({ label: field.label, value: this.data[field.key] }));
+    const fields = this.data.requiredFields || [];
+
+    return fields
+      .map(field => {
+        const raw = this.data[field.key];
+        const filled = raw && String(raw).trim() ? raw : '';
+        return {
+          label: field.label,
+          value: filled || (field.key === 'laptopModel' ? '未知' : '')
+        };
+      })
+      .filter(item => item.value);
   },
 
   /**
@@ -262,15 +272,6 @@ Page({
       fanModel: '',
       errorField: ''
     };
-  },
-
-  /**
-   * 确认页“修改”：直接回到对应步骤，保留已填内容
-   */
-  onEditStep(e) {
-    const step = Number(e.currentTarget.dataset.step);
-    if (Number.isNaN(step)) return;
-    this.goToStep(step);
   },
 
   // 页面动画
@@ -839,6 +840,8 @@ Page({
   async submitRepair() {
     // 验证必填的特殊字段
     const requiredFields = this.getRequiredFields();
+    // 当前问题类型是否需要“笔记本型号”：该栏目选填，但最终信息单必须呈现，未填时提交“未知”
+    const needsLaptopModel = requiredFields.some(field => field.key === 'laptopModel');
     for (const field of requiredFields) {
       if (field.required) {
         const value = this.data[field.key];
@@ -934,7 +937,8 @@ Page({
           otherDescription: otherDescription,
           // 特殊字段信息
           specialFields: {
-            laptopModel: laptopModel || '',
+            // 笔记本型号为选填，未填写时统一提交“未知”，保证信息单上始终有该栏目
+            laptopModel: needsLaptopModel ? (String(laptopModel || '').trim() || '未知') : '',
             phoneModel: phoneModel || '',
             laptopSystem: laptopSystem || '',
             softwareInfo: softwareInfo || '',

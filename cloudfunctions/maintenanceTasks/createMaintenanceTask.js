@@ -10,6 +10,28 @@ const CATEGORY_DEPARTMENT_MAP = {
 }
 
 /**
+ * 归一化特殊字段，保证任务表与待办表存的是同一份完整设备信息
+ * 注意：这里不做“未知”兜底——兜底由前端按问题类型判断后提交，
+ * 避免非笔记本类任务被写入无关的笔记本型号
+ * @param {Object} params - 云函数入参
+ * @returns {Object} 特殊字段
+ */
+function buildSpecialFields(params) {
+  const specialFields = (params && params.specialFields) || {}
+  return {
+    laptopModel: specialFields.laptopModel || '',
+    phoneModel: specialFields.phoneModel || '',
+    laptopSystem: specialFields.laptopSystem || '',
+    softwareInfo: specialFields.softwareInfo || '',
+    systemVersion: specialFields.systemVersion || '',
+    deviceModel: specialFields.deviceModel || '',
+    mouseModel: specialFields.mouseModel || '',
+    keyboardModel: specialFields.keyboardModel || '',
+    fanModel: specialFields.fanModel || ''
+  }
+}
+
+/**
  * 根据任务大类给对应部门成员推送站内消息
  * @param {Object} taskData - 维修任务详情
  */
@@ -293,13 +315,7 @@ exports.createMaintenanceTask = async (params, OPENID) => {
       level3: params.level3,
       otherDescription: params.otherDescription || params.description || '',
       // 特殊字段信息
-      specialFields: {
-        laptopModel: (params.specialFields && params.specialFields.laptopModel) || '',
-        laptopSystem: (params.specialFields && params.specialFields.laptopSystem) || '',
-        softwareInfo: (params.specialFields && params.specialFields.softwareInfo) || '',
-        systemVersion: (params.specialFields && params.specialFields.systemVersion) || '',
-        deviceModel: (params.specialFields && params.specialFields.deviceModel) || ''
-      },
+      specialFields: buildSpecialFields(params),
       cost: 0, // 初始费用为0
       ew: 0, // 初始等效工作量为0
       appointmentTime: params.appointmentTime,
@@ -347,13 +363,7 @@ exports.createMaintenanceTask = async (params, OPENID) => {
         title: `维修任务：${params.level1} > ${params.level2} > ${params.level3}`,
         otherDescription: params.otherDescription || params.description || '',
         // 特殊字段信息
-        specialFields: {
-          laptopModel: (params.specialFields && params.specialFields.laptopModel) || '',
-          laptopSystem: (params.specialFields && params.specialFields.laptopSystem) || '',
-          softwareInfo: (params.specialFields && params.specialFields.softwareInfo) || '',
-          systemVersion: (params.specialFields && params.specialFields.systemVersion) || '',
-          deviceModel: (params.specialFields && params.specialFields.deviceModel) || ''
-        },
+        specialFields: buildSpecialFields(params),
         appointmentTime: params.appointmentTime,
         completeTime: '',
         applicantId: finalApplicantId,

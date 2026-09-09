@@ -17,24 +17,34 @@ class BaseChart {
     return 1 - Math.pow(1 - t, 3);
   }
 
-  // 启动动画
-  static animate(component, onComplete) {
+  // 启动动画；canvasId 是组件内 canvas 的选择器，必须由调用方传入，否则查询不到节点、画布始终空白
+  static animate(component, canvasId, duration = 1500) {
+    // 同一组件重复触发（如刷新后数据变化）时，先停掉上一轮动画，避免多个定时器同时绘制
+    this.stop(component);
+
     let progress = 0;
-    const duration = onComplete === 'bar' ? 1200 : 1500;
     const interval = 16;
     const steps = duration / interval;
 
-    const timer = setInterval(() => {
+    component._chartTimer = setInterval(() => {
       progress += 1 / steps;
       if (progress >= 1) {
         progress = 1;
-        clearInterval(timer);
+        this.stop(component);
       }
-      
+
       component.setData({ animationProgress: this.easeOutCubic(progress) }, () => {
-        this.drawCanvas(component);
+        this.drawCanvas(component, canvasId);
       });
     }, interval);
+  }
+
+  // 停止动画（组件卸载或重新播放前调用）
+  static stop(component) {
+    if (component && component._chartTimer) {
+      clearInterval(component._chartTimer);
+      component._chartTimer = null;
+    }
   }
 
   // 绘制 Canvas（公共初始化逻辑）
@@ -43,15 +53,40 @@ class BaseChart {
     query.select(canvasId)
       .fields({ node: true, size: true })
       .exec((res) => {
-        if (!res[0]) return;
-        
-        const canvas = res[0].node;
+        const canvasInfo = res && res[0];
+        if (!canvasInfo || !canvasInfo.node) {
+          // 只提示一次，避免每帧刷屏
+          if (!component._queryWarned) {
+            component._queryWarned = true;
+            console.warn('[base-chart] 未获取到 canvas 节点:', canvasId);
+          }
+          return;
+        }
+
+        const canvas = canvasInfo.node;
         const ctx = canvas.getContext('2d');
-        const dpr = wx.getWindowInfo().pixelRatio;
-        
-        canvas.width = component.data.width * dpr;
-        canvas.height = component.data.height * dpr;
-        ctx.scale(dpr, dpr);
+        const dpr = (wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 1;
+
+        const targetWidth = Math.round(component.data.width * dpr);
+        const targetHeight = Math.round(component.data.height * dpr);
+
+        // 仅在画布尺寸变化时重新赋值：赋值会清空画布并复位变换
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          component._ctxScaled = false;
+        }
+
+        // 用绝对变换代替相对 scale：
+        // 若每帧都调用 ctx.scale(dpr, dpr)，而画布尺寸未变时不会复位变换，
+        // 缩放会逐帧叠加，图形很快被放大到画布外，最终表现为一片空白
+        if (typeof ctx.setTransform === 'function') {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          component._ctxScaled = true;
+        } else if (!component._ctxScaled) {
+          ctx.scale(dpr, dpr);
+          component._ctxScaled = true;
+        }
 
         component.renderChart(ctx);
       });

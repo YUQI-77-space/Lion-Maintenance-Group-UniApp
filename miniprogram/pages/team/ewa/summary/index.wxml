@@ -1,4 +1,6 @@
-<!--pages/team/ewa/summary/index.wxml-->
+<!--pages/team/ewa/summary/index.wxml
+  工作量统计 - 概览 / 构成 / 图表
+  风格与「我的消息」「待办详情」「报修向导」保持一致：白卡 + 细边框 + 品牌色点缀 -->
 <wxs module="format">
 function formatEW(value) {
   if (!value && value !== 0) {
@@ -29,66 +31,90 @@ module.exports = {
 };
 </wxs>
 
-<view class="container">
-  <!-- 顶部统计栏 -->
-  <view class="stats-row">
-    <view class="stat-card card-animate" style="animation-delay: 0.1s">
-      <view class="stat-icon members">👥</view>
-      <view class="stat-info">
-        <text class="stat-label">成员总数</text>
-        <text class="stat-value">{{summaryData.totalUsers || 0}}</text>
-      </view>
-    </view>
-    <view class="stat-card card-animate" style="animation-delay: 0.15s">
-      <view class="stat-icon total">📊</view>
-      <view class="stat-info">
-        <text class="stat-label">总工作量</text>
-        <text class="stat-value primary">{{format.formatEW(summaryData.totalEW)}}</text>
-      </view>
-    </view>
+<view class="page">
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <loading-animation size="large" />
   </view>
 
-  <!-- 核心数据卡片组 -->
-  <view class="data-cards chart-animate" wx:if="{{showCharts}}" style="animation-delay: 0.2s">
-    <view class="data-card" wx:for="{{ringChartData}}" wx:key="name">
-      <view class="card-top">
-        <text class="card-title">{{item.name}}</text>
-        <text class="card-percent" style="color: {{item.color}}">{{format.formatEW(item.value)}}</text>
-      </view>
-      <view class="card-progress">
-        <view class="progress-bar" style="width: {{item.percentage}}%; background: {{item.color}};"></view>
-      </view>
-      <text class="card-ratio">占比 {{item.percentage.toFixed(1)}}%</text>
-    </view>
-  </view>
-
-  <!-- 图表分析区 -->
-  <view class="charts-container chart-animate" wx:if="{{showCharts}}" style="animation-delay: 0.3s">
-    <!-- 饼图分布 -->
-    <view class="chart-box pie-box" wx:if="{{pieChartData.length > 0}}">
-      <view class="chart-header">
-        <text class="chart-title">工作量分布</text>
-      </view>
-      <pie-chart 
-        chartData="{{pieChartData}}"
-        width="{{240}}"
-        height="{{200}}"
-        legend="{{true}}"
-      ></pie-chart>
+  <block wx:else>
+    <!-- 空数据 -->
+    <view class="empty-wrap" wx:if="{{!summaryData.totalUsers}}">
+      <text class="empty-text">暂无统计数据</text>
     </view>
 
-    <!-- 柱状对比 -->
-    <view class="chart-box bar-box">
-      <view class="chart-header">
-        <text class="chart-title">数量对比</text>
+    <block wx:else>
+      <!-- 概览 -->
+      <view class="overview card-animate">
+        <view class="overview-block">
+          <text class="overview-label">总工作量</text>
+          <text class="overview-value">{{format.formatEW(summaryData.totalEW)}}</text>
+        </view>
+        <view class="overview-split"></view>
+        <view class="overview-block overview-block-side">
+          <text class="overview-label">参与成员</text>
+          <text class="overview-value overview-value-side">{{summaryData.totalUsers}}<text class="overview-unit">人</text></text>
+        </view>
       </view>
-      <bar-chart 
-        chartData="{{barChartData}}"
-        width="{{canvasWidth}}"
-        height="{{220}}"
-      ></bar-chart>
-    </view>
-  </view>
+
+      <block wx:if="{{summaryData.totalEW > 0}}">
+        <!-- 工作量构成 -->
+        <view class="card card-animate" style="animation-delay: 0.08s">
+          <view class="card-title">工作量构成</view>
+
+          <view class="dist-item" wx:for="{{ringChartData}}" wx:key="name">
+            <view class="dist-head">
+              <view class="dist-name">
+                <view class="dist-dot" style="background-color: {{item.color}};"></view>
+                <text>{{item.name}}</text>
+              </view>
+              <view class="dist-numbers">
+                <text class="dist-value">{{format.formatEW(item.value)}}</text>
+                <text class="dist-percent">{{item.percentage.toFixed(1)}}%</text>
+              </view>
+            </view>
+            <view class="dist-track">
+              <view
+                class="dist-fill"
+                style="width: {{item.percentage}}%; background-color: {{item.color}};"
+              ></view>
+            </view>
+          </view>
+
+          <view class="card-hint">占比按加权口径计算：维修 ×0.5、志愿 ×0.4、值班 ×0.1</view>
+        </view>
+
+        <!-- 加权占比 -->
+        <view class="card card-animate" wx:if="{{showCharts && pieChartData.length}}" style="animation-delay: 0.16s">
+          <view class="card-title">加权占比</view>
+          <view class="chart-wrap">
+            <pie-chart
+              chartData="{{pieChartData}}"
+              width="{{pieWidth}}"
+              height="{{pieHeight}}"
+              legend="{{true}}"
+            ></pie-chart>
+          </view>
+        </view>
+
+        <!-- 数量对比 -->
+        <view class="card card-animate" wx:if="{{showCharts}}" style="animation-delay: 0.24s">
+          <view class="card-title">数量对比</view>
+          <view class="chart-wrap">
+            <bar-chart
+              chartData="{{barChartData}}"
+              colors="{{chartColors}}"
+              width="{{canvasWidth}}"
+              height="{{220}}"
+            ></bar-chart>
+          </view>
+        </view>
+      </block>
+
+      <!-- 有成员但暂无工作量记录 -->
+      <view class="card card-animate empty-card" wx:else style="animation-delay: 0.08s">
+        <text class="empty-text">本期暂无工作量记录</text>
+      </view>
+    </block>
+  </block>
 </view>
-
-

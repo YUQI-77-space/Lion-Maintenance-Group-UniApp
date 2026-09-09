@@ -1,17 +1,26 @@
-/* pages/team/ewa/summary/index.wxss */
+/* pages/team/ewa/summary/index.wxss
+   工作量统计 - 白卡 + 细边框 + 品牌色点缀
+   风格与「我的消息」「待办详情」「报修向导」保持一致：克制的色彩、清晰的信息层级 */
 @import '/styles/variables.wxss';
 
-.container {
-  padding: 16rpx;
-  background: #f5f7fa;
-  min-height: 100vh;
+page {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
-/* 动画 */
+.page {
+  min-height: 100vh;
+  padding: 24rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: var(--bg-page);
+  box-sizing: border-box;
+}
+
+/* ==================== 入场动画 ==================== */
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(30rpx);
+    transform: translateY(24rpx);
   }
   to {
     opacity: 1;
@@ -20,177 +29,189 @@
 }
 
 .card-animate {
-  animation: slideInUp 0.5s ease-out forwards;
+  animation: slideInUp 0.45s ease-out forwards;
   opacity: 0;
 }
 
-.chart-animate {
-  animation: slideInUp 0.6s ease-out forwards;
-  opacity: 0;
+/* ==================== 卡片 ==================== */
+.card {
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  background: var(--bg-card);
+  border: 1rpx solid #f0f1f5;
+  border-radius: 20rpx;
+  box-sizing: border-box;
 }
 
-/* 顶部统计栏 */
-.stats-row {
-  display: flex;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
+.card:last-child {
+  margin-bottom: 0;
 }
 
-.stat-card {
-  flex: 1;
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx 20rpx;
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease;
-}
-
-.stat-card:active {
-  transform: scale(0.98);
-}
-
-.stat-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
-}
-
-.stat-icon.members {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.stat-icon.total {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.stat-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
-}
-
-.stat-label {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.stat-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
-  letter-spacing: 1rpx;
-}
-
-.stat-value.primary {
-  background: linear-gradient(135deg, #0066FF, #00C9A7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* 核心数据卡片组 */
-.data-cards {
-  display: flex;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
-}
-
-.data-card {
-  flex: 1;
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 16rpx 14rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
-}
-
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12rpx;
-}
-
+/* 卡片标题：左侧品牌色竖条 */
 .card-title {
-  font-size: 24rpx;
-  color: #666;
-}
-
-.card-percent {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22rpx;
   font-size: 28rpx;
-  font-weight: bold;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.card-progress {
+.card-title::before {
+  content: '';
+  width: 6rpx;
+  height: 26rpx;
+  margin-right: 12rpx;
+  border-radius: 3rpx;
+  background: var(--primary);
+}
+
+.card-hint {
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f1f5;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ==================== 概览 ==================== */
+.overview {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+  margin-bottom: 20rpx;
+  background: var(--bg-card);
+  border: 1rpx solid #f0f1f5;
+  border-radius: 20rpx;
+  box-sizing: border-box;
+}
+
+.overview-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.overview-block-side {
+  flex: none;
+  padding-left: 28rpx;
+  text-align: right;
+}
+
+.overview-split {
+  width: 1rpx;
+  height: 64rpx;
+  background: #f0f1f5;
+}
+
+.overview-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
+.overview-value {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 48rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--primary);
+  word-break: break-all;
+}
+
+.overview-value-side {
+  font-size: 36rpx;
+  color: var(--text-primary);
+}
+
+.overview-unit {
+  margin-left: 4rpx;
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* ==================== 工作量构成 ==================== */
+.dist-item + .dist-item {
+  margin-top: 26rpx;
+}
+
+.dist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dist-name {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.dist-dot {
+  width: 14rpx;
+  height: 14rpx;
+  margin-right: 12rpx;
+  border-radius: 50%;
+}
+
+.dist-numbers {
+  display: flex;
+  align-items: baseline;
+}
+
+.dist-value {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dist-percent {
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+.dist-track {
   height: 8rpx;
-  background: #f0f0f0;
+  margin-top: 12rpx;
+  background: #f0f1f5;
   border-radius: 4rpx;
   overflow: hidden;
-  margin-bottom: 8rpx;
 }
 
-.progress-bar {
+.dist-fill {
   height: 100%;
   border-radius: 4rpx;
   transition: width 0.6s ease-out;
 }
 
-.card-ratio {
-  font-size: 20rpx;
-  color: #999;
-}
-
-/* 图表分析区 */
-.charts-container {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 20rpx 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
-}
-
-.chart-box {
-  margin-bottom: 24rpx;
-}
-
-.chart-box:last-child {
-  margin-bottom: 0;
-}
-
-.chart-header {
-  margin-bottom: 12rpx;
-  padding-bottom: 12rpx;
-  border-bottom: 2rpx solid #f0f0f0;
-}
-
-.chart-title {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.pie-box {
+/* ==================== 图表 ==================== */
+.chart-wrap {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
 }
 
-.bar-box {
+/* ==================== 加载 / 空态 ==================== */
+.loading-wrap,
+.empty-wrap {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
 }
 
-/* 加载状态 */
-.loading {
-  text-align: center;
-  padding: 100rpx 0;
-  color: #999;
+.empty-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 28rpx;
 }
 
-
+.empty-text {
+  font-size: 26rpx;
+  color: var(--text-muted);
+}

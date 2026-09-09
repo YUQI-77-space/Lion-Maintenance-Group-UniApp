@@ -2,6 +2,7 @@
   "navigationBarTitleText": "工作量汇总",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "loading-animation": "/components/loading-animation/index",
     "pie-chart": "/components/charts/pie-chart/index",
     "bar-chart": "/components/charts/bar-chart/index"
   }

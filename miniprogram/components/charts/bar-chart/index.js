@@ -15,6 +15,11 @@ Component({
     height: {
       type: Number,
       value: 250
+    },
+    // 自定义配色：按 chartData 顺序取色，未传时回落到 BaseChart.COLORS
+    colors: {
+      type: Array,
+      value: []
     }
   },
 
@@ -25,6 +30,17 @@ Component({
   lifetimes: {
     attached() {
       this.colors = BaseChart.COLORS;
+    },
+    ready() {
+      // 兜底：部分场景下组件初始化时属性 observer 不会触发，这里补一次绘制
+      if (this._animationStarted) return;
+      const chartData = this.data.chartData;
+      if (chartData && chartData.length) {
+        this.updateChart(chartData);
+      }
+    },
+    detached() {
+      BaseChart.stop(this);
     }
   },
 
@@ -33,13 +49,9 @@ Component({
       const chartData = newVal !== undefined ? newVal : this.data.chartData;
       if (!chartData || !Array.isArray(chartData) || chartData.length === 0) return;
       
+      this._animationStarted = true;
       this.setData({ chartData });
-      BaseChart.animate(this, 'bar');
-    },
-
-    // 使用公共绘制方法
-    drawChart() {
-      BaseChart.drawCanvas(this, '#barCanvas');
+      BaseChart.animate(this, '#barCanvas', 1200);
     },
 
     renderChart(ctx) {
@@ -60,7 +72,10 @@ Component({
 
       ctx.clearRect(0, 0, width, height);
 
-      const maxValue = Math.max(...chartData.map(item => item.value));
+      const palette = (this.data.colors && this.data.colors.length) ? this.data.colors : this.colors;
+      // 全为 0 时用 1 兜底，避免除零导致柱子高度变成 NaN
+      const rawMax = Math.max(...chartData.map(item => Number(item.value) || 0));
+      const maxValue = rawMax > 0 ? rawMax : 1;
       const scale = chartHeight / maxValue;
       const barWidth = chartWidth / chartData.length * 0.6;
       const gap = chartWidth / chartData.length * 0.4;
@@ -68,12 +83,13 @@ Component({
       this.drawYAxis(ctx, padding, chartWidth, chartHeight, maxValue);
 
       chartData.forEach((item, index) => {
+        const value = Number(item.value) || 0;
         const x = padding.left + (chartWidth / chartData.length) * index + gap / 2;
-        const barHeight = item.value * scale * animationProgress;
+        const barHeight = value * scale * animationProgress;
         const y = padding.top + chartHeight - barHeight;
 
         const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
-        const color = this.colors[index % this.colors.length];
+        const color = palette[index % palette.length];
         gradient.addColorStop(0, color);
         gradient.addColorStop(1, BaseChart.lightenColor(color, 30));
         
@@ -89,7 +105,7 @@ Component({
           ctx.font = 'bold 13px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
-          ctx.fillText(item.value.toFixed(1), x + barWidth / 2, y - 12);
+          ctx.fillText(value.toFixed(1), x + barWidth / 2, y - 12);
         }
 
         ctx.fillStyle = '#666';

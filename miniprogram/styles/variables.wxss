@@ -77,6 +77,8 @@ page {
   --danger-color: var(--danger);
   --info-color: var(--info);
   --secondary-color: #1890FF;  /* 兼容旧的蓝色 */
+  /* 兼容旧主题色：历史页面大量使用 var(--primary-color)，此前未定义会退化为透明/继承色 */
+  --primary-color: var(--primary);
 
   /* === 兼容旧阴影（已废弃，仅保留边框） === */
   --box-shadow: none;

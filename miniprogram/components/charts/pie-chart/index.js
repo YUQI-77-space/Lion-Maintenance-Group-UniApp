@@ -28,13 +28,23 @@ Component({
 
   data: {
     animationProgress: 0,
-    legendItems: [],
-    legendSummary: null
+    legendItems: []
   },
 
   lifetimes: {
     attached() {
       this.colors = BaseChart.COLORS;
+    },
+    ready() {
+      // 兜底：部分场景下组件初始化时属性 observer 不会触发，这里补一次绘制
+      if (this._animationStarted) return;
+      const chartData = this.data.chartData;
+      if (chartData && chartData.length) {
+        this.updateChart(chartData);
+      }
+    },
+    detached() {
+      BaseChart.stop(this);
     }
   },
 
@@ -42,41 +52,30 @@ Component({
     updateChart(newVal) {
       const chartData = newVal !== undefined ? newVal : this.data.chartData;
       if (!chartData || !Array.isArray(chartData) || chartData.length === 0) {
-        this.setData({ legendItems: [], legendSummary: null });
+        this.setData({ legendItems: [] });
         return;
       }
-      
+
+      this._animationStarted = true;
       this.setData({ chartData });
-      BaseChart.animate(this);
-      
+      BaseChart.animate(this, '#pieCanvas');
+
       const totalWeighted = chartData.reduce((sum, item) => sum + (item.value || 0), 0) || 0;
-      const totalRaw = chartData.reduce((sum, item) => sum + Number(item.rawValue || item.value || 0), 0) || 0;
 
       if (totalWeighted === 0) {
-        this.setData({ legendItems: [], legendSummary: null });
+        this.setData({ legendItems: [] });
         return;
       }
 
+      const palette = this.colors || BaseChart.COLORS;
+      // 饼图按加权值作图，图例只给「名称 + 加权占比」，不混排原始值，避免两个口径互相误读
       const legendItems = chartData.map((item, index) => ({
         name: item.name,
-        value: Number(item.rawValue || item.value || 0),
-        displayValue: this.formatValue(item.rawValue || item.value || 0),
         percent: ((Number(item.value || 0) / totalWeighted) * 100).toFixed(1) + '%',
-        color: item.color || this.colors[index % this.colors.length]
+        color: item.color || palette[index % palette.length]
       }));
-      
-      this.setData({
-        legendItems,
-        legendSummary: {
-          raw: this.formatValue(totalRaw),
-          weighted: this.formatValue(totalWeighted)
-        }
-      });
-    },
 
-    // 使用公共绘制方法
-    drawChart() {
-      BaseChart.drawCanvas(this, '#pieCanvas');
+      this.setData({ legendItems });
     },
 
     renderChart(ctx) {
@@ -119,14 +118,6 @@ Component({
 
         startAngle = endAngle;
       });
-    },
-
-    formatValue(value) {
-      if (value === null || value === undefined || isNaN(value)) return '0';
-      const num = Number(value);
-      if (Math.abs(num) < 1000) return num.toFixed(1);
-      if (Math.abs(num) < 10000) return num.toFixed(0);
-      return (num / 10000).toFixed(1) + '万';
     }
   }
 });
