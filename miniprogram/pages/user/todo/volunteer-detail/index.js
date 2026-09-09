@@ -2,6 +2,7 @@
 const app = getApp();
 const api = require('../../../../utils/apiAdapter');
 const time = require('../../../../utils/time');
+const iconManager = require('../../../../utils/iconManager');
 
 Page({
   /**
@@ -19,10 +20,16 @@ Page({
     canCancel: false, // 是否可以取消报名
     cancelDeadline: '', // 取消报名截止时间
     cancelReasonText: '', // 不能取消报名的原因
+    showActionBar: false, // 是否显示底部操作栏
     showFeedbackModal: false, // 是否显示反馈弹窗
     feedbackContent: '', // 反馈内容
-    myFeedback: '' // 我提交的反馈
+    myFeedback: '', // 我提交的反馈
+    // 图标资源
+    iconVolunteer: iconManager.get('biz_volunteer')
   },
+
+  // 阻止事件穿透（弹窗遮罩使用）
+  noop() {},
 
   /**
    * 生命周期函数--监听页面加载
@@ -134,6 +141,7 @@ Page({
         cancelReasonText,
         loading: false,
         refreshing: false,
+        showActionBar: true,
         myFeedback: myFeedback
       });
 

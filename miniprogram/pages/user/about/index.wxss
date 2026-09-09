@@ -1,167 +1,237 @@
-/* pages/user/about/index.wxss */
+/* pages/user/about/index.wxss
+   关于我们 - 品牌头部 + 白卡信息块
+   与「我的消息」「待办详情」共用同一套版式语言 */
 @import "/styles/variables.wxss";
 
-.container {
-  padding: 30rpx;
+.page {
   min-height: 100vh;
-  background-color: var(--background-color);
-  display: flex;
-  flex-direction: column;
+  padding: 24rpx;
+  background: var(--bg-page);
+  box-sizing: border-box;
 }
 
-/* Logo部分 */
-.logo-section {
+/* ==================== 品牌头部 ==================== */
+.hero {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40rpx 0;
+  padding: 40rpx 24rpx 36rpx;
 }
 
-.logo {
-  width: 240rpx;
-  height: 240rpx;
-  border-radius: 20rpx;
+.hero-logo {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 32rpx;
 }
 
-.about-slogan {
-  margin-top: 30rpx;
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--primary-color);
+.hero-name {
+  margin-top: 26rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
   text-align: center;
-  padding: 20rpx;
-  background-color: rgba(58, 117, 251, 0.1);
-  border-radius: 10rpx;
-  width: 90%;
-  box-shadow: var(--box-shadow);
+  color: var(--text-primary);
 }
 
-/* 介绍部分 */
-.intro-section {
-  margin: 30rpx 0;
-  padding: 30rpx;
-  background-color: var(--card-background);
-  border-radius: 12rpx;
-}
-
-.section-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--primary-color);
-  margin-bottom: 20rpx;
-  position: relative;
-  padding-left: 20rpx;
-}
-
-.section-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8rpx;
-  height: 36rpx;
-  background-color: var(--primary-color);
-  border-radius: 4rpx;
-}
-
-.intro-content {
-  font-size: 28rpx;
-  color: var(--text-main);
-  line-height: 1.8;
-  text-align: justify;
-  white-space: pre-wrap;
-}
-
-/* 新增：段落与枚举列表样式 */
-.intro-paragraph {
-  margin-bottom: 12rpx;
-}
-
-.intro-list {
-  margin: 10rpx 0 16rpx;
-}
-
-.intro-list-item {
-  display: flex;
-  align-items: flex-start;
-  margin: 10rpx 0;
-}
-
-.intro-list-item .dot {
-  width: 32rpx;
-  display: inline-block;
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.intro-list-item .text {
-  flex: 1;
-  font-size: 28rpx;
-  color: var(--text-main);
-  line-height: 1.8;
-}
-
-/* 联系方式部分 */
-.contact-section {
-  margin: 30rpx 0;
-  padding: 30rpx;
-  background-color: var(--card-background);
-  border-radius: 12rpx;
-}
-
-.contact-item {
-  display: flex;
-  margin-bottom: 20rpx;
-}
-
-.contact-item:last-child {
-  margin-bottom: 0;
-}
-
-.contact-label {
-  font-size: 28rpx;
-  color: var(--text-regular);
-  min-width: 160rpx;
-}
-
-.contact-value {
-  font-size: 28rpx;
-  color: var(--text-main);
-  flex: 1;
-}
-
-/* 版权信息 */
-.footer {
-  margin-top: auto;
-  padding: 30rpx 0;
-  text-align: center;
+.hero-sub {
+  margin-top: 12rpx;
   font-size: 24rpx;
+  line-height: 1.5;
+  text-align: center;
   color: var(--text-secondary);
 }
 
-/* 可复制文本样式 */
-.copyable-text {
-  color: var(--primary-color);
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-underline-offset: 4rpx;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.copyable-text:active {
-  opacity: 0.7;
-  transform: scale(0.98);
-}
-
-/* 开发者信息样式 */
-.developer-info {
-  text-align: right;
-  padding: 20rpx 0;
+.hero-slogan {
+  margin-top: 24rpx;
+  padding: 10rpx 26rpx;
+  border-radius: 999rpx;
   font-size: 24rpx;
-  color: var(--warning-color);
-  font-family: 'KaiTi', '楷体', serif; /* 楷体 */
-  opacity: 0.8;
+  line-height: 1.6;
+  color: var(--primary);
+  background: rgba(0, 0, 205, 0.06);
 }
 
+/* ==================== 卡片 ==================== */
+.card {
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  background: var(--bg-card);
+  border: 1rpx solid #f0f1f5;
+  border-radius: 20rpx;
+  box-sizing: border-box;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-title::before {
+  content: '';
+  width: 6rpx;
+  height: 26rpx;
+  margin-right: 12rpx;
+  border-radius: 3rpx;
+  background: var(--primary);
+}
+
+/* ==================== 正文段落 ==================== */
+.para {
+  font-size: 28rpx;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  text-align: justify;
+}
+
+.para + .para {
+  margin-top: 18rpx;
+}
+
+/* ==================== 服务清单 ==================== */
+.service-list {
+  margin-top: 6rpx;
+}
+
+.service-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 18rpx 0;
+}
+
+.service-item + .service-item {
+  border-top: 1rpx solid #f0f1f5;
+}
+
+.service-index {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  margin: 4rpx 16rpx 0 0;
+  border-radius: 50%;
+  font-size: 20rpx;
+  font-weight: 600;
+  line-height: 36rpx;
+  text-align: center;
+  color: var(--primary);
+  background: rgba(0, 0, 205, 0.06);
+}
+
+.service-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.hint-line {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ==================== 可复制信息 ==================== */
+.copy-row {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: #f7f8fa;
+}
+
+.copy-row:active {
+  background: #f1f2f6;
+}
+
+.copy-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.copy-label {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.copy-value {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--primary);
+}
+
+.copy-btn {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 8rpx 22rpx;
+  border: 1rpx solid rgba(0, 0, 205, 0.35);
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--primary);
+}
+
+/* ==================== 联系方式 ==================== */
+.info-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.info-row + .info-row {
+  border-top: 1rpx solid #f0f1f5;
+}
+
+.info-row:active {
+  opacity: 0.7;
+}
+
+.info-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-label {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.info-value {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* ==================== 页脚 ==================== */
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32rpx 0 40rpx;
+}
+
+.footer-line {
+  font-size: 22rpx;
+  line-height: 1.8;
+  text-align: center;
+  color: var(--text-muted);
+}

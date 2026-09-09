@@ -4,7 +4,8 @@ Page({
   data: {
     categories: [],
     expandedCategories: {},
-    expandedSubcategories: {}
+    expandedSubcategories: {},
+    allExpanded: true
   },
 
   onLoad() {
@@ -18,21 +19,35 @@ Page({
         expandedSubcategories[sub.id] = true;
       });
     });
-    this.setData({ categories, expandedCategories, expandedSubcategories });
+    this.setData({ categories, expandedCategories, expandedSubcategories, allExpanded: true });
+  },
+
+  // 一键展开/收起全部层级
+  toggleAll() {
+    const expand = !this.data.allExpanded;
+    const expandedCategories = {};
+    const expandedSubcategories = {};
+    (this.data.categories || []).forEach(cat => {
+      expandedCategories[cat.id] = expand;
+      (cat.subcategories || []).forEach(sub => {
+        expandedSubcategories[sub.id] = expand;
+      });
+    });
+    this.setData({ expandedCategories, expandedSubcategories, allExpanded: expand });
   },
 
   toggleCategory(e) {
     const id = e.currentTarget.dataset.id;
     const expanded = this.data.expandedCategories;
     expanded[id] = !expanded[id];
-    this.setData({ expandedCategories: expanded });
+    this.setData({ expandedCategories: expanded, allExpanded: false });
   },
 
   toggleSubcategory(e) {
     const id = e.currentTarget.dataset.id;
     const expanded = this.data.expandedSubcategories;
     expanded[id] = !expanded[id];
-    this.setData({ expandedSubcategories: expanded });
+    this.setData({ expandedSubcategories: expanded, allExpanded: false });
   },
 
   // 地图中点击具体三级问题，跳转到报修页并带上三级信息

@@ -6,7 +6,14 @@ Page({
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
     // 当前年份
-    currentYear: new Date().getFullYear()
+    currentYear: new Date().getFullYear(),
+    // 维修业务清单
+    services: [
+      '笔记本清灰、换固态、换电源、软件配置安装等相关问题',
+      '电器维修，如吹风机故障、充电宝故障、收音机故障等',
+      '自行车保养维修、补胎充气等',
+      '还包括维修咨询、五金工具借用等丰富多彩的维修服务'
+    ]
   },
 
   /**

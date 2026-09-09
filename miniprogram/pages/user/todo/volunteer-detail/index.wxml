@@ -1,103 +1,104 @@
 <!--pages/user/todo/volunteer-detail/index.wxml-->
-<view class="container">
-  <scroll-view scroll-y="{{true}}" class="scroll-view" refresher-enabled="{{true}}" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
-    <view class="detail-card" wx:if="{{!loading && taskDetail}}">
-      <!-- 原有内容 -->
-      <view class="card-header">
-        <text class="task-title">{{taskDetail.title}}</text>
-        <view class="task-status {{taskDetail.activityStatus}}">
-          {{taskDetail.activityStatusText}}
+<view class="page">
+  <scroll-view
+    scroll-y="{{true}}"
+    class="scroll-view"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <!-- 加载中 -->
+    <view class="loading-wrap" wx:if="{{loading}}">
+      <loading-animation size="large"></loading-animation>
     </view>
-      </view>
 
-      <view class="card-content">
-        <view class="info-row">
-          <text class="info-label">活动编号:</text>
-          <text class="info-value">{{taskDetail.taskId || taskDetail.activityId}}</text>
-        </view>
-        <view class="info-row">
-          <text class="info-label">活动时间:</text>
-          <text class="info-value">{{formattedStartTime}} 至 {{formattedEndTime}}</text>
-        </view>
-        <view class="info-row">
-          <text class="info-label">活动地点:</text>
-          <text class="info-value">{{taskDetail.location}}</text>
-        </view>
-        <view class="info-row">
-          <text class="info-label">志愿时长:</text>
-          <text class="info-value">{{taskDetail.volunteerHours || 0}} 小时</text>
-      </view>
-
-        <view class="divider"></view>
-
-        <view class="description-section">
-          <text class="section-title">活动描述</text>
-          <view class="description-content">
-            <text>{{taskDetail.description || '暂无描述'}}</text>
-      </view>
-    </view>
-    
-        <!-- 我的反馈 -->
-        <view class="divider"></view>
-        <view class="feedback-section">
-          <text class="section-title">我的分工信息</text>
-          <view class="my-feedback" wx:if="{{myFeedback}}">
-            <text>{{myFeedback}}</text>
+    <block wx:if="{{!loading && taskDetail}}">
+      <!-- 概览 -->
+      <view class="card status-{{taskDetail.activityStatus}}">
+        <view class="hero">
+          <view class="hero-tile">
+            <image class="hero-icon" src="{{iconVolunteer}}"></image>
           </view>
-          <view class="empty-feedback" wx:else>
-            <text>暂无分工信息</text>
-    </view>
-    </view>
-  </view>
+          <view class="hero-main">
+            <text class="hero-title">{{taskDetail.title}}</text>
+            <view class="hero-sub">
+              <text class="hero-sub-text">志愿活动</text>
+            </view>
+          </view>
+          <view class="status-pill {{taskDetail.activityStatus}}">{{taskDetail.activityStatusText}}</view>
+        </view>
 
-      <!-- 按钮区域 -->
-      <view class="card-actions">
-        <button 
-          class="feedback-btn" 
-          bindtap="showFeedbackModal"
-        >分工信息</button>
-        
-    <button 
-          class="cancel-btn {{!canCancel ? 'disabled' : ''}}" 
-      bindtap="cancelRegistration"
-          disabled="{{!canCancel}}"
-    >取消报名</button>
-  </view>
-
-      <!-- 取消报名提示 -->
-      <view class="cancel-info" wx:if="{{!canCancel && cancelReasonText}}">
-        <text>{{cancelReasonText}}</text>
-  </view>
-</view>
-
-    <!-- 加载中状态 -->
-    <view class="loading-container" wx:if="{{loading}}">
-      <view class="loading">
-        <loading-animation size="default"></loading-animation>
+        <view class="meta-grid">
+          <view class="meta-item full">
+            <text class="meta-label">活动时间</text>
+            <text class="meta-value">{{formattedStartTime}} 至 {{formattedEndTime}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">活动地点</text>
+            <text class="meta-value">{{taskDetail.location || '未定'}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-label">志愿时长</text>
+            <text class="meta-value strong">{{taskDetail.volunteerHours || 0}} 小时</text>
+          </view>
+          <view class="meta-item full">
+            <text class="meta-label">活动编号</text>
+            <text class="meta-value">{{taskDetail.taskId || taskDetail.activityId}}</text>
+          </view>
+        </view>
       </view>
-    </view>
+
+      <!-- 活动描述 -->
+      <view class="card">
+        <view class="card-title">活动描述</view>
+        <view class="note">{{taskDetail.description || '暂无描述'}}</view>
+      </view>
+
+      <!-- 我的分工 -->
+      <view class="card">
+        <view class="card-title">我的分工</view>
+        <view class="note" wx:if="{{myFeedback}}">{{myFeedback}}</view>
+        <view class="note-empty" wx:else>还没有填写分工信息，点击下方按钮补充</view>
+      </view>
+
+      <!-- 底部操作栏占位 -->
+      <view class="bottom-space" wx:if="{{showActionBar}}"></view>
+    </block>
   </scroll-view>
 
-<!-- 反馈弹窗 -->
-  <view class="modal" wx:if="{{showFeedbackModal}}">
-    <view class="modal-mask" bindtap="closeFeedbackModal"></view>
-  <view class="modal-content">
-      <view class="modal-header">
-        <text>分工信息</text>
+  <!-- 底部操作栏 -->
+  <view class="action-dock" wx:if="{{showActionBar}}">
+    <view class="dock-hint" wx:if="{{!canCancel && cancelReasonText}}">{{cancelReasonText}}</view>
+    <view class="action-bar">
+      <view class="action-btn ghost-danger {{!canCancel ? 'disabled' : ''}}" bindtap="cancelRegistration">取消报名</view>
+      <view class="action-btn primary" bindtap="showFeedbackModal">{{myFeedback ? '修改分工' : '填写分工'}}</view>
+    </view>
+  </view>
+
+  <!-- 分工信息弹窗 -->
+  <view class="modal-mask" wx:if="{{showFeedbackModal}}" catchtouchmove="noop">
+    <view class="modal-backdrop" bindtap="closeFeedbackModal"></view>
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-head">
+        <text class="modal-title">分工信息</text>
+        <view class="modal-close" bindtap="closeFeedbackModal">×</view>
       </view>
       <view class="modal-body">
-    <textarea 
-          class="feedback-input" 
-          placeholder="请输入您在本次活动中的具体工作内容与分工..." 
-      value="{{feedbackContent}}"
-      bindinput="onFeedbackInput"
+        <view class="modal-label">请填写您在本次活动中的具体工作内容</view>
+        <textarea
+          class="modal-textarea"
+          placeholder="例如：负责签到与物资发放..."
+          value="{{feedbackContent}}"
+          bindinput="onFeedbackInput"
           maxlength="500"
-    ></textarea>
+          auto-height
+        ></textarea>
+        <view class="modal-count">{{feedbackContent ? feedbackContent.length : 0}}/500</view>
       </view>
-      <view class="modal-footer">
-        <button class="cancel-modal-btn" bindtap="closeFeedbackModal">取消</button>
-        <button class="submit-modal-btn" bindtap="submitFeedback">提交</button>
+      <view class="modal-foot">
+        <view class="action-btn ghost" bindtap="closeFeedbackModal">取消</view>
+        <view class="action-btn primary" bindtap="submitFeedback">提交</view>
       </view>
     </view>
   </view>
-</view> 
+</view>

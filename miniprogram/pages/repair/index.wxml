@@ -7,16 +7,37 @@
   </view>
 </view>
 
-<view class="repair-container {{currentStep === 5 ? 'repair-success-scroll' : ''}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" style="padding-top: {{navBarHeight + 20}}px;">
-  <!-- 步骤内容 -->
+<!-- 步骤条：固定在导航栏下方，始终可见 -->
+<view class="step-bar" wx:if="{{currentStep < 5}}" style="top: {{navBarHeight}}px; height: {{stepBarHeight}}px;">
+  <view class="step-track">
+    <view class="step-track-line"></view>
+    <view class="step-track-fill" style="width: {{progressStage * 33.33}}%;"></view>
+    <view
+      class="step-node {{progressStage > index ? 'done' : ''}} {{progressStage === index ? 'current' : ''}}"
+      wx:for="{{progressLabels}}"
+      wx:key="*this"
+    >
+      <view class="node-dot">{{index + 1}}</view>
+      <text class="node-text">{{item}}</text>
+    </view>
+  </view>
+</view>
+
+<view
+  class="repair-container"
+  bindtouchstart="onTouchStart"
+  bindtouchend="onTouchEnd"
+  style="padding-top: {{currentStep < 5 ? contentTop : contentTopNoBar}}px;"
+>
+  <!-- ==================== 步骤 0：选择大类 ==================== -->
   <view wx:if="{{currentStep === 0}}">
     <!-- 搜索栏 -->
-    <view class="repair-search-wrapper">
-      <view class="repair-search-bar">
-        <image class="repair-search-icon" src="{{iconSearch}}" mode="aspectFit"></image>
+    <view class="search-wrapper">
+      <view class="search-bar">
+        <image class="search-icon" src="{{iconSearch}}" mode="aspectFit"></image>
         <input
-          class="repair-search-input"
-          placeholder="搜索关键字快速找到具体维修问题，例如：清灰、电风扇、手机屏幕"
+          class="search-input"
+          placeholder="搜索问题，如：清灰、电风扇、手机屏幕"
           confirm-type="search"
           value="{{searchKeyword}}"
           bindinput="onSearchInput"
@@ -24,139 +45,197 @@
           bindfocus="onSearchFocus"
           bindblur="onSearchBlur"
         />
-        <view wx:if="{{searchKeyword}}" class="repair-search-clear" bindtap="onSearchClear">清空</view>
+        <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="onSearchClear">清空</view>
       </view>
 
-      <!-- 快捷关键词（无输入时展示） -->
-      <view wx:if="{{showQuickKeywords && !searchKeyword}}" class="repair-search-result-panel quick-keywords-panel">
-        <view class="quick-keywords-title">常用问题快捷选择</view>
-        <view class="quick-keywords-row">
+      <!-- 快捷关键词 -->
+      <view wx:if="{{showQuickKeywords && !searchKeyword}}" class="search-panel">
+        <view class="panel-title">常用问题</view>
+        <view class="chip-row">
           <view
-            class="quick-keyword-chip"
+            class="chip"
             wx:for="{{quickKeywords}}"
             wx:key="value"
             data-value="{{item.value}}"
             bindtap="onQuickKeywordTap"
-          >
-            {{item.label}}
-          </view>
+          >{{item.label}}</view>
         </view>
       </view>
 
-      <!-- 搜索结果列表 -->
-      <view wx:if="{{showSearchResult && searchResults.length}}" class="repair-search-result-panel">
-        <scroll-view scroll-y="true" style="max-height: 480rpx;">
+      <!-- 搜索结果 -->
+      <view wx:if="{{showSearchResult && searchResults.length}}" class="search-panel">
+        <scroll-view scroll-y="true" class="result-scroll">
           <view
             wx:for="{{searchResults}}"
             wx:key="id"
-            class="repair-search-result-item"
+            class="result-item"
             data-cat-id="{{item.categoryId}}"
             data-sub-id="{{item.subcategoryId}}"
             data-type-id="{{item.typeId}}"
             bindtap="onSearchResultTap"
           >
-            <view class="result-main-text">{{item.fullPath}}</view>
-            <view class="result-sub-text">{{item.hint}}</view>
+            <view class="result-main">{{item.fullPath}}</view>
+            <view class="result-sub">{{item.hint}}</view>
           </view>
-          <!-- 使用横线分隔每条词条 -->
-          <view wx:for="{{searchResults}}" wx:key="id-separator" class="repair-search-divider"></view>
         </scroll-view>
+      </view>
+
+      <!-- 无搜索结果 -->
+      <view wx:if="{{searchEmpty}}" class="search-panel">
+        <view class="panel-empty">没有找到相关问题，换个说法试试，或直接从下方选择大类</view>
       </view>
     </view>
 
     <view class="step-card">
       <view class="step-title">选择问题大类</view>
       <view class="step-subtitle">请选择您遇到的问题属于哪个范畴</view>
-      <view class="selection-grid">
-        <view wx:for="{{categories}}" wx:key="id" class="selection-item" data-id="{{item.id}}" bindtap="onCategorySelect">
-          {{item.name}}
+
+      <view class="category-list">
+        <view
+          class="category-row"
+          wx:for="{{categories}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onCategorySelect"
+        >
+          <text class="category-name">{{item.name}}</text>
+          <view class="row-arrow"></view>
         </view>
       </view>
-      <view class="helper-entry" bindtap="goToCategoryMap">
-        <text>不知道自己的维修问题属于哪个类别？</text>
-        <image class="helper-icon" src="{{iconArrowRight}}" mode="aspectFit"></image>
+
+      <view class="map-entry" bindtap="goToCategoryMap">
+        <text>不确定属于哪一类？查看分类地图</text>
+        <image class="map-entry-icon" src="{{iconArrowRight}}" mode="aspectFit"></image>
       </view>
     </view>
   </view>
-  
+
+  <!-- ==================== 步骤 1：选择子分类 ==================== -->
   <view wx:if="{{currentStep === 1}}">
     <view class="step-card">
       <view class="step-title">{{selectedCategory.name}}</view>
       <view class="step-subtitle">请选择具体的子分类</view>
       <view class="selection-grid">
-        <view wx:for="{{subcategories}}" wx:key="id" class="selection-item" data-id="{{item.id}}" bindtap="onSubcategorySelect">
-          {{item.name}}
-        </view>
+        <view
+          wx:for="{{subcategories}}"
+          wx:key="id"
+          class="selection-item"
+          data-id="{{item.id}}"
+          bindtap="onSubcategorySelect"
+        >{{item.name}}</view>
       </view>
-      <!-- 添加返回按钮 -->
       <view class="button-group single-button">
-        <button class="btn btn-outline" bindtap="prevStep">返回</button>
+        <button class="btn btn-outline" bindtap="prevStep">返回上一步</button>
       </view>
     </view>
   </view>
-  
+
+  <!-- ==================== 步骤 2：选择问题类型 ==================== -->
   <view wx:if="{{currentStep === 2}}">
     <view class="step-card">
       <view class="step-title">{{selectedSubcategory.name}}</view>
       <view class="step-subtitle">请选择具体的问题类型</view>
       <view class="selection-grid">
-        <view wx:for="{{types}}" wx:key="id" class="selection-item {{item.id === selectedTypeId ? 'selected' : ''}}" data-id="{{item.id}}" bindtap="onTypeSelect">
-          {{item.name}}
-        </view>
+        <view
+          wx:for="{{types}}"
+          wx:key="id"
+          class="selection-item {{item.id === selectedTypeId ? 'selected' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onTypeSelect"
+        >{{item.name}}</view>
       </view>
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep">返回</button>
-        <button class="btn btn-primary" bindtap="nextStep" wx:if="{{selectedType}}">下一步</button>
+        <button
+          class="btn btn-primary {{selectedType ? '' : 'btn-disabled'}}"
+          bindtap="nextStep"
+          disabled="{{!selectedType}}"
+        >下一步</button>
       </view>
     </view>
   </view>
-  
+
+  <!-- ==================== 步骤 3：填写报修详情 ==================== -->
   <view wx:if="{{currentStep === 3}}">
     <view class="step-card">
       <view class="step-title">填写报修详情</view>
-      <view class="step-subtitle">请提供准确的时间和问题描述</view>
-      
+      <view class="step-subtitle">补充信息能帮维修同学更快定位问题</view>
+
       <!-- 特殊输入字段 -->
-      <view wx:for="{{requiredFields}}" wx:key="key" wx:for-item="field" class="special-field">
-        <view class="field-label">{{field.label}}<text wx:if="{{field.required}}" class="required"> *</text><text wx:else class="optional"> (选填)</text></view>
+      <view
+        wx:for="{{requiredFields}}"
+        wx:key="key"
+        wx:for-item="field"
+        class="special-field {{errorField === field.key ? 'has-error' : ''}}"
+      >
+        <view class="field-label">
+          {{field.label}}
+          <text wx:if="{{field.required}}" class="required">*</text>
+          <text wx:else class="optional">选填</text>
+        </view>
         <!-- 文本输入框 -->
-        <input wx:if="{{!field.type || field.type === 'text'}}" 
-               class="field-input" 
-               placeholder="{{field.placeholder}}" 
-               value="{{field.key === 'laptopModel' ? laptopModel : (field.key === 'phoneModel' ? phoneModel : (field.key === 'laptopSystem' ? laptopSystem : (field.key === 'softwareInfo' ? softwareInfo : deviceModel)))}}"
-               data-field="{{field.key}}"
-               bindinput="onFieldInput"/>
+        <input
+          wx:if="{{!field.type || field.type === 'text'}}"
+          class="field-input"
+          placeholder="{{field.placeholder}}"
+          value="{{field.value}}"
+          data-field="{{field.key}}"
+          bindinput="onFieldInput"
+        />
         <!-- 下拉选择框 -->
-        <picker wx:if="{{field.type === 'select'}}" 
-                mode="selector" 
-                range="{{field.options}}" 
-                value="{{field.options.indexOf(systemVersion)}}"
-                bindchange="onSystemVersionChange">
+        <picker
+          wx:if="{{field.type === 'select'}}"
+          mode="selector"
+          range="{{field.options}}"
+          value="{{field.options.indexOf(systemVersion)}}"
+          bindchange="onSystemVersionChange"
+        >
           <view class="picker-item">
-            <view class="picker-value">{{systemVersion || '请选择' + field.label}}</view>
+            <view class="picker-value {{systemVersion ? '' : 'placeholder'}}">{{systemVersion || '请选择'}}</view>
+            <view class="row-arrow"></view>
           </view>
         </picker>
+        <view class="field-error" wx:if="{{errorField === field.key}}">请填写{{field.label}}</view>
       </view>
-      
 
-      
+      <view class="form-divider" wx:if="{{requiredFields.length}}"></view>
+
+      <!-- 预约时间 -->
       <view class="appointment-container">
         <picker mode="date" value="{{appointmentDate}}" start="{{startDate}}" end="{{endDate}}" bindchange="onDateChange">
           <view class="picker-item">
             <view class="picker-label">预约日期</view>
-            <view class="picker-value">{{appointmentDate}}</view>
+            <view class="picker-right">
+              <view class="picker-value">{{appointmentDate}}</view>
+              <view class="row-arrow"></view>
+            </view>
           </view>
         </picker>
         <picker mode="time" value="{{appointmentTime}}" start="08:00" end="22:00" bindchange="onTimeChange">
           <view class="picker-item">
             <view class="picker-label">预约时间</view>
-            <view class="picker-value">{{appointmentTime}}</view>
+            <view class="picker-right">
+              <view class="picker-value">{{appointmentTime}}</view>
+              <view class="row-arrow"></view>
+            </view>
           </view>
         </picker>
       </view>
-      
-      <view class="field-label description-label">问题详细描述<text class="optional"> (可选)</text></view>
-      <textarea class="description-textarea" placeholder="请详细描述您遇到的问题（可选）..." maxlength="200" bindinput="onDescriptionInput" value="{{otherDescription}}"></textarea>
+      <view class="field-hint">可预约时段为 08:00–22:00，请至少提前 1 小时</view>
+
+      <!-- 问题描述 -->
+      <view class="field-label description-label">
+        问题详细描述
+        <text class="optional">选填</text>
+      </view>
+      <textarea
+        class="description-textarea"
+        placeholder="可以补充故障现象、出现时间等（选填）"
+        maxlength="200"
+        bindinput="onDescriptionInput"
+        value="{{otherDescription}}"
+      ></textarea>
+      <view class="field-hint field-hint-right">{{otherDescription.length}}/200</view>
 
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep">返回</button>
@@ -164,61 +243,70 @@
       </view>
     </view>
   </view>
-  
+
+  <!-- ==================== 步骤 4：确认报修信息 ==================== -->
   <view wx:if="{{currentStep === 4}}">
     <view class="step-card">
       <view class="step-title">确认报修信息</view>
-      <view class="step-subtitle">请仔细核对您的报修内容</view>
+      <view class="step-subtitle">提交后维修同学会尽快与您联系</view>
+
       <view class="confirm-list">
-        <view class="confirm-item confirm-item-category">
-          <view class="confirm-label">问题类别</view>
-          <view class="confirm-value">{{selectedCategory.name}} > {{selectedSubcategory.name}} > {{selectedType.name}}</view>
-    </view>
         <view class="confirm-item">
-          <view class="confirm-label">预约时间</view>
-          <view class="confirm-value">{{appointmentDate}} {{appointmentTime}}</view>
-      </view>
-        <view wx:if="{{laptopModel || phoneModel || laptopSystem || softwareInfo || systemVersion || deviceModel || mouseModel || keyboardModel || fanModel}}" class="confirm-item confirm-item-category">
-          <view class="confirm-label">详细信息</view>
-          <view class="confirm-value">
-            <text wx:if="{{laptopModel}}">笔记本型号：{{laptopModel}}\n</text>
-            <text wx:if="{{phoneModel}}">手机型号：{{phoneModel}}\n</text>
-            <text wx:if="{{laptopSystem}}">笔记本系统：{{laptopSystem}}\n</text>
-            <text wx:if="{{softwareInfo}}">软件信息：{{softwareInfo}}\n</text>
-            <text wx:if="{{systemVersion}}">系统版本：{{systemVersion}}\n</text>
-            <text wx:if="{{deviceModel}}">设备型号：{{deviceModel}}\n</text>
-            <text wx:if="{{mouseModel}}">鼠标型号：{{mouseModel}}\n</text>
-            <text wx:if="{{keyboardModel}}">键盘型号：{{keyboardModel}}\n</text>
-            <text wx:if="{{fanModel}}">电风扇型号：{{fanModel}}\n</text>
+          <view class="confirm-main">
+            <text class="confirm-label">问题类别</text>
+            <text class="confirm-value">{{selectedCategory.name}} › {{selectedSubcategory.name}} › {{selectedType.name}}</text>
           </view>
+          <view class="confirm-edit" bindtap="onEditStep" data-step="0">修改</view>
         </view>
-        <view class="confirm-item confirm-item-category">
-          <view class="confirm-label">问题描述</view>
-          <view class="confirm-value">{{otherDescription || '无'}}</view>
+
+        <view class="confirm-item">
+          <view class="confirm-main">
+            <text class="confirm-label">预约时间</text>
+            <text class="confirm-value">{{appointmentDate}} {{appointmentTime}}</text>
+          </view>
+          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
+        </view>
+
+        <view class="confirm-item" wx:if="{{detailLines.length}}">
+          <view class="confirm-main">
+            <text class="confirm-label">设备信息</text>
+            <view class="confirm-lines">
+              <text class="confirm-line" wx:for="{{detailLines}}" wx:key="label">{{item.label}}：{{item.value}}</text>
+            </view>
+          </view>
+          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
+        </view>
+
+        <view class="confirm-item">
+          <view class="confirm-main">
+            <text class="confirm-label">问题描述</text>
+            <text class="confirm-value">{{otherDescription || '无'}}</text>
+          </view>
+          <view class="confirm-edit" bindtap="onEditStep" data-step="3">修改</view>
+        </view>
       </view>
-      </view>
+
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep">返回修改</button>
         <button class="btn btn-primary" bindtap="submitRepair">确认提交</button>
       </view>
     </view>
-      </view>
-      
+  </view>
+
+  <!-- ==================== 步骤 5：提交成功 ==================== -->
   <view wx:if="{{currentStep === 5}}">
-     <view class="step-card" style="text-align: center;">
-      <image src="{{iconCheck}}" style="width: 120rpx; height: 120rpx; margin-bottom: 30rpx;"></image>
+    <view class="step-card success-card">
+      <view class="success-badge">
+        <image class="success-icon" src="{{iconCheck}}" mode="aspectFit"></image>
+      </view>
       <view class="step-title success-title">提交成功</view>
       <view class="step-subtitle">您的报修已提交，请耐心等待维修人员联系</view>
 
-      <!-- 紧急联系人信息：原位于“填写报修详情”，现迁移至提交成功页展示，供有紧急需求的用户直接复制QQ联系 -->
-      <view class="emergency-section success-emergency-section" wx:if="{{emergencyContacts.length}}">
-        <view class="emergency-section-title">紧急联系人信息</view>
-        <view class="emergency-section-subtitle">如您的维修需求较为紧急，可直接点击下方 QQ 号复制，前往 QQ 搜索并联系对应的维修人员</view>
-        <view
-          class="emergency-contact-item"
-          wx:for="{{emergencyContacts}}"
-          wx:key="openid"
-        >
+      <!-- 紧急联系人：有紧急需求可直接复制 QQ 联系 -->
+      <view class="emergency-section" wx:if="{{emergencyContacts.length}}">
+        <view class="emergency-section-title">紧急联系人</view>
+        <view class="emergency-section-subtitle">如维修需求较为紧急，可点击下方 QQ 号复制，前往 QQ 搜索并联系对应维修人员</view>
+        <view class="emergency-contact-item" wx:for="{{emergencyContacts}}" wx:key="openid">
           <view class="emergency-contact-name-col">
             <view class="emergency-contact-label">昵称</view>
             <view class="emergency-contact-name">{{item.nickName}}</view>
@@ -239,36 +327,10 @@
         </view>
       </view>
 
-      <view class="button-group" style="justify-content: center; gap: 20rpx;">
+      <view class="button-group">
         <button class="btn btn-outline" bindtap="goToTodo">查看进度</button>
         <button class="btn btn-primary" bindtap="goToRepair">再次报修</button>
       </view>
     </view>
   </view>
-  
-  <!-- 底部步骤进度条 -->
-  <view class="bottom-progress-container" wx:if="{{currentStep < 5}}">
-    <!-- 进度轨道和进度条 -->
-    <view class="progress-track">
-      <!-- 蓝色填充条，从0%开始填充到当前位置 -->
-      <view class="progress-bar" style="width: {{ 15 + (currentStep <= 3 ? (currentStep / 3) * 35 : 70) }}%;"></view>
-      <view class="progress-inner">
-        <!-- 进度指示器图标 -->
-        <image class="progress-indicator" src="{{iconSchedule}}" style="left: {{ (currentStep <= 3 ? (currentStep / 3) * 50 : 100) }}%;"></image>
-      </view>
-    </view>
-    <!-- 步骤标签 -->
-    <view class="progress-steps">
-      <view class="progress-step {{currentStep <= 2 ? 'active' : ''}}">
-        <text class="step-text">选择类别</text>
-      </view>
-      <view class="progress-step {{currentStep === 3 ? 'active' : ''}}">
-        <text class="step-text">预约时间</text>
-      </view>
-      <view class="progress-step {{currentStep === 4 ? 'active' : ''}}">
-        <text class="step-text">确认信息</text>
-      </view>
-    </view>
-  </view>
-
 </view>

@@ -1,250 +1,173 @@
 <!--pages/user/todo/maintenance-detail/index.wxml-->
-<view class="container">
-    <view class="task-card" wx:if="{{!loading && taskDetail}}">
-      <!-- 卡片封面 -->
-      <view class="card-cover">
-        <image class="card-icon" src="{{iconRepair}}"></image>
-        <text class="card-type">维修任务</text>
+<view class="page {{showActionBar ? 'has-action-bar' : ''}}">
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <loading-animation size="large"></loading-animation>
   </view>
-  
-      <!-- 卡片头部 -->
-      <view class="card-header">
-        <text class="task-title">{{taskDetail.level3}}</text>
-        <view class="task-status {{taskDetail.taskStatus}}">
-          {{taskDetail.taskStatus === 'pending' ? '待受理' : (taskDetail.taskStatus === 'inProgress' ? '处理中' : (taskDetail.taskStatus === 'completed' ? '已完成' : '已撤销'))}}
-    </view>
-      </view>
-      
-      <!-- 卡片内容 -->
-      <view class="card-content">
-        <!-- 问题分类 -->
-        <view class="category-section">
-          <view class="info-row">
-            <text class="info-label">问题类别:</text>
-            <text class="info-value">{{taskDetail.level1}} > {{taskDetail.level2}}</text>
-          </view>
-    </view>
-    
-        <!-- 特殊字段信息 -->
-        <view class="special-fields-section" wx:if="{{taskDetail.specialFields && (taskDetail.specialFields.laptopModel || taskDetail.specialFields.phoneModel || taskDetail.specialFields.laptopSystem || taskDetail.specialFields.softwareInfo || taskDetail.specialFields.systemVersion || taskDetail.specialFields.deviceModel)}}">
-          <view class="divider"></view>
-          <text class="section-title">详细信息</text>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.laptopModel}}">
-            <text class="info-label">笔记本型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.laptopModel}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.phoneModel}}">
-            <text class="info-label">手机型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.phoneModel}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.laptopSystem}}">
-            <text class="info-label">笔记本系统:</text>
-            <text class="info-value">{{taskDetail.specialFields.laptopSystem}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.softwareInfo}}">
-            <text class="info-label">软件信息:</text>
-            <text class="info-value">{{taskDetail.specialFields.softwareInfo}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.systemVersion}}">
-            <text class="info-label">系统版本:</text>
-            <text class="info-value">{{taskDetail.specialFields.systemVersion}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.deviceModel}}">
-            <text class="info-label">设备型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.deviceModel}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.mouseModel}}">
-            <text class="info-label">鼠标型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.mouseModel}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.keyboardModel}}">
-            <text class="info-label">键盘型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.keyboardModel}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.specialFields.fanModel}}">
-            <text class="info-label">电风扇型号:</text>
-            <text class="info-value">{{taskDetail.specialFields.fanModel}}</text>
+
+  <block wx:if="{{!loading && taskDetail}}">
+    <!-- 概览 -->
+    <view class="card status-{{taskDetail.taskStatus}}">
+      <view class="hero">
+        <view class="hero-tile">
+          <image class="hero-icon" src="{{iconRepair}}"></image>
+        </view>
+        <view class="hero-main">
+          <text class="hero-title">{{taskDetail.level3}}</text>
+          <view class="hero-sub">
+            <text class="hero-sub-text">{{taskDetail.level1}} · {{taskDetail.level2}}</text>
+            <text class="tag-soft" wx:if="{{taskDetail.isManagementCreated}}">组长创建</text>
           </view>
         </view>
-    
-        <view class="divider"></view>
-        
-        <!-- 时间信息 -->
-        <view class="time-section">
-          <view class="info-row">
-            <text class="info-label">预约时间:</text>
-            <text class="info-value">{{taskDetail.appointmentTime}}</text>
-          </view>
-          <view class="info-row" wx:if="{{taskDetail.completeTime}}">
-            <text class="info-label">完成时间:</text>
-            <text class="info-value">{{taskDetail.completeTime}}</text>
-          </view>
-    </view>
-    
-        <view class="divider"></view>
-        
-        <!-- 人员信息 -->
-        <view class="people-section">
-          <!-- 申请人信息区块 -->
-          <view class="person-block applicant-block">
-            <view class="person-header">
-              <text class="person-title">申请人信息</text>
-            </view>
-            <view class="person-content">
-              <view class="info-row">
-                <text class="info-label">姓名:</text>
-                <text class="info-value">{{taskDetail.applicantName}}</text>
-              </view>
-              
-              <view class="info-row">
-                <text class="info-label">学号:</text>
-                <text class="info-value">{{taskDetail.applicantStudentId || '未填'}}</text>
-              </view>
+        <view class="status-pill {{taskDetail.taskStatus}}">{{statusText}}</view>
+      </view>
 
-              <view class="info-row" wx:if="{{taskDetail.applicantQqId}}">
-                <text class="info-label">QQ号:</text>
-                <text class="info-value">
-                  <text class="qq-link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">{{taskDetail.applicantQqId}}（长按复制）</text>
-                </text>
-              </view>
-              <view class="info-row">
-                <text class="info-label">申请时间:</text>
-                <text class="info-value">{{taskDetail.applicantTime}}</text>
-              </view>
-            </view>
-          </view>
-
-          <!-- 主受理人信息区块 -->
-          <view class="person-block main-assignee-block" wx:if="{{taskDetail.assigneeName}}">
-            <view class="person-header">
-              <text class="person-title">主受理人信息</text>
-            </view>
-            <view class="person-content">
-              <view class="info-row">
-                <text class="info-label">姓名:</text>
-                <text class="info-value">{{taskDetail.assigneeName}}</text>
-              </view>
-              
-              <view class="info-row">
-                <text class="info-label">学号:</text>
-                <text class="info-value">{{taskDetail.assigneeStudentId || '未填'}}</text>
-              </view>
-
-              <view class="info-row" wx:if="{{taskDetail.assigneeQqId}}">
-                <text class="info-label">QQ号:</text>
-                <text class="info-value">
-                  <text class="qq-link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="主受理人">{{taskDetail.assigneeQqId}}（长按复制）</text>
-                </text>
-              </view>
-              <view class="info-row">
-                <text class="info-label">受理时间:</text>
-                <text class="info-value">{{taskDetail.assigneeTime}}</text>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 协助受理人信息区块 -->
-          <view class="person-block additional-assignee-block" wx:if="{{taskDetail.additionalAssignees && taskDetail.additionalAssignees.length > 0}}">
-            <view class="person-header">
-              <text class="person-title">协助受理人信息</text>
-            </view>
-            <view class="person-content">
-              <view class="additional-assignee-item" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
-                <view class="assignee-name-tag">协助受理人{{index + 1}}</view>
-                <view class="info-row">
-                  <text class="info-label">姓名:</text>
-                  <text class="info-value">{{item.assigneeName}}</text>
-                </view>
-                
-                <view class="info-row">
-                  <text class="info-label">学号:</text>
-                  <text class="info-value">{{item.assigneeStudentId || '未填'}}</text>
-                </view>
-
-                <view class="info-row" wx:if="{{item.assigneeQqId}}">
-                  <text class="info-label">QQ号:</text>
-                  <text class="info-value">
-                    <text class="qq-link" bindlongpress="copyQQ" data-qq="{{item.assigneeQqId}}" data-type="协助受理人">{{item.assigneeQqId}}（长按复制）</text>
-                  </text>
-                </view>
-                <view class="info-row">
-                  <text class="info-label">受理时间:</text>
-                  <text class="info-value">{{item.assigneeTime}}</text>
-                </view>
-                <view class="assignee-divider" wx:if="{{index < taskDetail.additionalAssignees.length - 1}}"></view>
-              </view>
-            </view>
-          </view>
-    </view>
-  
-        <view class="divider"></view>
-        
-        <!-- 问题描述 -->
-        <view class="description-section">
-          <text class="section-title">问题描述</text>
-          <view class="description-content">
-            <text>{{taskDetail.otherDescription || '暂无描述'}}</text>
-    </view>
-    </view>
-    
-        <!-- 备注信息 -->
-        <view class="remarks-section" wx:if="{{taskDetail.comments}}">
-          <view class="divider"></view>
-          <text class="section-title">备注信息</text>
-          <view class="description-content">
-            <text>{{taskDetail.comments}}</text>
+      <view class="meta-grid">
+        <view class="meta-item full">
+          <text class="meta-label">预约时间</text>
+          <text class="meta-value">{{taskDetail.appointmentTime || '未预约'}}</text>
+        </view>
+        <view class="meta-item full" wx:if="{{taskDetail.completeTime}}">
+          <text class="meta-label">完成时间</text>
+          <text class="meta-value">{{taskDetail.completeTime}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">申请人</text>
+          <text class="meta-value">{{taskDetail.applicantName || '未填'}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">受理人</text>
+          <text class="meta-value">{{taskDetail.assigneeName || '待受理'}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{taskDetail.cost}}">
+          <text class="meta-label">所需费用</text>
+          <text class="meta-value strong">¥{{taskDetail.cost}}</text>
+        </view>
+        <view class="meta-item {{taskDetail.cost ? '' : 'full'}}">
+          <text class="meta-label">任务编号</text>
+          <text class="meta-value">{{taskDetail.taskId}}</text>
+        </view>
       </view>
     </view>
-    
-        <!-- 撤销原因 -->
-        <view class="cancel-reason-section" wx:if="{{taskDetail.taskStatus === 'cancelled' && taskDetail.cancelReason}}">
-          <view class="divider"></view>
-          <text class="section-title">撤销原因</text>
-          <view class="description-content cancel-reason-content">
-            <text>{{taskDetail.cancelReason}}</text>
-          </view>
+
+    <!-- 设备信息 -->
+    <view class="card" wx:if="{{deviceFields.length > 0}}">
+      <view class="card-title">设备信息</view>
+      <view class="meta-grid no-top-line">
+        <view class="meta-item" wx:for="{{deviceFields}}" wx:key="label">
+          <text class="meta-label">{{item.label}}</text>
+          <text class="meta-value">{{item.value}}</text>
         </view>
+      </view>
+    </view>
+
+    <!-- 问题描述 -->
+    <view class="card">
+      <view class="card-title">问题描述</view>
+      <view class="note">{{taskDetail.otherDescription || '暂无描述'}}</view>
+    </view>
+
+    <!-- 备注信息 -->
+    <view class="card" wx:if="{{taskDetail.comments}}">
+      <view class="card-title">备注信息</view>
+      <view class="note">{{taskDetail.comments}}</view>
+    </view>
+
+    <!-- 撤销原因 -->
+    <view class="card" wx:if="{{taskDetail.taskStatus === 'cancelled' && taskDetail.cancelReason}}">
+      <view class="card-title">撤销原因</view>
+      <view class="note note-danger">{{taskDetail.cancelReason}}</view>
+    </view>
+
+    <!-- 申请人信息 -->
+    <view class="card">
+      <view class="card-title">申请人信息</view>
+      <view class="person">
+        <view class="avatar-badge">{{applicantInitial}}</view>
+        <view class="person-main">
+          <text class="person-name">{{taskDetail.applicantName || '未填'}}</text>
+          <text class="person-meta">学号 {{taskDetail.applicantStudentId || '未填'}}</text>
+        </view>
+      </view>
+      <view class="meta-grid">
+        <view class="meta-item" wx:if="{{taskDetail.applicantQqId}}">
+          <text class="meta-label">QQ号</text>
+          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">{{taskDetail.applicantQqId}}<text class="copy-hint">长按复制</text></text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">申请时间</text>
+          <text class="meta-value">{{taskDetail.applicantTime || '未填'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 受理人信息 -->
+    <view class="card" wx:if="{{taskDetail.assigneeName}}">
+      <view class="card-title">受理人信息</view>
+      <view class="person">
+        <view class="avatar-badge">{{assigneeInitial}}</view>
+        <view class="person-main">
+          <text class="person-name">{{taskDetail.assigneeName}}</text>
+          <text class="person-meta">学号 {{taskDetail.assigneeStudentId || '未填'}}</text>
+        </view>
+        <text class="role-tag">主受理</text>
+      </view>
+      <view class="meta-grid">
+        <view class="meta-item" wx:if="{{taskDetail.assigneeQqId}}">
+          <text class="meta-label">QQ号</text>
+          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="主受理人">{{taskDetail.assigneeQqId}}<text class="copy-hint">长按复制</text></text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">受理时间</text>
+          <text class="meta-value">{{taskDetail.assigneeTime || '未填'}}</text>
+        </view>
+      </view>
+
+      <!-- 协助受理人 -->
+      <block wx:if="{{taskDetail.additionalAssignees.length > 0}}">
+        <view class="sub-divider"></view>
+        <view class="sub-title">协助受理人</view>
+        <view class="person sub-person" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
+          <view class="avatar-badge muted">{{item.initial}}</view>
+          <view class="person-main">
+            <text class="person-name">{{item.assigneeName || '未填'}}</text>
+            <text class="person-meta">学号 {{item.assigneeStudentId || '未填'}} · 受理 {{item.assigneeTime || '未填'}}</text>
+          </view>
+          <text class="role-tag" wx:if="{{item.assigneeQqId}}" bindlongpress="copyQQ" data-qq="{{item.assigneeQqId}}" data-type="协助受理人">QQ {{item.assigneeQqId}}</text>
+        </view>
+      </block>
+    </view>
+  </block>
+
+  <!-- 底部操作栏 -->
+  <view class="action-bar" wx:if="{{showActionBar}}">
+    <view class="action-btn ghost-danger" bindtap="openCancelModal">撤销任务</view>
+    <view class="action-btn primary" wx:if="{{canComplete}}" bindtap="confirmCompleteTask">确认完成</view>
   </view>
-  
-      <!-- 按钮区域 -->
-      <view class="card-actions" wx:if="{{isApplicant && taskDetail.taskStatus !== 'completed' && taskDetail.taskStatus !== 'cancelled'}}">
-        <button class="cancel-btn" bindtap="openCancelModal">撤销任务</button>
-        <button class="complete-btn" bindtap="confirmCompleteTask" wx:if="{{canComplete}}">确认完成任务</button>
-    </view>
-    </view>
-    
-    <!-- 加载中状态 -->
-    <view class="loading-container" wx:if="{{loading}}">
-      <view class="loading">
-        <loading-animation size="default"></loading-animation>
+
+  <!-- 撤销任务弹窗 -->
+  <view class="modal-mask" wx:if="{{showCancelModal}}" catchtouchmove="noop">
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-head">
+        <text class="modal-title">撤销任务</text>
+        <view class="modal-close" bindtap="closeCancelModal">×</view>
+      </view>
+      <view class="modal-body">
+        <view class="modal-label">请说明撤销原因</view>
+        <textarea
+          class="modal-textarea"
+          placeholder="请输入撤销原因..."
+          value="{{cancelReason}}"
+          bindinput="onCancelReasonInput"
+          maxlength="200"
+          auto-height
+        ></textarea>
+        <view class="modal-count">{{cancelReason ? cancelReason.length : 0}}/200</view>
+      </view>
+      <view class="modal-foot">
+        <view class="action-btn ghost" bindtap="closeCancelModal">取消</view>
+        <view class="action-btn danger" bindtap="confirmCancelTask">确认撤销</view>
       </view>
     </view>
-    
-    <!-- 撤销任务弹窗 -->
-    <view class="cancel-modal-overlay" wx:if="{{showCancelModal}}" catchtouchmove="noop">
-      <view class="cancel-modal" catchtap="">
-        <view class="modal-header">
-          <text class="modal-title">撤销任务</text>
-          <view class="modal-close" bindtap="closeCancelModal">×</view>
-        </view>
-        <view class="modal-content">
-          <view class="modal-label">请说明撤销原因：</view>
-          <textarea 
-            class="cancel-reason-input" 
-            placeholder="请输入撤销原因..." 
-            value="{{cancelReason}}"
-            bindinput="onCancelReasonInput"
-            maxlength="200"
-            auto-height
-          ></textarea>
-          <view class="char-count">{{cancelReason ? cancelReason.length : 0}}/200</view>
-        </view>
-        <view class="modal-actions">
-          <button class="modal-btn cancel-btn" bindtap="closeCancelModal">取消</button>
-          <button class="modal-btn confirm-btn" bindtap="confirmCancelTask">确认撤销</button>
-        </view>
-      </view>
-    </view>
-
-
+  </view>
 </view>

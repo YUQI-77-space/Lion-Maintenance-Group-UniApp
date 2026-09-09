@@ -9,6 +9,11 @@ const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) 
 const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
 const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
 
+// 步骤条高度（100rpx）与内容顶部留白：按屏幕宽度换算，避免 rpx/px 混算
+const STEP_BAR_HEIGHT = Math.round(100 * (WINDOW_INFO.windowWidth || 375) / 750);
+const CONTENT_TOP = NAV_BAR_HEIGHT + STEP_BAR_HEIGHT + 12;
+const CONTENT_TOP_NO_BAR = NAV_BAR_HEIGHT + 12;
+
 // 首帧直出：预约时间、日期区间、用户信息都能同步算出来，直接作为初始 data
 function computeEarliestAppointmentTime() {
   const now = new Date();
@@ -68,15 +73,20 @@ Page({
     // 导航栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
+    stepBarHeight: STEP_BAR_HEIGHT,
+    contentTop: CONTENT_TOP,
+    contentTopNoBar: CONTENT_TOP_NO_BAR,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
     iconSearch: iconManager.get('common_search'),
     iconArrowRight: iconManager.get('common_arrow_right'),
     iconCheck: iconManager.get('common_check'),
-    iconSchedule: iconManager.get('status_schedule'),
 
     currentStep: 0,
+    // 步骤条：0 选择类别 / 1 填写信息 / 2 确认提交
+    progressStage: 0,
+    progressLabels: ['选择类别', '填写信息', '确认提交'],
     
     // 问题分类数据
     categories: repairCategories,
@@ -88,6 +98,7 @@ Page({
     searchResults: [],
     showSearchResult: false,
     showQuickKeywords: false,
+    searchEmpty: false,
     quickKeywords: [
       { label: '笔记本清灰', value: '清灰' },
       { label: '系统重装', value: '重装' },
@@ -119,6 +130,8 @@ Page({
     keyboardModel: '',      // 键盘型号
     fanModel: '',           // 电风扇型号
     requiredFields: [],     // 当前需要的特殊字段
+    errorField: '',         // 校验未通过的字段 key，用于内联提示
+    detailLines: [],        // 确认页展示的“设备信息”行
     
     // 用户信息
     userInfo: INITIAL_USER_INFO,
@@ -189,45 +202,7 @@ Page({
         const sub = category && (category.subcategories || []).find(s => s.id === quick.subcategoryId);
         const type = sub && (sub.types || []).find(t => t.id === quick.typeId);
         if (category && sub && type) {
-          const requiredFields = this.getRequiredFieldsById(type.id);
-          this.setData({
-            selectedCategory: category,
-            selectedSubcategory: sub,
-            selectedType: type,
-            selectedTypeId: type.id,
-            types: sub.types || [],
-            subcategories: category.subcategories || [],
-            requiredFields,
-            tempState: {
-              selectedType: type,
-              selectedTypeId: type.id
-            },
-            currentStep: 3
-          });
-
-          // 笔记本清灰（id: 111）需要温馨提醒
-          if (type.id === 111) {
-            wx.showModal({
-              title: '温馨提醒',
-              content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
-              showCancel: false,
-              confirmText: '我知道了',
-              confirmColor: '#4A90E2',
-              success: () => {
-                wx.showToast({
-                  title: '已根据地图定位到该问题',
-                  icon: 'none',
-                  duration: 1000
-                });
-              }
-            });
-          } else {
-            wx.showToast({
-              title: '已根据地图定位到该问题',
-              icon: 'none',
-              duration: 1000
-            });
-          }
+          this.applyTypeSelection(category, sub, type, { toastText: '已根据地图定位到该问题' });
         }
         // 只使用一次
         app.globalData.repairQuickSelect = null;
@@ -238,6 +213,65 @@ Page({
   },
 
   onUnload() {},
+
+  /**
+   * 步骤对应的进度阶段：0 选择类别 / 1 填写信息 / 2 确认提交
+   */
+  stageOf(step) {
+    if (step <= 2) return 0;
+    return step === 3 ? 1 : 2;
+  },
+
+  /**
+   * 切换步骤：同步进度条、必要时重建确认页数据，并把页面滚回顶部
+   */
+  goToStep(step, extraData) {
+    const patch = Object.assign({}, extraData || {}, {
+      currentStep: step,
+      progressStage: this.stageOf(step)
+    });
+    if (step === 4) {
+      patch.detailLines = this.buildDetailLines();
+    }
+    this.setData(patch);
+    wx.pageScrollTo({ scrollTop: 0, duration: 0 });
+  },
+
+  /**
+   * 构建确认页的“设备信息”行；标签取当前类型的字段定义，避免出现“设备型号”这类泛化名称
+   */
+  buildDetailLines() {
+    return (this.data.requiredFields || [])
+      .filter(field => this.data[field.key])
+      .map(field => ({ label: field.label, value: this.data[field.key] }));
+  },
+
+  /**
+   * 清空特殊字段（切换问题类型 / 重新报修时调用）
+   */
+  specialFieldResetPatch() {
+    return {
+      laptopModel: '',
+      phoneModel: '',
+      laptopSystem: '',
+      softwareInfo: '',
+      systemVersion: '',
+      deviceModel: '',
+      mouseModel: '',
+      keyboardModel: '',
+      fanModel: '',
+      errorField: ''
+    };
+  },
+
+  /**
+   * 确认页“修改”：直接回到对应步骤，保留已填内容
+   */
+  onEditStep(e) {
+    const step = Number(e.currentTarget.dataset.step);
+    if (Number.isNaN(step)) return;
+    this.goToStep(step);
+  },
 
   // 页面动画
   // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
@@ -342,9 +376,10 @@ Page({
       showQuickKeywords: !keyword
     });
     if (!keyword) {
-      this.setData({ searchResults: [], showSearchResult: false });
+      this.setData({ searchResults: [], showSearchResult: false, searchEmpty: false });
       return;
     }
+    // 输入过程中静默搜索，命中与否都只在面板内反馈
     this.runSearch(keyword);
   },
 
@@ -362,7 +397,8 @@ Page({
       searchKeyword: '',
       searchResults: [],
       showSearchResult: false,
-      showQuickKeywords: true
+      showQuickKeywords: true,
+      searchEmpty: false
     });
   },
 
@@ -375,12 +411,16 @@ Page({
   },
 
   onSearchBlur() {
-    // 失焦后保留输入内容，但收起所有浮层
-    this.setData({
-      showQuickKeywords: false,
-      showSearchResult: false,
-      searchResults: []
-    });
+    // 延迟收起，保证面板内的点击（选结果/点快捷词）能先被响应
+    clearTimeout(this._searchBlurTimer);
+    this._searchBlurTimer = setTimeout(() => {
+      this.setData({
+        showQuickKeywords: false,
+        showSearchResult: false,
+        searchResults: [],
+        searchEmpty: false
+      });
+    }, 250);
   },
 
   onQuickKeywordTap(e) {
@@ -409,51 +449,7 @@ Page({
     }
 
     const { cat, sub, type } = found;
-    const requiredFields = this.getRequiredFieldsById(type.id);
-
-    this.setData({
-      selectedCategory: cat,
-      selectedSubcategory: sub,
-      selectedType: type,
-      selectedTypeId: type.id,
-      types: sub.types || [],
-      subcategories: cat.subcategories || [],
-      requiredFields,
-      tempState: {
-        selectedType: type,
-        selectedTypeId: type.id
-      },
-      currentStep: 3,
-      // 清空搜索相关状态
-      searchKeyword: '',
-      searchResults: [],
-      showSearchResult: false,
-      showQuickKeywords: false
-    });
-
-    // 笔记本清灰（id: 111）需要温馨提醒
-    if (type.id === 111) {
-      wx.showModal({
-        title: '温馨提醒',
-        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
-        showCancel: false,
-        confirmText: '我知道了',
-        confirmColor: '#4A90E2',
-        success: () => {
-          wx.showToast({
-            title: '已为您定位到该问题',
-            icon: 'none',
-            duration: 1000
-          });
-        }
-      });
-    } else {
-      wx.showToast({
-        title: '已为您定位到该问题',
-        icon: 'none',
-        duration: 1000
-      });
-    }
+    this.applyTypeSelection(cat, sub, type);
   },
 
   runSearch(keyword) {
@@ -471,22 +467,67 @@ Page({
               categoryId: cat.id,
               subcategoryId: sub.id,
               typeId: t.id,
-              fullPath: `${cat.name} > ${sub.name} > ${name}`,
-              hint: '点击直接跳转到“填写报修详情”'
+              fullPath: `${cat.name} › ${sub.name} › ${name}`,
+              hint: '点击直接进入填写'
             });
           }
         });
       });
     });
 
-    if (!results.length) {
-      wx.showToast({ title: '未找到相关问题', icon: 'none' });
-    }
-
+    // 无结果时用面板内的空状态提示，不再弹 toast 打断输入
     this.setData({
       searchResults: results,
-      showSearchResult: !!results.length
+      showSearchResult: !!results.length,
+      searchEmpty: !results.length
     });
+  },
+
+  /**
+   * 选定三级问题并直接进入“填写报修详情”
+   * 搜索结果、快捷关键词、分类地图三处入口共用
+   */
+  applyTypeSelection(category, sub, type, options) {
+    const opts = options || {};
+    const requiredFields = this.getRequiredFieldsById(type.id);
+
+    this.goToStep(3, Object.assign({
+      selectedCategory: category,
+      selectedSubcategory: sub,
+      selectedType: type,
+      selectedTypeId: type.id,
+      types: sub.types || [],
+      subcategories: category.subcategories || [],
+      requiredFields,
+      tempState: {
+        selectedType: type,
+        selectedTypeId: type.id
+      },
+      // 清空搜索相关状态
+      searchKeyword: '',
+      searchResults: [],
+      showSearchResult: false,
+      showQuickKeywords: false,
+      searchEmpty: false
+    }, this.specialFieldResetPatch()));
+
+    const toastText = opts.toastText || '已为您定位到该问题';
+
+    // 笔记本清灰（id: 111）需要温馨提醒
+    if (type.id === 111) {
+      wx.showModal({
+        title: '温馨提醒',
+        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
+        showCancel: false,
+        confirmText: '我知道了',
+        confirmColor: '#0000CD',
+        success: () => {
+          wx.showToast({ title: toastText, icon: 'none', duration: 1000 });
+        }
+      });
+    } else {
+      wx.showToast({ title: toastText, icon: 'none', duration: 1000 });
+    }
   },
 
   // 点击搜索结果：直接完成前面三级选择并跳到填写详情步骤
@@ -502,112 +543,59 @@ Page({
     const type = (sub.types || []).find(t => t.id === typeId);
     if (!type) return;
 
-    const requiredFields = this.getRequiredFieldsById(type.id);
-
-    this.setData({
-      selectedCategory: category,
-      selectedSubcategory: sub,
-      selectedType: type,
-      selectedTypeId: type.id,
-      types: sub.types || [],
-      subcategories: category.subcategories || [],
-      requiredFields,
-      tempState: {
-        selectedType: type,
-        selectedTypeId: type.id
-      },
-      currentStep: 3,
-      // 清空搜索相关状态
-      searchKeyword: '',
-      searchResults: [],
-      showSearchResult: false,
-      showQuickKeywords: false
-    });
-
-    // 笔记本清灰（id: 111）需要温馨提醒
-    if (type.id === 111) {
-      wx.showModal({
-        title: '温馨提醒',
-        content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
-        showCancel: false,
-        confirmText: '我知道了',
-        confirmColor: '#4A90E2',
-        success: () => {
-          wx.showToast({
-            title: '已为您定位到该问题',
-            icon: 'none',
-            duration: 1000
-          });
-        }
-      });
-    } else {
-      wx.showToast({
-        title: '已为您定位到该问题',
-        icon: 'none',
-        duration: 1000
-      });
-    }
+    this.applyTypeSelection(category, sub, type);
   },
   
   // 步骤控制
   nextStep() {
     let { currentStep, selectedType, selectedTypeId, tempState } = this.data;
+    const extra = {};
 
+    // 步骤 2 → 3：必须先选中问题类型，同时清空上一次填写过的特殊字段
     if (currentStep === 2) {
+      if (!selectedType) {
+        wx.showToast({ title: '请选择问题类型', icon: 'none' });
+        return;
+      }
       tempState = { selectedType, selectedTypeId };
-      this.setData({
-        laptopModel: '',
-        phoneModel: '',
-        laptopSystem: '',
-        softwareInfo: '',
-        systemVersion: '',
-        deviceModel: '',
-        mouseModel: '',
-        keyboardModel: '',
-        fanModel: ''
-      });
+      Object.assign(extra, this.specialFieldResetPatch());
     }
-    
-    // 验证必填字段
+
+    // 步骤 3 → 4：校验必填项，未通过时在对应字段下方内联提示
     if (currentStep === 3) {
       const requiredFields = this.getRequiredFields();
-      for (const field of requiredFields) {
-        if (field.required) {
-          const value = this.data[field.key];
-          if (!value || value.trim() === '') {
-            wx.showToast({ title: `请填写${field.label}`, icon: 'none' });
-            return;
-          }
-        }
+      const missing = requiredFields.find(field => {
+        if (!field.required) return false;
+        const value = this.data[field.key];
+        return !value || String(value).trim() === '';
+      });
+
+      if (missing) {
+        this.setData({ errorField: missing.key });
+        wx.showToast({ title: `请填写${missing.label}`, icon: 'none' });
+        return;
       }
-      
+
       if (!this.data.appointmentDate) {
         wx.showToast({ title: '请选择预约日期', icon: 'none' });
         return;
       }
-      
+
       if (!this.data.appointmentTime) {
         wx.showToast({ title: '请选择预约时间', icon: 'none' });
         return;
       }
-      
+
       selectedType = tempState.selectedType;
       selectedTypeId = tempState.selectedTypeId;
     }
-    
-    this.setData({
-      currentStep: currentStep + 1,
-      tempState,
-      selectedType,
-      selectedTypeId
-    });
+
+    this.goToStep(currentStep + 1, Object.assign(extra, { tempState, selectedType, selectedTypeId }));
   },
   
   prevStep() {
     const { currentStep } = this.data;
-    let updateData = {
-      currentStep: currentStep - 1
-    };
+    const updateData = {};
 
     // 清理状态
     if (currentStep === 1) {
@@ -619,18 +607,10 @@ Page({
       updateData.selectedType = null;
       updateData.selectedTypeId = null;
       updateData.requiredFields = [];
-      updateData.laptopModel = '';
-      updateData.phoneModel = '';
-      updateData.laptopSystem = '';
-      updateData.softwareInfo = '';
-      updateData.systemVersion = '';
-      updateData.deviceModel = '';
-      updateData.mouseModel = '';
-      updateData.keyboardModel = '';
-      updateData.fanModel = '';
+      Object.assign(updateData, this.specialFieldResetPatch());
     }
 
-    this.setData(updateData);
+    this.goToStep(currentStep - 1, updateData);
   },
   
   onCategorySelect(e) {
@@ -668,7 +648,8 @@ Page({
     this.setData({
       selectedTypeId: id,
       selectedType: selected,
-      requiredFields: this.getRequiredFieldsById(id)
+      requiredFields: this.getRequiredFieldsById(id),
+      errorField: ''
     });
 
     // 笔记本清灰（id: 111）需要温馨提醒
@@ -678,7 +659,7 @@ Page({
         content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
-        confirmColor: '#4A90E2'
+        confirmColor: '#0000CD'
       });
     }
   },
@@ -747,7 +728,7 @@ Page({
   onSystemVersionChange(e) {
     const systemOptions = ['WIN7', 'WIN10', 'WIN11', 'MAC'];
     const selectedIndex = e.detail.value;
-    this.setData({ systemVersion: systemOptions[selectedIndex] });
+    this.applyFieldValue('systemVersion', systemOptions[selectedIndex]);
   },
   
   onDeviceModelInput(e) {
@@ -769,10 +750,25 @@ Page({
   // 通用的字段输入处理函数
   onFieldInput(e) {
     const field = e.currentTarget.dataset.field;
-    const value = e.detail.value;
-    this.setData({
-      [field]: value
-    });
+    this.applyFieldValue(field, e.detail.value);
+  },
+
+  /**
+   * 写入字段值：同步清理该字段的校验提示，并回写到 requiredFields，
+   * 保证从确认页返回修改时输入框内容不丢失
+   */
+  applyFieldValue(field, value) {
+    const patch = {
+      [field]: value,
+      errorField: this.data.errorField === field ? '' : this.data.errorField
+    };
+
+    const index = (this.data.requiredFields || []).findIndex(item => item.key === field);
+    if (index !== -1) {
+      patch[`requiredFields[${index}].value`] = value;
+    }
+
+    this.setData(patch);
   },
   
   // 获取当前选择的问题类型需要的特殊输入字段
@@ -834,7 +830,8 @@ Page({
       fields.push({ key: 'deviceModel', label: '设备型号', placeholder: '请填写设备型号', required: false });
     }
     
-    return fields;
+    // value 供输入框展示；每次重新构建字段时都从空开始，避免残留上一次的选择
+    return fields.map(field => ({ ...field, value: '' }));
   },
 
 
@@ -927,20 +924,6 @@ Page({
         return;
       }
       
-      // 构建特殊字段信息
-      let specialInfo = '';
-      if (laptopModel) specialInfo += `笔记本型号：${laptopModel}\n`;
-      if (phoneModel) specialInfo += `手机型号：${phoneModel}\n`;
-      if (laptopSystem) specialInfo += `笔记本系统：${laptopSystem}\n`;
-      if (softwareInfo) specialInfo += `软件信息：${softwareInfo}\n`;
-      if (systemVersion) specialInfo += `系统版本：${systemVersion}\n`;
-      if (deviceModel) specialInfo += `设备型号：${deviceModel}\n`;
-      if (mouseModel) specialInfo += `鼠标型号：${mouseModel}\n`;
-      if (keyboardModel) specialInfo += `键盘型号：${keyboardModel}\n`;
-      if (fanModel) specialInfo += `电风扇型号：${fanModel}\n`;
-      
-      const finalDescription = specialInfo + (otherDescription ? `\n其他描述：${otherDescription}` : '');
-      
       const res = await api.call('maintenanceTasks', {
         action: 'createMaintenanceTask',
         params: {
@@ -971,7 +954,7 @@ Page({
       wx.hideLoading();
 
       if (res.success) {
-        this.setData({ currentStep: this.data.currentStep + 1 });
+        this.goToStep(5);
       } else {
         if (res.code === 401 || /未注册|未找到用户|not registered/i.test(res.message || '')) {
           wx.showToast({ title: '请先注册后再提交', icon: 'none' });
@@ -1000,26 +983,18 @@ Page({
   },
   
   goToRepair() {
-    this.setData({
-      currentStep: 0,
+    this.goToStep(0, Object.assign({
       selectedCategory: null,
       selectedSubcategory: null,
       selectedType: null,
       selectedTypeId: null,
+      types: [],
+      subcategories: [],
       otherDescription: '',
-      tempState: {},
-      // 清理特殊字段
-      laptopModel: '',
-      phoneModel: '',
-      laptopSystem: '',
-      softwareInfo: '',
-      systemVersion: '',
-      deviceModel: '',
-      mouseModel: '',
-      keyboardModel: '',
-      fanModel: '',
-      requiredFields: []
-    });
+      requiredFields: [],
+      detailLines: [],
+      tempState: {}
+    }, this.specialFieldResetPatch()));
     this.initAppointmentDate();
   },
 

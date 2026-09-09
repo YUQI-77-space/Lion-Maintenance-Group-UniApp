@@ -5,6 +5,27 @@ const time = require('../../../../utils/time');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const iconManager = require('../../../../utils/iconManager');
 
+// 状态文案
+const STATUS_TEXT = {
+  pending: '待受理',
+  inProgress: '处理中',
+  completed: '已完成',
+  cancelled: '已撤销'
+};
+
+// 特殊字段的展示顺序与中文标签
+const DEVICE_FIELDS = [
+  ['laptopModel', '笔记本型号'],
+  ['phoneModel', '手机型号'],
+  ['laptopSystem', '笔记本系统'],
+  ['systemVersion', '系统版本'],
+  ['softwareInfo', '软件信息'],
+  ['deviceModel', '设备型号'],
+  ['mouseModel', '鼠标型号'],
+  ['keyboardModel', '键盘型号'],
+  ['fanModel', '电风扇型号']
+];
+
 Page({
   /**
    * 页面的初始数据
@@ -17,11 +38,26 @@ Page({
     isAssignee: false,
     canComplete: false,
     canCancel: false,
+    showActionBar: false,
+    statusText: '',
+    deviceFields: [],
+    applicantInitial: '',
+    assigneeInitial: '',
     showCancelModal: false,
     cancelReason: '',
     completionInProgress: false,
     // 图标资源
     iconRepair: iconManager.get('biz_repair')
+  },
+
+  /**
+   * 取姓名首字作为头像占位
+   * @param {string} name
+   * @returns {string}
+   */
+  getInitial: function(name) {
+    const text = String(name || '').trim();
+    return text ? text.charAt(0) : '?';
   },
 
   /**
@@ -83,8 +119,15 @@ Page({
             if (assignee.assigneeTime) {
               assignee.assigneeTime = this.formatTime(assignee.assigneeTime);
             }
+            assignee.initial = this.getInitial(assignee.assigneeName);
           });
         }
+
+        // 组装设备信息（仅展示已填写的字段）
+        const specialFields = taskDetail.specialFields || {};
+        const deviceFields = DEVICE_FIELDS
+          .filter(item => specialFields[item[0]])
+          .map(item => ({ label: item[1], value: specialFields[item[0]] }));
 
         this.setData({
           taskDetail,
@@ -92,7 +135,12 @@ Page({
           isApplicant,
           isAssignee,
           canComplete,
-          canCancel
+          canCancel,
+          showActionBar: canCancel,
+          statusText: STATUS_TEXT[taskDetail.taskStatus] || '未知',
+          deviceFields,
+          applicantInitial: this.getInitial(taskDetail.applicantName),
+          assigneeInitial: this.getInitial(taskDetail.assigneeName)
         });
       } else {
         this.setData({ loading: false });
@@ -159,6 +207,8 @@ Page({
             taskDetail: updatedTaskDetail, 
             canComplete: false,
             canCancel: false,
+            showActionBar: false,
+            statusText: STATUS_TEXT.completed,
             completionInProgress: true
           });
           
@@ -277,7 +327,9 @@ Page({
           this.setData({ 
             taskDetail: updatedTaskDetail, 
             canComplete: false,
-            canCancel: false 
+            canCancel: false,
+            showActionBar: false,
+            statusText: STATUS_TEXT.cancelled
           });
           
           // 刷新前一页面的数据

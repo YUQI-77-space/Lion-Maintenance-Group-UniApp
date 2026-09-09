@@ -3,6 +3,47 @@ const network = require('./utils/network');
 const outbox = require('./utils/outbox');
 const api = require('./utils/apiAdapter');
 
+// ==================== 启动期噪音日志过滤 ====================
+// 小程序框架会在 app.js 之前/期间输出一些与业务无关的日志：
+//   1. 数据预拉取的隐私校验失败（本项目未使用预拉取，属框架内部行为，不影响功能）
+//   2. 开发者工具读写不存在的日志文件
+// 这些日志会淹没真正的错误。过滤器必须在模块加载阶段就装好——等 onLaunch 再打补丁已经太晚。
+const NOISE_LOG_KEYWORDS = [
+	'backgroundfetch privacy fail',
+	'private_getBackgroundFetchData:fail'
+];
+const NOISE_FILE_HINTS = [
+	'wxfile://usr/miniprogramlog',
+	'interstitialAdExtInfo.txt',
+	'scopeState.txt',
+	'wxfile://usr/miniprogramLog/log1'
+];
+
+function isNoiseLog(message) {
+	if (NOISE_LOG_KEYWORDS.some(keyword => message.includes(keyword))) {
+		return true;
+	}
+	return message.includes('no such file or directory') &&
+		NOISE_FILE_HINTS.some(hint => message.includes(hint));
+}
+
+let noiseLogFilterInstalled = false;
+
+function installNoiseLogFilter() {
+	if (noiseLogFilterInstalled) return;
+	noiseLogFilterInstalled = true;
+
+	['error', 'warn'].forEach(level => {
+		const original = console[level];
+		console[level] = function () {
+			if (isNoiseLog(Array.from(arguments).join(' '))) return;
+			return original.apply(console, arguments);
+		};
+	});
+}
+
+installNoiseLogFilter();
+
 App({
 	onLaunch: function () {
 		// 版本更新检查（静默下载 + 弹窗引导重启）
@@ -427,24 +468,9 @@ App({
 		}
 	},
 
-	// 全局错误处理
+	// 全局错误处理：过滤器已在模块加载阶段安装，这里保留入口以便后续扩展
 	handleGlobalErrors: function() {
-		const originalError = console.error;
-		console.error = function() {
-			const errorMsg = Array.from(arguments).join(' ');
-			if (errorMsg.includes('no such file or directory') && 
-				(errorMsg.includes('wxfile://usr/miniprogramlog') || 
-					errorMsg.includes('interstitialAdExtInfo.txt') || 
-					errorMsg.includes('scopeState.txt') || 
-					errorMsg.includes('wxfile://usr/miniprogramLog/log1'))) {
-				return;
-			}
-			if (errorMsg.includes('backgroundfetch privacy fail') || 
-				errorMsg.includes('private_getBackgroundFetchData:fail')) {
-				return;
-			}
-			return originalError.apply(console, arguments);
-		};
+		installNoiseLogFilter();
 	},
 
 	getEnvVersion: function() {

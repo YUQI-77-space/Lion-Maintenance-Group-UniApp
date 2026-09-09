@@ -1,436 +1,452 @@
-/* pages/user/todo/maintenance-detail/index.wxss */
+/* pages/user/todo/maintenance-detail/index.wxss
+   维修任务详情 - 白卡 + 细边框 + 状态色点缀
+   风格与「我的消息」列表保持一致：克制的色彩、清晰的信息层级 */
 @import "/styles/variables.wxss";
 
-/* 特殊字段信息样式 */
-.special-fields-section {
-  padding: 0 30rpx;
-}
-
-.special-fields-section .section-title {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  margin-bottom: 20rpx;
-  display: block;
-}
-
-.container {
+.page {
   min-height: 100vh;
-  background-color: var(--background-color);
-  padding-bottom: 40rpx;
-}
-
-.task-card {
-  background-color: var(--card-background);
-  border-radius: 16rpx;
-  margin: 10rpx;
-  overflow: hidden;
-  box-shadow: var(--box-shadow);
-}
-
-.card-cover {
-  display: flex;
-  align-items: center;
-  padding: 30rpx;
-  color: var(--text-white);
-  height: 80rpx;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-}
-
-.card-icon {
-  width: 50rpx;
-  height: 50rpx;
-  margin-right: 20rpx;
-}
-
-.card-type {
-  font-size: 32rpx;
-  font-weight: bold;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 30rpx;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.task-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  max-width: 70%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-status {
-  font-size: 24rpx;
-  padding: 8rpx 16rpx;
-  border-radius: 30rpx;
-  color: var(--text-white);
-  font-weight: bold;
-  box-shadow: var(--box-shadow);
-}
-
-/* 状态颜色 */
-.pending { 
-  background: var(--gradient-warning);
-}
-
-.inProgress { 
-  background: var(--gradient-secondary);
-}
-
-.completed { 
-  background: var(--gradient-info);
-}
-
-.card-content {
-  padding: 30rpx;
-}
-
-.info-row {
-  display: flex;
-  align-items: baseline;
-  margin-bottom: 20rpx;
-  line-height: 1.5;
-}
-
-.info-label {
-  color: var(--text-secondary);
-  margin-right: 20rpx;
-  min-width: 140rpx;
-  flex-shrink: 0;
-  font-size: 28rpx;
-  line-height: 1.5;
-}
-
-.info-value {
-  color: var(--text-main);
-  flex: 1;
-  font-size: 28rpx;
-  line-height: 1.5;
-  display: inline;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.divider {
-  height: 1rpx;
-  background-color: var(--border-light);
-  margin: 30rpx 0;
-}
-
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  margin-bottom: 20rpx;
-  display: block;
-}
-
-.description-content {
-  background-color: var(--background-color);
-  padding: 20rpx;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-  color: var(--text-regular);
-  line-height: 1.6;
-}
-
-.card-actions {
-  padding: 20rpx 30rpx;
-  display: flex;
-  justify-content: center;
-  border-top: 1rpx solid var(--border-light);
-  background-color: var(--background-color);
-}
-
-.complete-btn {
-  background: var(--gradient-success);
-  color: var(--text-white);
-  border: none;
-  font-size: 28rpx;
-  font-weight: bold;
-  border-radius: 40rpx;
-  padding: 0 40rpx;
-  height: 80rpx;
-  line-height: 80rpx;
-  box-shadow: var(--shadow-success);
-}
-
-/* 加载状态 */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 400rpx;
-  width: 100%;
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 电话链接样式 */
-.phone-link {
-  color: var(--primary-color);
-  margin-left: 10rpx;
-  font-size: 28rpx;
-  line-height: 1.5;
-  display: inline;
-}
-
-.phone-icon {
-  margin-left: 4rpx;
-  font-size: 24rpx;
-} 
-
-/* QQ号链接样式 */
-.qq-link {
-  color: var(--primary-color);
-  font-size: 28rpx;
-  padding: 4rpx 8rpx;
-  border-radius: 6rpx;
-  background-color: var(--status-primary-bg);
-  transition: background-color 0.3s ease;
-}
-
-.qq-link:active {
-  background-color: rgba(58, 117, 251, 0.2);
-}
-
-/* 人员信息区块样式 */
-.person-block {
-  margin-bottom: 30rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-  box-shadow: var(--box-shadow);
-}
-
-.person-header {
-  padding: 20rpx 24rpx;
-  color: var(--text-white);
-  font-weight: bold;
-}
-
-.person-title {
-  font-size: 30rpx;
-  font-weight: bold;
-}
-
-.person-content {
   padding: 24rpx;
-  background-color: var(--card-background);
+  background: var(--bg-page);
+  box-sizing: border-box;
 }
 
-/* 申请人信息区块 */
-.applicant-block .person-header {
-  background: var(--gradient-warning);
+/* 底部有操作栏时留出空间 */
+.page.has-action-bar {
+  padding-bottom: 180rpx;
 }
 
-/* 主受理人信息区块 */
-.main-assignee-block .person-header {
-  background: var(--gradient-success);
+/* ==================== 加载状态 ==================== */
+.loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
 }
 
-/* 协助受理人信息区块 */
-.additional-assignee-block .person-header {
-  background: var(--gradient-secondary);
-}
-
-/* 协助受理人单项样式 */
-.additional-assignee-item {
+/* ==================== 卡片 ==================== */
+.card {
+  padding: 28rpx;
   margin-bottom: 20rpx;
-}
-
-.additional-assignee-item:last-child {
-  margin-bottom: 0;
-}
-
-.assignee-name-tag {
-  background: var(--status-secondary-bg);
-  color: var(--secondary-color);
-  font-size: 26rpx;
-  font-weight: bold;
-  padding: 8rpx 16rpx;
+  background: var(--bg-card);
+  border: 1rpx solid #f0f1f5;
   border-radius: 20rpx;
-  margin-bottom: 16rpx;
-  display: inline-block;
-  border: 1rpx solid var(--secondary-color);
+  box-sizing: border-box;
 }
 
-.assignee-divider {
-  height: 1rpx;
-  background: linear-gradient(to right, transparent, var(--border-color), transparent);
-  margin: 24rpx 0;
-}
-
-/* 调整人员信息区块内的间距 */
-.person-block .info-row {
-  margin-bottom: 16rpx;
-}
-
-.person-block .info-row:last-child {
+.card:last-child {
   margin-bottom: 0;
 }
 
-/* 调整标签宽度 */
-.person-content .info-label {
-  min-width: 120rpx;
-  color: var(--text-regular);
-  font-weight: 500;
-} 
-
-/* 详情页撤销按钮 */
-.cancel-btn {
-  background: var(--card-background);
-  color: var(--danger-color);
-  border: 2rpx solid var(--danger-color);
+/* 卡片标题：左侧品牌色竖条 */
+.card-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22rpx;
   font-size: 28rpx;
-  font-weight: bold;
-  border-radius: 40rpx;
-  padding: 0 40rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-title::before {
+  content: '';
+  width: 6rpx;
+  height: 26rpx;
+  margin-right: 12rpx;
+  border-radius: 3rpx;
+  background: var(--primary);
+}
+
+/* ==================== 概览头部 ==================== */
+.hero {
+  display: flex;
+  align-items: flex-start;
+}
+
+.hero-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 88rpx;
+  height: 88rpx;
   margin-right: 20rpx;
-  box-shadow: var(--shadow-danger);
+  border-radius: 20rpx;
+  background: rgba(145, 158, 171, 0.14);
 }
 
-/* 撤销原因显示样式 */
-.cancel-reason-section {
-  padding: 0 30rpx;
+/* 图标底色跟随任务状态，作为最轻量的状态提示 */
+.status-pending .hero-tile { background: rgba(250, 140, 22, 0.12); }
+.status-inProgress .hero-tile { background: rgba(24, 144, 255, 0.12); }
+.status-completed .hero-tile { background: rgba(82, 196, 26, 0.12); }
+.status-cancelled .hero-tile { background: rgba(145, 158, 171, 0.14); }
+
+.hero-icon {
+  width: 44rpx;
+  height: 44rpx;
 }
 
-.cancel-reason-content {
-  background-color: #fff5f5;
-  border: 1rpx solid var(--danger-color);
-  border-radius: 8rpx;
-  color: var(--danger-color);
-  font-weight: 500;
+.hero-main {
+  flex: 1;
+  min-width: 0;
 }
 
-/* 撤销状态样式 */
-.cancelled { 
-  background: var(--gradient-danger);
+.hero-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+  word-break: break-word;
 }
 
-/* 自定义撤销弹窗样式 */
-.cancel-modal-overlay {
+.hero-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+
+.hero-sub-text {
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.tag-soft {
+  margin-left: 12rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  background: rgba(145, 158, 171, 0.16);
+}
+
+/* 状态徽标 */
+.status-pill {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  background: rgba(145, 158, 171, 0.16);
+}
+
+.status-pill.pending {
+  color: var(--maintenance-pending-color);
+  background: rgba(250, 140, 22, 0.12);
+}
+
+.status-pill.inProgress {
+  color: var(--maintenance-inProgress-color);
+  background: rgba(24, 144, 255, 0.12);
+}
+
+.status-pill.completed {
+  color: var(--maintenance-completed-color);
+  background: rgba(82, 196, 26, 0.12);
+}
+
+.status-pill.cancelled {
+  color: var(--text-secondary);
+  background: rgba(145, 158, 171, 0.16);
+}
+
+/* ==================== 字段网格 ==================== */
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26rpx 20rpx;
+  margin-top: 28rpx;
+  padding-top: 26rpx;
+  border-top: 1rpx solid #f0f1f5;
+}
+
+/* 设备信息卡内不需要再画一条顶部分割线 */
+.meta-grid.no-top-line {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.meta-item {
+  min-width: 0;
+}
+
+.meta-item.full {
+  grid-column: 1 / -1;
+}
+
+.meta-label {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.meta-value {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.meta-value.strong {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.meta-value.link {
+  color: var(--primary);
+}
+
+.copy-hint {
+  margin-left: 10rpx;
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+/* ==================== 文本块 ==================== */
+.note {
+  padding: 22rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  background: #f7f8fa;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-danger {
+  color: var(--danger);
+  background: rgba(255, 77, 79, 0.06);
+}
+
+/* ==================== 人员 ==================== */
+.person {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  margin-right: 20rpx;
+  border-radius: 50%;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(0, 0, 205, 0.06);
+}
+
+.avatar-badge.muted {
+  color: var(--text-secondary);
+  background: rgba(145, 158, 171, 0.14);
+}
+
+.person-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.person-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.person-meta {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.role-tag {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  color: var(--primary);
+  background: rgba(0, 0, 205, 0.06);
+}
+
+.sub-divider {
+  height: 1rpx;
+  margin: 28rpx 0 24rpx;
+  background: #f0f1f5;
+}
+
+.sub-title {
+  margin-bottom: 22rpx;
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
+.person.sub-person + .person.sub-person {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx dashed #eef0f4;
+}
+
+/* ==================== 底部操作栏 ==================== */
+.action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 24rpx 24rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid #f0f1f5;
+}
+
+.action-btn {
+  flex: 1;
+  height: 84rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.action-btn.primary {
+  color: #ffffff;
+  background: var(--primary);
+}
+
+.action-btn.primary:active {
+  opacity: 0.88;
+}
+
+.action-btn.ghost {
+  color: var(--text-secondary);
+  border: 2rpx solid var(--border);
+}
+
+.action-btn.ghost:active {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.action-btn.ghost-danger {
+  color: var(--danger);
+  border: 2rpx solid rgba(255, 77, 79, 0.45);
+}
+
+.action-btn.ghost-danger:active {
+  background: rgba(255, 77, 79, 0.06);
+}
+
+.action-btn.danger {
+  color: #ffffff;
+  background: var(--danger);
+}
+
+.action-btn.danger:active {
+  opacity: 0.88;
+}
+
+/* ==================== 撤销弹窗 ==================== */
+.modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 1000;
-}
-
-.cancel-modal {
-  background-color: var(--card-background);
-  border-radius: 16rpx;
-  width: 600rpx;
-  max-height: 80vh;
-  overflow: hidden;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 30rpx;
-  border-bottom: 1rpx solid var(--border-light);
-  background: var(--gradient-danger);
+  justify-content: center;
+  padding: 0 56rpx;
+  box-sizing: border-box;
+  background: rgba(15, 18, 24, 0.55);
+}
+
+.modal-card {
+  width: 100%;
+  border-radius: 24rpx;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f0f1f5;
 }
 
 .modal-title {
   font-size: 32rpx;
-  font-weight: bold;
-  color: var(--text-white);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .modal-close {
-  width: 50rpx;
-  height: 50rpx;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 36rpx;
-  color: var(--text-white);
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
+  font-size: 34rpx;
+  line-height: 1;
+  color: var(--text-muted);
+  background: #f2f3f6;
 }
 
-.modal-content {
-  padding: 30rpx;
+.modal-body {
+  padding: 28rpx 32rpx 8rpx;
 }
 
 .modal-label {
-  font-size: 28rpx;
-  color: var(--text-main);
-  margin-bottom: 20rpx;
-  font-weight: 500;
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
 }
 
-.cancel-reason-input {
+.modal-textarea {
   width: 100%;
-  min-height: 120rpx;
-  background-color: var(--background-color);
-  border: 1rpx solid var(--border-color);
-  border-radius: 8rpx;
+  min-height: 140rpx;
   padding: 20rpx;
+  border: 1rpx solid var(--border);
+  border-radius: 12rpx;
   font-size: 28rpx;
-  color: var(--text-main);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: #f7f8fa;
   box-sizing: border-box;
 }
 
-.cancel-reason-input:focus {
-  border-color: var(--primary-color);
-}
-
-.char-count {
-  text-align: right;
-  font-size: 24rpx;
-  color: var(--text-secondary);
+.modal-count {
   margin-top: 10rpx;
+  font-size: 22rpx;
+  text-align: right;
+  color: var(--text-muted);
 }
 
-.modal-actions {
+.modal-foot {
   display: flex;
-  padding: 20rpx 30rpx 30rpx;
   gap: 20rpx;
+  padding: 24rpx 32rpx 30rpx;
 }
-
-.modal-btn {
-  flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  border: none;
-}
-
-.modal-btn.cancel-btn {
-  background-color: var(--background-color);
-  color: var(--text-secondary);
-  border: 1rpx solid var(--border-color);
-}
-
-.modal-btn.confirm-btn {
-  background: var(--gradient-danger);
-  color: var(--text-white);
-  box-shadow: var(--shadow-danger);
-}
-
- 
