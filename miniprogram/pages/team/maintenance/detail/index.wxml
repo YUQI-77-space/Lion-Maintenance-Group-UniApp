@@ -26,8 +26,22 @@ function formatEW(value) {
   return str;
 }
 
+// 统计受理人总数：主受理人 + 协助受理人
+function countAssignees(task) {
+  if (!task) {
+    return 0;
+  }
+  var total = task.assigneeName ? 1 : 0;
+  var extra = task.additionalAssignees;
+  if (extra && extra.length) {
+    total += extra.length;
+  }
+  return total;
+}
+
 module.exports = {
-  formatEW: formatEW
+  formatEW: formatEW,
+  countAssignees: countAssignees
 };
 </wxs>
 
@@ -270,50 +284,73 @@ module.exports = {
 
 <!-- EW设置弹窗（管理详情页） -->
 <view class="ew-modal" wx:if="{{showEWModal}}" catchtouchmove="preventScrollThrough">
-  <view class="modal-content" catchtouchmove="preventScrollThrough">
-    <view class="modal-header">设置等效工作量</view>
-    <view class="modal-body">
-      <view class="task-info-modal">
-        <text>任务编号: {{currentTask.maintenanceTaskId}}</text>
-        <text>问题类别: {{currentTask.level1}} > {{currentTask.level2}} > {{currentTask.level3}}</text>
+  <view class="modal-content ew-modal-content" catchtouchmove="preventScrollThrough">
+    <!-- 标题：标题 + 任务引用一行表达，避免头部堆叠 -->
+    <view class="ew-head">
+      <view class="ew-head-title">设置等效工作量</view>
+      <view class="ew-head-tag">单人 EW</view>
+    </view>
+
+    <view class="modal-body ew-body">
+      <!-- 任务引用 -->
+      <view class="ew-task-ref">
+        <text class="ew-task-id">#{{currentTask.maintenanceTaskId}}</text>
+        <text class="ew-task-cat">{{currentTask.level1}} · {{currentTask.level2}} · {{currentTask.level3}}</text>
       </view>
 
-      <view class="ew-description">
-        <text class="ew-tip">💡 设置的EW值为每个受理人的标准值</text>
-      </view>
+      <!-- EW 数值区：读数 + 输入同排，滑块单独一行 -->
+      <view class="ew-value-block">
+        <view class="ew-value-row">
+          <text class="ew-value-num">{{format.formatEW(ewValue)}}</text>
+          <text class="ew-value-unit">EW / 人</text>
+          <view class="ew-input-wrap">
+            <input class="ew-input" type="digit" value="{{ewInputText}}"
+              bindinput="onEWInputChange" bindblur="onEWInputBlur"/>
+          </view>
+        </view>
 
-      <view class="ew-slider">
-        <text>单人EW值: {{format.formatEW(ewValue)}}</text>
-        <view class="ew-slider-row">
-          <slider class="ew-slider-control" min="0.5" max="10" step="0.5" value="{{ewValue}}" show-value="{{false}}" block-size="28"
-            activeColor="#3a86ff" block-color="#3a86ff" bindchanging="onEWSliderChanging" bindchange="onEWSliderChange"/>
-          <input class="ew-input" type="digit" value="{{ewInputText}}" bindinput="onEWInputChange" bindblur="onEWInputBlur"/>
+        <slider class="ew-slider-control" min="0.5" max="10" step="0.5" value="{{ewValue}}"
+          show-value="{{false}}" block-size="26" block-color="#0000CD"
+          activeColor="#0000CD" backgroundColor="#E0E0E0"
+          bindchanging="onEWSliderChanging" bindchange="onEWSliderChange"/>
+
+        <view class="ew-scale">
+          <text>0.5</text>
+          <text>5</text>
+          <text>10</text>
         </view>
       </view>
 
-      <view class="assignees-section">
-        <view class="assignees-title">受理人员</view>
-        <scroll-view class="assignees-list" scroll-y="{{true}}">
-          <view class="assignee-item" wx:if="{{currentTask.assigneeName}}">
-            <text class="assignee-name">{{currentTask.assigneeName}}</text>
-            <text class="assignee-role primary">主受理人</text>
+      <view class="ew-note">每个受理人按此值计入等效工作量，合计写入汇总</view>
+
+      <!-- 受理人员 -->
+      <view class="ew-assignees">
+        <view class="ew-block-title">
+          <text>受理人员</text>
+          <text class="ew-count">共 {{format.countAssignees(currentTask)}} 人</text>
+        </view>
+        <view class="ew-assignee-list">
+          <view class="ew-assignee-row" wx:if="{{currentTask.assigneeName}}">
+            <text class="ew-assignee-name">{{currentTask.assigneeName}}</text>
+            <text class="ew-assignee-role primary">主受理人</text>
           </view>
           <block wx:if="{{currentTask.additionalAssignees && currentTask.additionalAssignees.length > 0}}">
-            <view class="assignee-item" wx:for="{{currentTask.additionalAssignees}}" wx:key="assigneeId">
-              <text class="assignee-name">{{item.assigneeName}}</text>
-              <text class="assignee-role">协助受理人</text>
+            <view class="ew-assignee-row" wx:for="{{currentTask.additionalAssignees}}" wx:key="assigneeId">
+              <text class="ew-assignee-name">{{item.assigneeName}}</text>
+              <text class="ew-assignee-role">协助</text>
             </view>
           </block>
-          <view class="no-assignees" wx:if="{{!currentTask.assigneeName && (!currentTask.additionalAssignees || currentTask.additionalAssignees.length === 0)}}">
-            <text>暂无受理人</text>
+          <view class="ew-assignee-empty" wx:if="{{!currentTask.assigneeName && (!currentTask.additionalAssignees || currentTask.additionalAssignees.length === 0)}}">
+            暂无受理人
           </view>
-        </scroll-view>
+        </view>
       </view>
     </view>
 
-    <view class="modal-footer">
+    <view class="modal-footer ew-footer">
       <button class="btn-cancel" bindtap="cancelEWSetting">取消</button>
-      <button class="btn-confirm" bindtap="confirmEWSetting">确认</button>
+      <button class="btn-confirm {{ewSaving ? 'btn-confirm-disabled' : ''}}"
+        bindtap="confirmEWSetting">{{ewSaving ? '保存中...' : '确认'}}</button>
     </view>
   </view>
 </view>
