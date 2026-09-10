@@ -1,0 +1,14 @@
+{
+  "triggers": [
+    {
+      "name": "autoWeekSwitcherTimer",
+      "type": "timer",
+      "config": "0 30 10 ? * MON *"
+    },
+    {
+      "name": "dutyReminderTimer",
+      "type": "timer",
+      "config": "0 */5 * * * * *"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ const { cleanupExpiredLocks, forceReleaseUserLocks, getLockStatus } = require('.
 const { batchUpdateDutyStatus, scheduledStatusUpdate } = require('./dutyStatusManager')
 const { scheduleDutyReminder } = require('./scheduleDutyReminder')
 const autoWeekSwitcher = require('./autoWeekSwitcher')
+const dutyReminderScheduler = require('./dutyReminderScheduler')
 
 exports.main = async (event, context) => {
   // 检查是否为定时触发器调用（对大小写保持宽容，并记录上下文便于排查）
@@ -28,6 +29,10 @@ exports.main = async (event, context) => {
   if (triggerName === 'autoweekswitchertimer' || triggerName.includes('autoweekswitcher')) {
     console.log('[dutySchedule] 命中自动切周触发器，开始执行 autoWeekSwitcher')
     return await autoWeekSwitcher.main(event, context)
+  }
+  if (triggerName.includes('dutyreminder')) {
+    console.log('[dutySchedule] 命中值班提醒触发器，开始执行 dutyReminderScheduler')
+    return await dutyReminderScheduler.main(event, context)
   }
   
   const { OPENID } = cloud.getWXContext()

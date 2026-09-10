@@ -61,8 +61,8 @@ exports.scheduleDutyReminder = async (event, openid) => {
 
     
 
-    // 使用统一的时间处理方法
-    const currentTime = getCurrentChinaTime()
+    // 统一用绝对毫秒时间戳比较；东八区换算只用在解析“值班开始时刻”上
+    const nowMs = Date.now()
     const oneHourInMs = 60 * 60 * 1000
 
     const immediateSendSlots = [] // 需要立即发送的时间段
@@ -71,11 +71,20 @@ exports.scheduleDutyReminder = async (event, openid) => {
 
     // 分析每个时间段的时间差
     for (const slot of slotsResult.data) {
-      const dutyStartTime = getDutyStartDateTime(slot.date, slot.startTime)
-      const timeDifference = dutyStartTime.getTime() - currentTime.getTime()
+      const dutyStartMs = getDutyStartMs(slot.date, slot.startTime)
+      if (!Number.isFinite(dutyStartMs)) {
+        console.warn('[scheduleDutyReminder] 值班开始时间解析失败，跳过', {
+          dutySlotId: slot.dutySlotId,
+          date: slot.date,
+          startTime: slot.startTime
+        })
+        skippedSlots.push(slot)
+        continue
+      }
+      const timeDifference = dutyStartMs - nowMs
 
-      // 已超过开始时间，跳过，不发送订阅消息
-      if (timeDifference < 0) {
+      // 已经开始或已过开始时间，跳过，不发送订阅消息
+      if (timeDifference <= 0) {
         skippedSlots.push(slot)
         continue
       }
@@ -193,29 +202,13 @@ exports.scheduleDutyReminder = async (event, openid) => {
 }
 
 /**
- * 获取当前中国时间
- * @returns {Date} 中国时间的Date对象
- */
-function getCurrentChinaTime() {
-  const now = new Date()
-  // 转换为东八区时间
-  const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000))
-  return chinaTime
-}
-
-/**
- * 根据日期和时间构建值班开始的完整时间
+ * 把 duty_slots 里的 date + startTime 解析成“东八区该时刻”的绝对毫秒时间戳
  * @param {String} dateStr 日期字符串 (YYYY-MM-DD)
  * @param {String} timeStr 时间字符串 (HH:MM)
- * @returns {Date} 值班开始时间的Date对象（东八区）
+ * @returns {Number} 毫秒时间戳，无法解析时为 NaN
  */
-function getDutyStartDateTime(dateStr, timeStr) {
-  try {
-    // 构建完整的日期时间字符串，并指定为东八区时间
-    const dateTimeStr = `${dateStr}T${timeStr}:00+08:00`
-    return new Date(dateTimeStr)
-  } catch (error) {
-    console.error('构建值班开始时间失败:', error)
-    return new Date() // 降级返回当前时间
-  }
+function getDutyStartMs(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return NaN
+  const parsed = Date.parse(`${dateStr}T${timeStr}:00+08:00`)
+  return Number.isNaN(parsed) ? NaN : parsed
 }
