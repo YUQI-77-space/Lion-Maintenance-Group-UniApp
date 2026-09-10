@@ -17,42 +17,49 @@
   min-height: 300rpx;
 }
 
-/* 移除顶部任务状态栏，改为标题 + 描边表达 */
-
-/* 任务信息样式 */
-.task-info, .applicant-info, .assignee-info {
+/* 卡片统一：白底 + 细描边 + 圆角，与志愿活动详情页同一套线框风格 */
+.task-info,
+.applicant-info,
+.assignees-section {
   background-color: var(--card-background);
+  border: 1rpx solid var(--border-light);
   border-radius: 10rpx;
-  padding: 20rpx;
-  margin-bottom: 30rpx;
-  box-shadow: var(--box-shadow);
+  padding: 24rpx 30rpx;
+  margin-bottom: 20rpx;
 }
 
-/* 任务信息容器：按状态着色描边 */
-.task-info {
-  border: 1rpx solid var(--border-light);
-}
+/* 任务信息卡片：按状态着色描边 */
 .task-info.status-pending { border-color: var(--maintenance-pending-color); }
 .task-info.status-inProgress { border-color: var(--maintenance-inProgress-color); }
 .task-info.status-completed { border-color: var(--maintenance-completed-color); }
 .task-info.status-cancelled { border-color: var(--maintenance-cancelled-color); }
 
+/* 卡片内标题：与内容同处一块，用下划线区分层级 */
 .section-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: bold;
-  margin: 20rpx 0;
   color: var(--text-main);
+  margin-bottom: 15rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1rpx solid var(--border-light);
 }
 
-.section-header .section-title {
-  margin: 0;
-}
-
-.section-header {
+/* 卡片头部：标题与右侧状态/操作同排，下划线由头部统一提供 */
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20rpx 0;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 15rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+.card-header .section-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .section-action-btn {
@@ -68,10 +75,43 @@
   background: rgba(58, 117, 251, 0.08);
 }
 
+/* 状态标签：与志愿活动详情页同一套表达 */
+.status-tag {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+  background-color: transparent;
+  border: 1rpx solid;
+}
+
+.status-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  margin-right: 6rpx;
+}
+
+.status-pending { color: var(--maintenance-pending-color); border-color: var(--maintenance-pending-color); }
+.status-pending .status-dot { background-color: var(--maintenance-pending-color); }
+.status-inProgress { color: var(--maintenance-inProgress-color); border-color: var(--maintenance-inProgress-color); }
+.status-inProgress .status-dot { background-color: var(--maintenance-inProgress-color); }
+.status-completed { color: var(--maintenance-completed-color); border-color: var(--maintenance-completed-color); }
+.status-completed .status-dot { background-color: var(--maintenance-completed-color); }
+.status-cancelled { color: var(--maintenance-cancelled-color); border-color: var(--maintenance-cancelled-color); }
+.status-cancelled .status-dot { background-color: var(--maintenance-cancelled-color); }
+
 .info-item {
   display: flex;
   margin-bottom: 20rpx;
   line-height: 1.5;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
 }
 
 .info-label {
@@ -82,8 +122,10 @@
 
 .info-value {
   flex: 1;
-  word-break: break-all;
   color: var(--text-main);
+  /* 中文可自由断行，长编号/链接才强制断开，避免把时间戳截断 */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 /* 联系方式样式 */
@@ -91,7 +133,8 @@
   color: var(--primary-color) !important;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* 提示紧跟在号码后面，不再被推到卡片最右侧 */
+  justify-content: flex-start;
   padding: 8rpx;
   border-radius: 8rpx;
   transition: background-color 0.3s ease;
@@ -221,31 +264,29 @@
   background-color: rgba(40, 167, 69, 0.05);
 }
 
-/* 受理人容器样式 */
-.assignees-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
+/* 受理人卡片内的子块：主受理人 / 协助受理人不再各自成卡 */
+.assignee-info {
+  padding: 0;
 }
 
-.assignee-info {
-  border-radius: 12rpx;
-  padding: 30rpx;
+/* 子块之间用细线分隔 */
+.assignee-info + .assignee-info {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--border-light);
 }
 
 .assignee-header {
-  margin-bottom: 20rpx;
-  padding-bottom: 10rpx;
-  border-bottom: 2rpx solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 16rpx;
 }
 
 .assignee-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--text-regular);
+  color: var(--text-main);
 }
 
 .assignee-actions {
@@ -256,7 +297,7 @@
 
 .assignee-remove-btn {
   font-size: 26rpx;
-  color: #ff4d4f;
+  color: var(--danger-color);
   padding: 8rpx 20rpx;
   border-radius: 999rpx;
   border: 1rpx solid rgba(255, 77, 79, 0.4);

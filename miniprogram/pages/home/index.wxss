@@ -11,6 +11,8 @@
   min-height: 100vh;
   background-color: var(--bg-page);
   -webkit-overflow-scrolling: touch;
+  /* 为悬浮 tabBar 预留空间，否则滑到底时团队荣誉会被导航栏盖住 */
+  padding-bottom: 220rpx;
 }
 
 /* ============================================

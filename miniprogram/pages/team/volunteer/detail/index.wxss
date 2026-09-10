@@ -5,29 +5,42 @@
   padding: 20rpx;
   background-color: var(--background-color);
   min-height: 100vh;
-  padding-bottom: 140rpx;
+  /* 页面无固定底栏，底部留白收窄，避免末尾出现大片空白 */
+  padding-bottom: 40rpx;
+}
+
+/* 卡片统一：白底 + 细描边 + 圆角，与维修任务详情页同一套线框风格 */
+.header-card,
+.info-section,
+.description-section,
+.participants-section {
+  background-color: var(--card-background);
+  border: 1rpx solid var(--border-light);
+  border-radius: var(--radius-card);
+  margin-bottom: 20rpx;
+  overflow: hidden;
 }
 
 .header-card {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 20rpx;
   padding: 30rpx;
-  background-color: var(--card-background);
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
 }
 
 .header-left {
   flex: 1;
-  margin-right: 20rpx;
+  min-width: 0;
 }
 
 .title {
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: bold;
+  line-height: 1.4;
   color: var(--text-main);
   margin-bottom: 10rpx;
+  word-break: break-all;
 }
 
 .activity-id {
@@ -41,6 +54,7 @@
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
   font-size: 24rpx;
+  font-weight: 500;
   flex-shrink: 0;
   margin-top: 5rpx;
   background-color: transparent; /* 无底色填充 */
@@ -54,35 +68,35 @@
 }
 /* 筹备中 - 金色 */
 .status-inPreparation { 
-  color: #FFD700; 
-  border-color: #FFD700; 
+  color: var(--volunteer-inPreparation-color); 
+  border-color: var(--volunteer-inPreparation-color); 
 }
 .status-inPreparation .status-dot { 
-  background-color: #FFD700; 
+  background-color: var(--volunteer-inPreparation-color); 
 }
-/* 进行中 - 蓝色 */
+/* 进行中 - 深蓝 */
 .status-inProgress { 
-  color: #0000FF; 
-  border-color: #0000FF; 
+  color: var(--volunteer-inProgress-color); 
+  border-color: var(--volunteer-inProgress-color); 
 }
 .status-inProgress .status-dot { 
-  background-color: #0000FF; 
+  background-color: var(--volunteer-inProgress-color); 
 }
 /* 已结束 - 绿色 */
 .status-ended { 
-  color: #00FF00; 
-  border-color: #00FF00; 
+  color: var(--volunteer-ended-color); 
+  border-color: var(--volunteer-ended-color); 
 }
 .status-ended .status-dot { 
-  background-color: #00FF00; 
+  background-color: var(--volunteer-ended-color); 
 }
 /* 待发布 - 橙色 */
 .status-pending { 
-  color: #fa8c16; 
-  border-color: #fa8c16; 
+  color: var(--volunteer-pending-color); 
+  border-color: var(--volunteer-pending-color); 
 }
 .status-pending .status-dot { 
-  background-color: #fa8c16; 
+  background-color: var(--volunteer-pending-color); 
 }
 
 /* 加载中 */
@@ -145,23 +159,24 @@
 
 /* 信息部分 */
 .info-section {
-  background-color: var(--card-background);
-  padding: 20rpx 30rpx;
-  margin-bottom: 20rpx;
+  padding: 24rpx 30rpx;
 }
 
 .info-item {
   display: flex;
-  padding: 15rpx 0;
+  padding: 18rpx 0;
+  line-height: 1.5;
   border-bottom: 1rpx solid var(--border-light);
 }
 
 .info-item:last-child {
   border-bottom: none;
+  padding-bottom: 4rpx;
 }
 
 .info-label {
   width: 180rpx;
+  flex-shrink: 0;
   color: var(--text-secondary);
   font-size: 28rpx;
 }
@@ -170,16 +185,45 @@
   flex: 1;
   color: var(--text-main);
   font-size: 28rpx;
+  /* 中文可自由断行，长英文/链接才强制断开，避免时间戳被截断 */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
-.detail-card .info-value {
-  color: var(--text-regular);
+/* 起止时间分行对齐，比连成一串更易读 */
+.time-range {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-line {
+  display: block;
+  line-height: 1.5;
+}
+
+/* 弱化分隔符，避免与时间数字混在一起 */
+.time-sep {
+  margin-right: 8rpx;
+  color: var(--text-placeholder);
+}
+
+/* 报名人数：当前人数加重，总名额弱化 */
+.count-current {
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.count-sep {
+  margin: 0 8rpx;
+  color: var(--text-placeholder);
+}
+
+.count-total {
+  color: var(--text-secondary);
 }
 
 .description-section {
-  background-color: var(--card-background);
-  padding: 20rpx 30rpx;
-  margin-bottom: 20rpx;
+  padding: 24rpx 30rpx;
 }
 
 .section-title {
@@ -199,11 +243,7 @@
   word-break: break-all;
 }
 
-.participants-section {
-  padding-top: 15rpx; /* detail-card has its own padding */
-  background-color: var(--card-background);
-}
-
+/* 参与者列表：标题区与信息区共用一条分隔线，整块由卡片统一承载 */
 .participants-section .section-title {
   font-size: 30rpx;
   font-weight: bold;
@@ -233,7 +273,7 @@
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
-  margin-right: 30rpx; /* 与左侧头像保持适中间距 */
+  margin-right: 24rpx;
 }
 
 .info-column {
@@ -247,10 +287,11 @@
 .division-column {
   flex: 1;
   display: flex;
-  align-items: center;         /* 垂直方向居中 */
-  justify-content: flex-start; /* 文本靠左，便于阅读 */
-  padding-left: 40rpx;         /* 与个人信息区域拉开距离 */
-  margin-left: 40rpx;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-left: 24rpx;         /* 与个人信息区域拉开距离 */
+  margin-left: 24rpx;
   border-left: 1rpx solid var(--border-light); /* 细分割线形成视觉隔离 */
   box-sizing: border-box;
 }
@@ -267,6 +308,11 @@
   font-weight: bold;
   margin-bottom: 8rpx;
 }
+/* 学号属于次要信息，弱化处理避免与姓名抢视线 */
+.info-text.student-id {
+  font-size: 24rpx;
+  color: var(--text-placeholder);
+}
 .info-text.detail {
   font-size: 26rpx;
   color: var(--text-main);
@@ -276,10 +322,16 @@
   color: var(--text-main);
 }
 
+.info-text.division-label {
+  font-size: 22rpx;
+  color: var(--text-placeholder);
+  margin-bottom: 6rpx;
+}
+
 .info-text.division {
   font-size: 26rpx;
-  color: var(--text-secondary);
-  max-width: 200rpx;
+  color: var(--text-regular);
+  max-width: 100%;
   white-space: normal;
   line-height: 1.4;
 }
@@ -534,39 +586,49 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30rpx 15rpx;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 24rpx 30rpx 18rpx;
   border-bottom: 1rpx solid var(--border-light);
+}
+
+/* 卡片头部已提供内边距与分隔线，标题自身不再重复 */
+.participants-header .section-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .participant-header-actions {
   display: flex;
   gap: 16rpx;
   align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
+/* 三个操作按钮需要并排放下，收窄内边距避免挤成一团 */
 .participant-action-btn {
-  min-width: 150rpx;
-  padding: 10rpx 24rpx;
+  padding: 8rpx 22rpx;
   border-radius: 999rpx;
   border: 2rpx solid var(--border-color);
-  font-size: 26rpx;
+  font-size: 24rpx;
+  font-weight: 500;
   color: var(--text-main);
   background: var(--card-background);
+  white-space: nowrap;
 }
 
+/* 导入为主动作，导出与设置EW属次要操作，统一主色描边避免多个蓝色混用 */
 .participant-action-btn--import {
   border-color: var(--success-color);
   color: var(--success-color);
 }
 
-.participant-action-btn--export {
+.participant-action-btn--export,
+.participant-action-btn--ew {
   border-color: var(--primary-color);
   color: var(--primary-color);
-}
-
-.participant-action-btn--ew {
-  border-color: var(--info-color);
-  color: var(--info-color);
 }
 
 /* 导入志愿者底部浮窗 */
@@ -1154,5 +1216,57 @@
 }
 .per-ew-cancel { border: 2rpx solid var(--border-color); color: var(--text-main); background: var(--card-background); }
 .per-ew-confirm { border: 2rpx solid var(--primary-color); color: var(--primary-color); background: var(--card-background); }
+
+/* 管理操作按钮区域（编辑 / 删除）：仅从管理列表进入的组长可见 */
+.action-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40rpx;
+  margin-top: 40rpx;
+}
+
+.action-area .btn {
+  padding: 22rpx 80rpx;
+  font-size: 32rpx;
+  border-radius: 999rpx;
+  /* 只覆盖粗细与线型，边框色交给下面的按钮修饰类 */
+  border-width: 2rpx;
+  border-style: solid;
+  line-height: 1;
+}
+
+.management-action-area {
+  flex-wrap: wrap;
+  gap: 20rpx;
+  padding-bottom: 20rpx;
+}
+
+.management-action-area .btn {
+  flex: 0 0 auto;
+  padding: 20rpx 48rpx;
+  font-size: 30rpx;
+}
+
+/* 编辑：实心深蓝 */
+.btn-edit {
+  border-color: #191970;
+  background-color: #191970;
+  color: #ffffff;
+}
+.btn-edit:active { opacity: 0.9; }
+
+/* 删除：实心红色 */
+.btn-delete {
+  border-color: #B22222;
+  background-color: #B22222;
+  color: #ffffff;
+}
+.btn-delete:active { opacity: 0.9; }
+
+.btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 
 /* 深色模式适配移除 */

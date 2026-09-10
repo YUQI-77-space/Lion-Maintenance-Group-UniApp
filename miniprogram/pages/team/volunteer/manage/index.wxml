@@ -87,15 +87,7 @@
               <text>活动将在发布时间自动发布</text>
             </view>
 
-            <!-- 编辑和删除按钮 -->
-            <view class="actions">
-              <view class="action-btn edit-btn" catchtap="goToEdit" data-id="{{item.activityId}}" data-index="{{index}}">
-                <text>编辑</text>
-              </view>
-            <view class="action-btn delete-btn" catchtap="deleteActivity" data-id="{{item.activityId}}" data-index="{{index}}">
-                <text>删除</text>
-              </view>
-            </view>
+            <!-- 编辑、删除已迁移至管理详情页底部，列表只负责浏览与跳转 -->
         </view>
       </view>
 

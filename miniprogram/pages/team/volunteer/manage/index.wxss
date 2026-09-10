@@ -274,7 +274,7 @@
   filter: brightness(0) invert(1);
 }
 
-/* 操作按钮区域 */
+/* 操作按钮区域（旧版列表按钮样式：编辑、删除已迁移至管理详情页，此处保留备用） */
 .actions {
   display: flex;
   align-items: center;
@@ -460,45 +460,45 @@
 }
 
 .status-inPreparation {
-  color: #FFD700;
-  border-color: #FFD700;
+  color: var(--volunteer-inPreparation-color);
+  border-color: var(--volunteer-inPreparation-color);
 }
 .status-inPreparation .status-dot {
-  background-color: #FFD700;
+  background-color: var(--volunteer-inPreparation-color);
 }
 .status-inProgress {
-  color: #0000FF;
-  border-color: #0000FF;
+  color: var(--volunteer-inProgress-color);
+  border-color: var(--volunteer-inProgress-color);
 }
 .status-inProgress .status-dot {
-  background-color: #0000FF;
+  background-color: var(--volunteer-inProgress-color);
 }
 .status-ended {
-  color: #00FF00;
-  border-color: #00FF00;
+  color: var(--volunteer-ended-color);
+  border-color: var(--volunteer-ended-color);
 }
 .status-ended .status-dot {
-  background-color: #00FF00;
+  background-color: var(--volunteer-ended-color);
 }
 .status-pending {
-  color: #fa8c16;
-  border-color: #fa8c16;
+  color: var(--volunteer-pending-color);
+  border-color: var(--volunteer-pending-color);
 }
 .status-pending .status-dot {
-  background-color: #fa8c16;
+  background-color: var(--volunteer-pending-color);
 }
 
 .activity-card.status-pending-card {
-  border-color: #fa8c16;
+  border-color: var(--volunteer-pending-color);
 }
 .activity-card.status-inPreparation-card {
-  border-color: #FFD700;
+  border-color: var(--volunteer-inPreparation-color);
 }
 .activity-card.status-inProgress-card {
-  border-color: #0000FF;
+  border-color: var(--volunteer-inProgress-color);
 }
 .activity-card.status-ended-card {
-  border-color: #00FF00;
+  border-color: var(--volunteer-ended-color);
 }
 
 /* 弹窗样式 */

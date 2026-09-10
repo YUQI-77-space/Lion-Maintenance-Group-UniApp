@@ -148,38 +148,38 @@
 }
 /* 筹备中 - 金色 */
 .status-inPreparation { 
-  color: #FFD700; 
-  border-color: #FFD700; 
+  color: var(--volunteer-inPreparation-color); 
+  border-color: var(--volunteer-inPreparation-color); 
 }
 .status-inPreparation .status-dot { 
-  background-color: #FFD700; 
+  background-color: var(--volunteer-inPreparation-color); 
 }
-/* 进行中 - 蓝色 */
+/* 进行中 - 深蓝 */
 .status-inProgress { 
-  color: #0000FF; 
-  border-color: #0000FF; 
+  color: var(--volunteer-inProgress-color); 
+  border-color: var(--volunteer-inProgress-color); 
 }
 .status-inProgress .status-dot { 
-  background-color: #0000FF; 
+  background-color: var(--volunteer-inProgress-color); 
 }
 /* 已结束 - 绿色 */
 .status-ended { 
-  color: #00FF00; 
-  border-color: #00FF00; 
+  color: var(--volunteer-ended-color); 
+  border-color: var(--volunteer-ended-color); 
 }
 .status-ended .status-dot { 
-  background-color: #00FF00; 
+  background-color: var(--volunteer-ended-color); 
 }
 
 /* 卡片边框按状态着色 */
 .activity-card.status-inPreparation-card { 
-  border-color: #FFD700; 
+  border-color: var(--volunteer-inPreparation-color); 
 }
 .activity-card.status-inProgress-card { 
-  border-color: #0000FF; 
+  border-color: var(--volunteer-inProgress-color); 
 }
 .activity-card.status-ended-card { 
-  border-color: #00FF00; 
+  border-color: var(--volunteer-ended-color); 
 }
 
 .activity-id {

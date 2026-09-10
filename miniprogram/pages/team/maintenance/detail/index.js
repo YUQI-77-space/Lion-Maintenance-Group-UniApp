@@ -4,6 +4,14 @@ const api = require('../../../../utils/apiAdapter');
 const time = require('../../../../utils/time');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 
+// 任务状态文案，与列表页 / 管理页保持一致
+const STATUS_MAP = {
+  pending: '未受理',
+  inProgress: '处理中',
+  completed: '已完成',
+  cancelled: '已撤销'
+};
+
 Page({
 
   /**
@@ -210,6 +218,8 @@ Page({
         };
         
         const nextStatus = safeTaskDetail.taskStatus || 'pending';
+        // 状态文案与列表页一致：详情页不再只靠卡片描边颜色表达状态
+        safeTaskDetail.taskStatusText = STATUS_MAP[nextStatus] || '未知状态';
         this.setData({ 
           taskDetail: safeTaskDetail, 
           canManageAssignees: this.shouldEnableAssigneeManagement(nextStatus)
@@ -404,6 +414,7 @@ Page({
         const updatedTask = {
           ...this.data.taskDetail,
           taskStatus: 'completed',
+          taskStatusText: STATUS_MAP.completed,
           completeTime: completeTime
         };
         this.setData({

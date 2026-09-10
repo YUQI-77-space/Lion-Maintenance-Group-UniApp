@@ -20,9 +20,14 @@
   
     <!-- 活动信息 -->
     <view class="info-section">
+      <view class="section-title">活动信息</view>
+
       <view class="info-item">
         <view class="info-label">活动时间</view>
-        <view class="info-value">{{formattedStartTime}} 至 {{formattedEndTime}}</view>
+        <view class="info-value time-range">
+          <text class="time-line">{{formattedStartTime}}</text>
+          <text class="time-line"><text class="time-sep">至</text>{{formattedEndTime}}</text>
+        </view>
       </view>
       <view class="info-item">
         <view class="info-label">活动地点</view>
@@ -38,7 +43,11 @@
       </view>
       <view class="info-item">
         <view class="info-label">报名人数</view>
-        <view class="info-value">{{activity.numberOfVolunteers}}/{{activity.volunteerCount}}人</view>
+        <view class="info-value">
+          <text class="count-current">{{activity.numberOfVolunteers}}</text>
+          <text class="count-sep">/</text>
+          <text class="count-total">{{activity.volunteerCount}} 人</text>
+        </view>
       </view>
 
       <view class="info-item">
@@ -54,7 +63,7 @@
     </view>
     
     <!-- 参与者列表 -->
-    <view class="detail-card participants-section" wx:if="{{userRole === 'leader'}}">
+    <view class="participants-section" wx:if="{{userRole === 'leader'}}">
       <view class="participants-header">
         <view class="section-title">参与者列表</view>
         <view class="participant-header-actions" wx:if="{{isFromManagePage}}">
@@ -95,7 +104,8 @@
             
             <!-- Col 3: Division -->
             <view class="division-column">
-              <text class="info-text division">{{item.feedback || '未填写分工信息'}}</text>
+              <text class="info-text division-label">分工</text>
+              <text class="info-text division">{{item.feedback || '未填写'}}</text>
             </view>
           </view>
         </block>
@@ -106,7 +116,15 @@
         </block>
       </view>
     </view>
-    
+
+    <!-- 管理操作按钮：编辑、删除（仅从管理列表进入的组长可见） -->
+    <view class="action-area management-action-area" wx:if="{{isFromManagePage && userRole === 'leader'}}">
+      <view class="btn btn-edit" catchtap="goToEdit">编辑</view>
+      <view class="btn btn-delete {{deleting ? 'btn-disabled' : ''}}" catchtap="deleteActivity">
+        {{deleting ? '删除中...' : '删除'}}
+      </view>
+    </view>
+
   </block>
   
   <!-- 活动不存在 -->

@@ -53,11 +53,16 @@ module.exports = {
 
   <!-- 页面内容 -->
   <view wx:if="{{!loading}}">
-    <!-- 页面标题：任务详情 -->
-    <view class="section-title">任务详情</view>
-
     <!-- 任务基本信息（边框颜色按状态） -->
     <view class="task-info status-{{taskDetail.taskStatus}}">
+      <view class="card-header">
+        <view class="section-title">任务信息</view>
+        <view class="status-tag status-{{taskDetail.taskStatus}}">
+          <view class="status-dot"></view>
+          <text>{{taskDetail.taskStatusText}}</text>
+        </view>
+      </view>
+
       <view class="info-item">
         <view class="info-label">任务编号</view>
         <view class="info-value">{{taskDetail.maintenanceTaskId}}</view>
@@ -154,8 +159,9 @@ module.exports = {
     </view>
 
     <!-- 申请人信息 -->
-    <view class="section-title">申请人信息</view>
     <view class="applicant-info">
+      <view class="section-title">申请人信息</view>
+
       <view class="info-item">
         <view class="info-label">姓名</view>
         <view class="info-value">{{taskDetail.applicantName}}</view>
@@ -182,13 +188,14 @@ module.exports = {
     </view>
 
     <!-- 受理人信息 -->
-    <view class="section-header" wx:if="{{taskDetail.assigneeId}}">
-      <text class="section-title">受理人信息</text>
-      <view class="section-action-btn" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal">
-        添加协助受理人
+    <view class="assignees-section" wx:if="{{taskDetail.assigneeId}}">
+      <view class="card-header">
+        <view class="section-title">受理人信息</view>
+        <view class="section-action-btn" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal">
+          添加协助受理人
+        </view>
       </view>
-    </view>
-    <view class="assignees-container" wx:if="{{taskDetail.assigneeId}}">
+
       <!-- 主受理人 -->
       <view class="assignee-info main-assignee">
         <view class="assignee-header">

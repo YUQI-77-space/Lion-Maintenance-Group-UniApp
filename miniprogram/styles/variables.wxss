@@ -32,6 +32,12 @@ page {
   --maintenance-completed-color: #52C41A;   /* 已完成 - 绿色 */
   --maintenance-cancelled-color: #000000;   /* 已撤销 - 黑色 */
 
+  /* === 志愿活动状态色（深色化处理，保证白底可读） === */
+  --volunteer-pending-color: #FA8C16;         /* 待发布 - 橙色 */
+  --volunteer-inPreparation-color: #B8860B;  /* 筹备中 - 金色 */
+  --volunteer-inProgress-color: #0000FF;      /* 进行中 - 深蓝 */
+  --volunteer-ended-color: #52C41A;           /* 已结束 - 绿色 */
+
   /* === 字体大小 === */
   --font-title: 36rpx;       /* 标题 */
   --font-subtitle: 30rpx;     /* 小标题 */

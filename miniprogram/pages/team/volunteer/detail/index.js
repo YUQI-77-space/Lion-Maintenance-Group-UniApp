@@ -38,7 +38,9 @@ Page({
     importSheetClosing: false,
     // 新增：按人EW弹窗与数据
     showPerUserEWModal: false,
-    perUserEWMap: {}
+    perUserEWMap: {},
+    // 管理操作（编辑 / 删除），仅从管理列表进入的组长可见
+    deleting: false
   },
 
   /**
@@ -712,6 +714,117 @@ Page({
     } finally {
       wx.hideLoading();
     }
+  },
+
+  /**
+   * 是否为管理详情页的组长操作
+   */
+  canManageActivity() {
+    return this.data.isFromManagePage && this.data.userRole === 'leader';
+  },
+
+  /**
+   * 编辑活动（原管理列表入口，已迁移至管理详情页）
+   */
+  goToEdit() {
+    if (!this.canManageActivity()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+
+    const activity = this.data.activity;
+    if (!activity || !activity.activityId) {
+      wx.showToast({ title: '活动信息加载中，请稍后再试', icon: 'none' });
+      return;
+    }
+
+    // 进行中/已结束的活动不允许修改时间字段，与创建页保持一致
+    const lockTimeFields = activity.activityStatus === 'inProgress' || activity.activityStatus === 'ended';
+    wx.navigateTo({
+      url: `/pages/team/volunteer/create/index?id=${activity.activityId}${lockTimeFields ? '&lockTime=1' : ''}`
+    });
+  },
+
+  /**
+   * 删除活动（原管理列表入口，已迁移至管理详情页）
+   */
+  deleteActivity() {
+    if (!this.canManageActivity()) {
+      wx.showToast({ title: '暂无操作权限', icon: 'none' });
+      return;
+    }
+    if (this.data.deleting) return;
+
+    const activity = this.data.activity;
+    if (!activity || !activity.activityId) {
+      wx.showToast({ title: '无法获取活动信息', icon: 'none' });
+      return;
+    }
+
+    const activityId = activity.activityId;
+
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除该活动吗？此操作不可恢复。',
+      confirmColor: '#ff6b6b',
+      success: (res) => {
+        if (res.confirm) {
+          this.confirmDeleteActivity(activityId);
+        }
+      }
+    });
+  },
+
+  /**
+   * 确认删除活动
+   */
+  confirmDeleteActivity: async function(activityId) {
+    if (this.data.deleting) return;
+
+    this.setData({ deleting: true });
+    wx.showLoading({ title: '删除中...', mask: true });
+
+    try {
+      const requestId = api.generateRequestId();
+      const result = await api.call('volunteerActivities', {
+        action: 'deleteVolunteerActivity',
+        params: { activityId, requestId }
+      });
+
+      wx.hideLoading();
+
+      if (result.success) {
+        wx.showToast({ title: '删除成功', icon: 'success' });
+        // 管理列表在 onShow 中会自动刷新，这里补上侧边栏统计数字
+        this.refreshPreviousStats();
+        setTimeout(() => { wx.navigateBack(); }, 500);
+      } else {
+        wx.showToast({ title: result.message || '删除失败', icon: 'none' });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      console.error('删除活动失败:', err);
+      wx.showToast({ title: '删除失败', icon: 'none' });
+    } finally {
+      this.setData({ deleting: false });
+    }
+  },
+
+  /**
+   * 刷新上一页（管理列表）的活动统计数字，避免删除后数量不更新
+   */
+  refreshPreviousStats() {
+    const pages = getCurrentPages();
+    const prevPage = pages && pages.length >= 2 ? pages[pages.length - 2] : null;
+    if (!prevPage || typeof prevPage.getActivityStats !== 'function') return;
+
+    setTimeout(() => {
+      try {
+        prevPage.getActivityStats();
+      } catch (err) {
+        console.error('刷新活动统计失败', err);
+      }
+    }, 200);
   },
 
   /**
