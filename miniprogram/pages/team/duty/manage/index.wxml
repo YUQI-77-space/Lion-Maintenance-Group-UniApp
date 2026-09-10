@@ -216,7 +216,7 @@
               <text class="settings-label">自动切换周次</text>
               <text class="settings-value">
                 <block wx:if="{{configData.autoSwitchEnabled !== false}}">
-                  已开启（每周{{autoSwitchDayOptions[(configData.autoSwitchDayOfWeek || configData.autoSwitchDayOfWeek === 0) ? configData.autoSwitchDayOfWeek : 1] || '周一'}} {{configData.autoSwitchTime || '10:30'}}）
+                  已开启（{{autoSwitchScheduleText}}）
                 </block>
                 <block wx:else>已关闭</block>
               </text>
@@ -318,7 +318,7 @@
             <text class="config-label">切周时间</text>
             <text class="config-value">
               <block wx:if="{{configData.autoSwitchEnabled !== false}}">
-                每周{{autoSwitchDayOptions[(configData.autoSwitchDayOfWeek || configData.autoSwitchDayOfWeek === 0) ? configData.autoSwitchDayOfWeek : 1] || '周一'}} {{configData.autoSwitchTime || '21:40'}}
+                {{autoSwitchScheduleText}}
               </block>
               <block wx:else>
                 未开启
@@ -506,7 +506,7 @@
     <view class="modal-content">
       <view class="modal-header">
         <text class="modal-title">自动切换周次设置</text>
-        <text class="modal-subtitle">默认每周日 22:00 自动切换到下一周</text>
+        <text class="modal-subtitle">固定 {{autoSwitchScheduleText}}（北京时间）自动切换到下一周</text>
       </view>
 
       <view class="auto-switch-section">
@@ -516,25 +516,15 @@
         </view>
 
         <view class="auto-switch-row">
-          <text class="auto-switch-label">每周哪一天</text>
-          <picker mode="selector" range="{{autoSwitchDayOptions}}" value="{{autoSwitchDayIndexTemp}}" bindchange="onAutoSwitchDayChange">
-            <view class="picker-display">
-              <image class="picker-icon" src="{{iconCalendar}}" mode="aspectFit"></image>
-              <text class="picker-text">{{autoSwitchDayOptions[autoSwitchDayIndexTemp]}}</text>
-            </view>
-          </picker>
-        </view>
-
-        <view class="auto-switch-row">
           <text class="auto-switch-label">切换时间</text>
-          <picker mode="time" value="{{autoSwitchTimeTemp}}" bindchange="onAutoSwitchTimeChange">
-            <view class="picker-display">
-              <image class="picker-icon" src="{{iconTime}}" mode="aspectFit"></image>
-              <text class="picker-text">{{autoSwitchTimeTemp}}</text>
-            </view>
-          </picker>
+          <view class="picker-display">
+            <image class="picker-icon" src="{{iconTime}}" mode="aspectFit"></image>
+            <text class="picker-text">{{autoSwitchScheduleText}}</text>
+          </view>
         </view>
       </view>
+
+      <text class="modal-subtitle">触发时间由云端定时触发器决定，如需调整请联系管理员。</text>
 
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelAutoSwitchSettings">取消</button>

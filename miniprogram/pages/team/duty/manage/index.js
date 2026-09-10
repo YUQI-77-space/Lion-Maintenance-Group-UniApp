@@ -58,12 +58,11 @@ Page({
     assignedSlots: 0,
 
     // 自动切周配置相关
+    // 切周日程固定为每周一 10:30（东八区），由云端定时触发器 autoWeekSwitcherTimer 决定，
+    // 这里只展示、不可改；改动需同时调整云开发控制台的 cron 与云函数里的常量
     showAutoSwitchModal: false,
     autoSwitchEnabledTemp: true,
-    autoSwitchDayOfWeekTemp: 1,
-    autoSwitchTimeTemp: '10:30',
-    autoSwitchDayOptions: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
-    autoSwitchDayIndexTemp: 1,
+    autoSwitchScheduleText: '每周一 10:30',
 
     // 顶部分页导航
     tabs: ['本周值班', '值班设置', '当前配置'],
@@ -166,15 +165,10 @@ Page({
   openAutoSwitchSettings: function () {
     const cfg = this.data.configData || {}
     const enabled = cfg.autoSwitchEnabled !== false
-    const dayOfWeek = typeof cfg.autoSwitchDayOfWeek === 'number' ? cfg.autoSwitchDayOfWeek : 1
-    const timeStr = cfg.autoSwitchTime || '10:30'
 
     this.setData({
       showAutoSwitchModal: true,
-      autoSwitchEnabledTemp: enabled,
-      autoSwitchDayOfWeekTemp: dayOfWeek,
-      autoSwitchDayIndexTemp: dayOfWeek,
-      autoSwitchTimeTemp: timeStr
+      autoSwitchEnabledTemp: enabled
     })
   },
 
@@ -188,25 +182,9 @@ Page({
     this.setData({ autoSwitchEnabledTemp: !!e.detail.value })
   },
 
-  // 选择每周哪一天自动切周
-  onAutoSwitchDayChange: function (e) {
-    const index = parseInt(e.detail.value, 10) || 0
-    this.setData({
-      autoSwitchDayIndexTemp: index,
-      autoSwitchDayOfWeekTemp: index
-    })
-  },
-
-  // 选择自动切周时间（HH:MM）
-  onAutoSwitchTimeChange: function (e) {
-    this.setData({ autoSwitchTimeTemp: e.detail.value })
-  },
-
   // 保存自动切周配置
   saveAutoSwitchSettings: async function () {
     const enabled = this.data.autoSwitchEnabledTemp
-    const dayOfWeek = this.data.autoSwitchDayOfWeekTemp
-    const timeStr = this.data.autoSwitchTimeTemp || '10:30'
 
     this.setData({ 
       isLoading: true,
@@ -219,13 +197,14 @@ Page({
         action: 'updateDutyConfig',
         params: { configType: 'autoSwitchEnabled', value: enabled }
       })
+      // 切周日程固定为周一(1) 10:30，这里把库里可能残留的旧值校准回来，避免与实际触发时间不一致
       await api.call('dutySchedule', {
         action: 'updateDutyConfig',
-        params: { configType: 'autoSwitchDayOfWeek', value: dayOfWeek }
+        params: { configType: 'autoSwitchDayOfWeek', value: 1 }
       })
       await api.call('dutySchedule', {
         action: 'updateDutyConfig',
-        params: { configType: 'autoSwitchTime', value: timeStr }
+        params: { configType: 'autoSwitchTime', value: '10:30' }
       })
 
       wx.showToast({ title: '自动切周设置已保存', icon: 'success' })
