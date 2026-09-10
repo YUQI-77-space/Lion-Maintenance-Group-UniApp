@@ -58,10 +58,7 @@
     <!-- 值班：只呈现当前状态，不提供跳转入口（值班表在维修组 Tab 内） -->
     <view class="today-block">
       <view class="block-head">
-        <view class="block-title">
-          <view class="live-dot {{duty.current ? 'on' : ''}}"></view>
-          <text>值班</text>
-        </view>
+        <text class="block-title">值班</text>
         <view class="block-more muted" wx:if="{{duty && duty.summaryText}}">{{duty.summaryText}}</view>
       </view>
 
@@ -100,61 +97,63 @@
     </view>
   </view>
 
-  <!-- ========== 我的待办：我提交的报修进度 ========== -->
+  <!-- ========== 我的待办：我提交的报修进度（仅呈现，卡片内不设任何跳转入口） ========== -->
   <view class="todo-card entrance" style="animation-delay: 100ms;">
-    <view class="todo-head">
-      <view class="todo-title">
-        <text>我的待办</text>
-        <view class="todo-count" wx:if="{{myTodosTotal}}">{{myTodosTotal}}</view>
-      </view>
-      <view class="todo-more" bindtap="onTodoTap">全部 ></view>
+    <view class="todo-title">
+      <text>我的待办</text>
+      <view class="todo-count" wx:if="{{myTodosTotal}}">{{myTodosTotal}}</view>
     </view>
 
     <block wx:if="{{myTodos.length}}">
       <view class="todo-item"
             wx:for="{{myTodos}}"
-            wx:key="taskId"
-            data-id="{{item.taskId}}"
-            bindtap="onTodoItemTap">
+            wx:key="taskId">
+        <!-- 标题与状态同排：一眼看清「哪件事、到哪一步了」 -->
         <view class="todo-item-head">
           <text class="todo-item-title">{{item.title}}</text>
           <view class="todo-status status-{{item.taskStatus}}">{{item.statusText}}</view>
         </view>
-        <view class="todo-item-meta" wx:if="{{item.category}}">
-          <text class="todo-item-category">{{item.category}}</text>
-          <text class="todo-item-id">#{{item.taskId}}</text>
+
+        <!-- 字段两栏铺开，避免所有信息挤在同一列 -->
+        <view class="todo-fields">
+          <view class="todo-field">
+            <text class="todo-field-label">预约时间</text>
+            <text class="todo-field-value strong">{{item.appointmentTime || '未预约'}}</text>
+          </view>
+          <view class="todo-field">
+            <text class="todo-field-label">问题类别</text>
+            <text class="todo-field-value">{{item.category || '未分类'}}</text>
+          </view>
+          <view class="todo-field">
+            <text class="todo-field-label">受理人</text>
+            <text class="todo-field-value">{{item.assigneeName || '待受理'}}</text>
+          </view>
+          <view class="todo-field">
+            <text class="todo-field-label">单号</text>
+            <text class="todo-field-value">#{{item.taskId}}</text>
+          </view>
         </view>
 
-        <!-- 进度：三段式，已到的阶段填色，当前阶段高亮 -->
+        <!-- 动作行：可确认时才出现，压在进度轨之上 -->
+        <view class="todo-item-actions" wx:if="{{item.canConfirm}}">
+          <view class="todo-item-btn {{todoConfirming ? 'disabled' : ''}}"
+                data-id="{{item.taskId}}"
+                catchtap="onConfirmTodo">确认完成</view>
+        </view>
+
+        <!-- 进度轨收尾：信息读完落到进度本身 -->
         <view class="todo-progress">
           <view class="todo-progress-seg {{seg.on ? 'on' : ''}}" wx:for="{{item.steps}}" wx:for-item="seg" wx:key="key"></view>
         </view>
         <view class="todo-stages">
           <text class="todo-stage {{seg.cur ? 'cur' : ''}}" wx:for="{{item.steps}}" wx:for-item="seg" wx:key="key">{{seg.label}}</text>
         </view>
-
-        <view class="todo-item-foot">
-          <view class="todo-item-info">
-            <text wx:if="{{item.assigneeName}}">受理人 {{item.assigneeName}}</text>
-            <text wx:if="{{item.appointmentTime}}">预约 {{item.appointmentTime}}</text>
-            <text wx:if="{{!item.assigneeName && !item.appointmentTime}}">等待受理人联系</text>
-          </view>
-          <view class="todo-item-btn {{todoConfirming ? 'disabled' : ''}}"
-                wx:if="{{item.canConfirm}}"
-                data-id="{{item.taskId}}"
-                catchtap="onConfirmTodo">确认完成</view>
-        </view>
-      </view>
-
-      <view class="todo-more-row" wx:if="{{myTodosMoreCount > 0}}" bindtap="onTodoTap">
-        还有 {{myTodosMoreCount}} 项待办
       </view>
     </block>
 
     <!-- 空态：没有任何进行中的报修 -->
     <view class="todo-empty" wx:else>
       <view class="todo-empty-text">当前没有进行中的报修</view>
-      <view class="todo-empty-btn" data-index="0" bindtap="onFunctionEntryTap">我要报修</view>
     </view>
   </view>
 

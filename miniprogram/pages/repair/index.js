@@ -3,6 +3,7 @@ const SubscriptionAuth = require('../../utils/subscriptionAuth');
 const repairCategories = require('../../utils/repairCategories');
 const iconManager = require('../../utils/iconManager');
 const time = require('../../utils/time');
+const swr = require('../../utils/swrCache');
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
 const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
@@ -958,6 +959,8 @@ Page({
       wx.hideLoading();
 
       if (res.success) {
+        // 首页「我的待办」是缓存直出，新建成功后必须作废，否则切回首页看到的还是旧列表
+        swr.clear(`home:todos:${(userInfo && userInfo.openid) || ''}`);
         this.goToStep(5);
       } else {
         if (res.code === 401 || /未注册|未找到用户|not registered/i.test(res.message || '')) {

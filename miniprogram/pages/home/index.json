@@ -1,6 +1,8 @@
 {
   "navigationStyle": "custom",
   "backgroundColor": "#F7F7F7",
+  "backgroundTextStyle": "dark",
+  "enablePullDownRefresh": true,
   "usingComponents": {
     "section-header": "/components/section-header/index",
     "entry-item": "/components/entry-item/index"

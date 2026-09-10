@@ -136,13 +136,12 @@
   margin-bottom: 14rpx;
 }
 
-.block-title {
-  display: flex;
-  align-items: center;
-  font-size: 26rpx;
+/* 卡片标题共用一套字型：值班 / 我的待办 处于同一层级，字号字重必须一致 */
+.block-title,
+.todo-title {
+  font-size: 28rpx;
   font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 1rpx;
+  color: var(--text-main);
 }
 
 .block-more {
@@ -152,26 +151,6 @@
 
 .block-more.muted {
   color: var(--text-placeholder);
-}
-
-/* 值班状态灯：有人值班时才亮 */
-.live-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  margin-right: 10rpx;
-  background-color: var(--border);
-}
-
-.live-dot.on {
-  background-color: var(--success-color);
-  animation: live-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes live-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.45); }
-  70% { box-shadow: 0 0 0 10rpx rgba(82, 196, 26, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0); }
 }
 
 /* 有人值班 */
@@ -306,18 +285,10 @@
   border-radius: var(--radius-card);
 }
 
-.todo-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
+/* 字型与值班标题共用上面的 .block-title，这里只补数量胶囊所需的横排 */
 .todo-title {
   display: flex;
   align-items: center;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-main);
 }
 
 /* 待办数量小胶囊 */
@@ -335,11 +306,6 @@
   text-align: center;
 }
 
-.todo-more {
-  font-size: 24rpx;
-  color: var(--primary-color);
-}
-
 .todo-item {
   padding: 22rpx 0;
   border-bottom: 1rpx solid var(--border-light);
@@ -351,6 +317,7 @@
   padding-bottom: 4rpx;
 }
 
+/* 标题与状态药丸同排 */
 .todo-item-head {
   display: flex;
   align-items: center;
@@ -367,6 +334,49 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* 字段两栏网格：把信息横向铺开，而不是竖向堆成一列 */
+.todo-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx 24rpx;
+  margin-top: 18rpx;
+}
+
+.todo-field {
+  min-width: 0;
+}
+
+.todo-field-label {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.4;
+  color: var(--text-placeholder);
+}
+
+.todo-field-value {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 26rpx;
+  line-height: 1.4;
+  color: var(--text-main);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 预约时间是本卡片最该被先看到的字段，单独上主色加重 */
+.todo-field-value.strong {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* 动作行：右对齐，让进度轨保持收尾位置 */
+.todo-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20rpx;
 }
 
 /* 状态药丸：沿用维修任务的状态色 */
@@ -390,33 +400,11 @@
   border-color: var(--maintenance-inProgress-color);
 }
 
-.todo-item-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
-  margin-top: 10rpx;
-  font-size: 22rpx;
-  color: var(--text-placeholder);
-}
-
-.todo-item-category {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.todo-item-id {
-  flex-shrink: 0;
-}
-
 /* 三段式进度条：走过的阶段填色，当前阶段在下面对应高亮 */
 .todo-progress {
   display: flex;
   gap: 6rpx;
-  margin-top: 18rpx;
+  margin-top: 20rpx;
 }
 
 .todo-progress-seg {
@@ -449,22 +437,6 @@
   font-weight: 600;
 }
 
-.todo-item-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
-  margin-top: 18rpx;
-}
-
-.todo-item-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6rpx 20rpx;
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-
 .todo-item-btn {
   flex-shrink: 0;
   padding: 12rpx 30rpx;
@@ -484,41 +456,14 @@
   pointer-events: none;
 }
 
-.todo-more-row {
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 1rpx solid var(--border-light);
-  text-align: center;
-  font-size: 24rpx;
-  color: var(--primary-color);
-}
-
 /* 空态：没有任何进行中的报修 */
 .todo-empty {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20rpx;
   padding: 16rpx 0 4rpx;
 }
 
 .todo-empty-text {
   font-size: 28rpx;
   color: var(--text-secondary);
-}
-
-.todo-empty-btn {
-  flex-shrink: 0;
-  padding: 16rpx 36rpx;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #FFFFFF;
-  background-color: var(--primary-color);
-  border-radius: 10rpx;
-}
-
-.todo-empty-btn:active {
-  opacity: 0.85;
 }
 
 /* ============================================
@@ -550,10 +495,6 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 18rpx;
-}
-
-.quick-item.primary .quick-icon-wrap {
-  background-color: rgba(0, 0, 205, 0.07);
 }
 
 .quick-icon {

@@ -19,11 +19,12 @@ const REPAIR_STEPS = [
   { key: 'completed', label: '已完成' }
 ];
 
-// 工作台数据的缓存有效期（秒）与「多久算过期」
+// 工作台数据的缓存有效期（秒）
 const WIDGET_TTL = { duty: 120, todos: 60 };
-const WIDGET_STALE_MS = 60 * 1000;
-// 首页最多展开几条待办，其余用「还有 N 项」引到待办页
-const MAX_TODO_PREVIEW = 2;
+// 刷新下限：距上次请求不足这个间隔就不再打扰后端。
+// 取 10s 是为了和 app.js 待办角标的节奏对齐（那边 TTL 10s + 单航班），
+// 同时保证「切个页面回来就能看到新建的报修」——原来 60s 的静默期才是数据发馊的原因。
+const WIDGET_MIN_INTERVAL_MS = 10 * 1000;
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
 const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
@@ -75,10 +76,9 @@ Page({
     dutyText: { main: '', sub: '', tone: 'muted' },
     dutyLoading: true,
 
-    // 我的待办（我提交的报修进度）
+    // 我的待办（我提交的报修进度，仅呈现，不设跳转）
     myTodos: [],
     myTodosTotal: 0,
-    myTodosMoreCount: 0,
     todoConfirming: false,
 
     // 荣誉履带：轻触暂停
@@ -552,14 +552,29 @@ Page({
     this.setData({ userRole: role });
     this.setData(this.buildHeadText());
 
+    // 缓存只负责首帧不空白，数据新鲜度交给下面的补拉
     this.renderWidgetsFromCache();
+    this.refreshWidgets(false);
+  },
 
-    // 60s 内不重复请求，避免 Tab 来回切换产生风暴
-    if (Date.now() - (this._widgetsLoadedAt || 0) < WIDGET_STALE_MS) return;
-    this._widgetsLoadedAt = Date.now();
+  // 补拉工作台数据（值班 + 我的待办）
+  // force=true 用于下拉刷新：无视间隔，强制拉一次
+  refreshWidgets: function (force) {
+    if (!force && Date.now() - (this._widgetsFetchedAt || 0) < WIDGET_MIN_INTERVAL_MS) {
+      return Promise.resolve();
+    }
+    this._widgetsFetchedAt = Date.now();
+    return Promise.all([this.loadDutyStatus(), this.loadMyTodos()]);
+  },
 
-    this.loadDutyStatus();
-    this.loadMyTodos();
+  // 下拉刷新：手动路径，必须绕开间隔限制，否则用户拉一下却什么都没发生
+  onPullDownRefresh: function () {
+    this.refreshWidgets(true).then(() => {
+      wx.stopPullDownRefresh();
+      wx.showToast({ title: '已刷新', icon: 'none', duration: 1200 });
+    }).catch(() => {
+      wx.stopPullDownRefresh();
+    });
   },
 
   // 用缓存填充区块，不发请求
@@ -637,7 +652,9 @@ Page({
       params: { type: 'maintenance', userId: openid }
     }).then((res) => {
       if (this.data.isPageUnloaded) return;
-      const list = Array.isArray(res && res.data) ? res.data : [];
+      // 失败时既不覆盖已有列表、也不写缓存，否则一次 500 会让卡片空 60s
+      if (!res || !res.success) return;
+      const list = Array.isArray(res.data) ? res.data : [];
       // 只呈现进行中的：已完成 / 已撤销不再占用首页位置
       const active = list.filter(t => t && (t.taskStatus === 'pending' || t.taskStatus === 'inProgress'));
       swr.set(`home:todos:${openid}`, active, WIDGET_TTL.todos);
@@ -645,14 +662,12 @@ Page({
     }).catch(() => {});
   },
 
-  // 最多展示 2 条，其余用「还有 N 项」引到待办页
+  // 全部进行中的待办都铺出来，总数由标题旁的数量胶囊提示
   applyTodos: function (active) {
     const list = (active || []).map(t => this.buildTodoItem(t));
-    const visible = list.slice(0, MAX_TODO_PREVIEW);
     this.setData({
-      myTodos: visible,
-      myTodosTotal: list.length,
-      myTodosMoreCount: Math.max(0, list.length - visible.length)
+      myTodos: list,
+      myTodosTotal: list.length
     });
   },
 
@@ -669,13 +684,6 @@ Page({
       appointmentTime: task.appointmentTime || '',
       canConfirm: task.taskStatus === 'inProgress'
     };
-  },
-
-  // 打开这条报修的详情
-  onTodoItemTap: function (e) {
-    const taskId = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id) || '';
-    if (!taskId) return;
-    wx.navigateTo({ url: `/pages/team/maintenance/detail/index?taskId=${taskId}` });
   },
 
   // 申请人确认完成（与待办页同一套接口）
@@ -719,12 +727,6 @@ Page({
     } finally {
       this.setData({ todoConfirming: false });
     }
-  },
-
-  // 待办事项
-  onTodoTap: function () {
-    const router = require('../../utils/router');
-    router.navigateTo('/pages/user/todo/index');
   },
 
   // 荣誉履带：轻触暂停 / 继续
