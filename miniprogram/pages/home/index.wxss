@@ -4,6 +4,17 @@
 @import "/styles/custom-navbar.wxss";
 
 /* ============================================
+   顶部导航栏：滚动时透出栏后滚过的头图，形成纵深
+   ============================================ */
+/* 首屏静止时栏后是浅色页面底，透明度看不出差别；真正的用处是下滑时头图从栏后
+   滚过——0.60 能把照片的色调雾化透出来，同时标题是深色、读得清。
+   滚动后的收实状态（.is-scrolled）与其它页面一致，沿用公共样式即可。 */
+.custom-navbar {
+  --navbar-alpha: 0.60;
+  --navbar-blur: 28px;
+}
+
+/* ============================================
    页面容器
    ============================================ */
 .home-container {
@@ -15,71 +26,556 @@
   padding-bottom: 220rpx;
 }
 
+/* 入场动效：只做位移与透明度，避免低端机合成层压力 */
+@keyframes home-fade-up {
+  from { opacity: 0; transform: translate3d(0, 16rpx, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.entrance {
+  /* backwards：动画结束即回到元素自身样式，避免动画未执行时内容停留在 opacity:0 */
+  animation: home-fade-up 0.32s ease backwards;
+}
+
 /* ============================================
-   轮播图区域
+   首屏问候头（原轮播降级为背景）
    ============================================ */
-.swiper-section {
+.hero-section {
   position: relative;
-  margin: 0 20rpx var(--space-lg) 20rpx;
-  border-radius: var(--radius-card);
+  height: 340rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
   overflow: hidden;
+  background-color: #0A2540;
 }
 
-.home-swiper {
+.hero-swiper {
   width: 100%;
-  height: 400rpx;
-  border-radius: var(--radius-card);
+  height: 100%;
 }
 
+/* swiper-item 为原生组件，显式撑满避免个别机型高度塌陷 */
 .swiper-item {
-  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-card);
+}
+
+.hero-bg {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-skeleton {
+  background: #123354;
+}
+
+/* 底部加深，保证问候语在照片上也读得清 */
+.hero-veil {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 37, 64, 0.42) 0%,
+    rgba(10, 37, 64, 0.30) 45%,
+    rgba(10, 37, 64, 0.78) 100%
+  );
+  pointer-events: none;
+}
+
+.hero-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 必须高于今日卡的上浮距离（64rpx）+ 余量，否则问候语会被卡片压住 */
+  bottom: 128rpx;
+  padding: 0 var(--space-md);
+}
+
+.hero-greeting {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 1rpx;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.swiper-image {
-  width: 100%;
-  height: 100%;
-}
-
-/* 指示器 */
-.home-swiper .wx-swiper-dots {
-  bottom: 20rpx;
-}
-
-.home-swiper .wx-swiper-dot {
-  width: 16rpx;
-  height: 16rpx;
-  margin: 0 8rpx;
-  border-radius: 8rpx;
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.home-swiper .wx-swiper-dot-active {
-  background-color: #fff;
-}
-
-/* 骨架屏 - 使用公共加载动画样式 */
-.swiper-skeleton {
-  width: 100%;
-  height: 400rpx;
-  border-radius: var(--radius-card);
-  background: #E8ECEF;
+.hero-meta {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 /* ============================================
-   功能入口区域
+   今日状态卡
    ============================================ */
-.function-entries-section {
-  margin: 0 20rpx var(--space-xl) 20rpx;
+.today-card {
+  position: relative;
+  z-index: 2;
+  margin: -64rpx 20rpx var(--space-md) 20rpx;
+  background-color: var(--card-background);
+  border: 1rpx solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 24rpx 0;
 }
 
-/* 功能入口网格 - 使用公共 entry-grid */
-.function-entries-section .entry-grid {
-  /* 公共样式已处理 */
+.today-block {
+  padding: 0 var(--space-md);
 }
+
+
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+
+.block-title {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 1rpx;
+}
+
+.block-more {
+  font-size: 24rpx;
+  color: var(--primary-color);
+}
+
+.block-more.muted {
+  color: var(--text-placeholder);
+}
+
+/* 值班状态灯：有人值班时才亮 */
+.live-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+  background-color: var(--border);
+}
+
+.live-dot.on {
+  background-color: var(--success-color);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.45); }
+  70% { box-shadow: 0 0 0 10rpx rgba(82, 196, 26, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0); }
+}
+
+/* 有人值班 */
+.duty-live-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.duty-name {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-right: 12rpx;
+}
+
+.duty-flag {
+  font-size: 22rpx;
+  color: var(--success-color);
+  border: 1rpx solid var(--success-color);
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  margin-right: 12rpx;
+}
+
+.duty-remain {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.duty-time {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--text-regular);
+}
+
+.duty-progress {
+  margin-top: 14rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background-color: var(--border-light);
+  overflow: hidden;
+}
+
+.duty-progress-inner {
+  height: 100%;
+  border-radius: 3rpx;
+  background-color: var(--primary-color);
+  transition: width 0.4s ease;
+}
+
+/* 无人值班 / 非值班时段 / 数据不可用 */
+.duty-empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.duty-empty-sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* 加载骨架 */
+.skeleton-line {
+  height: 28rpx;
+  border-radius: 6rpx;
+  margin-bottom: 14rpx;
+}
+
+.skeleton-line.w70 { width: 70%; }
+.skeleton-line.w45 { width: 45%; }
+
+/* 一周值班条 */
+.week-strip {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--border-light);
+}
+
+.week-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.week-name {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+.week-bar {
+  width: 8rpx;
+  height: 36rpx;
+  margin: 8rpx 0;
+  border-radius: 4rpx;
+  background-color: var(--border-light);
+}
+
+.week-bar.on {
+  background-color: var(--primary-color);
+}
+
+.week-date {
+  font-size: 20rpx;
+  color: var(--text-placeholder);
+}
+
+.week-cell.is-today .week-name {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.week-cell.is-today .week-date {
+  color: var(--primary-color);
+}
+
+/* ============================================
+   我的待办：我提交的报修进度
+   ============================================ */
+.todo-card {
+  margin: 0 20rpx var(--space-md) 20rpx;
+  padding: 24rpx var(--space-md);
+  background-color: var(--card-background);
+  border: 1rpx solid var(--border-light);
+  border-radius: var(--radius-card);
+}
+
+.todo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.todo-title {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* 待办数量小胶囊 */
+.todo-count {
+  min-width: 34rpx;
+  height: 34rpx;
+  line-height: 34rpx;
+  padding: 0 10rpx;
+  margin-left: 12rpx;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  background-color: rgba(0, 0, 205, 0.08);
+  color: var(--primary-color);
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.todo-more {
+  font-size: 24rpx;
+  color: var(--primary-color);
+}
+
+.todo-item {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--border-light);
+}
+
+/* 最后一条不再画线，与卡片底部留白衔接 */
+.todo-item:last-of-type {
+  border-bottom: none;
+  padding-bottom: 4rpx;
+}
+
+.todo-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.todo-item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 状态药丸：沿用维修任务的状态色 */
+.todo-status {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 500;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid;
+  background-color: transparent;
+}
+
+.todo-status.status-pending {
+  color: var(--maintenance-pending-color);
+  border-color: var(--maintenance-pending-color);
+}
+
+.todo-status.status-inProgress {
+  color: var(--maintenance-inProgress-color);
+  border-color: var(--maintenance-inProgress-color);
+}
+
+.todo-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--text-placeholder);
+}
+
+.todo-item-category {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.todo-item-id {
+  flex-shrink: 0;
+}
+
+/* 三段式进度条：走过的阶段填色，当前阶段在下面对应高亮 */
+.todo-progress {
+  display: flex;
+  gap: 6rpx;
+  margin-top: 18rpx;
+}
+
+.todo-progress-seg {
+  flex: 1;
+  height: 10rpx;
+  border-radius: 6rpx;
+  background-color: var(--border-light);
+  transition: background-color 0.3s ease;
+}
+
+.todo-progress-seg.on {
+  background-color: var(--primary-color);
+}
+
+.todo-stages {
+  display: flex;
+  gap: 6rpx;
+  margin-top: 10rpx;
+}
+
+.todo-stage {
+  flex: 1;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-placeholder);
+}
+
+.todo-stage.cur {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.todo-item-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.todo-item-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6rpx 20rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.todo-item-btn {
+  flex-shrink: 0;
+  padding: 12rpx 30rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  background-color: var(--primary-color);
+  border-radius: 999rpx;
+}
+
+.todo-item-btn:active {
+  opacity: 0.85;
+}
+
+.todo-item-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.todo-more-row {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-light);
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--primary-color);
+}
+
+/* 空态：没有任何进行中的报修 */
+.todo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 16rpx 0 4rpx;
+}
+
+.todo-empty-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.todo-empty-btn {
+  flex-shrink: 0;
+  padding: 16rpx 36rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  background-color: var(--primary-color);
+  border-radius: 10rpx;
+}
+
+.todo-empty-btn:active {
+  opacity: 0.85;
+}
+
+/* ============================================
+   快捷入口：动作条
+   ============================================ */
+.quick-actions {
+  display: flex;
+  align-items: center;
+  margin: 0 20rpx var(--space-md) 20rpx;
+  padding: 24rpx 0;
+  background-color: var(--card-background);
+  border: 1rpx solid var(--border-light);
+  border-radius: var(--radius-card);
+}
+
+.quick-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.quick-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+}
+
+.quick-item.primary .quick-icon-wrap {
+  background-color: rgba(0, 0, 205, 0.07);
+}
+
+.quick-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.quick-title {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: var(--text-main);
+}
+
+.quick-item.primary .quick-title {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.quick-item:active .quick-icon-wrap {
+  transform: scale(0.94);
+}
+
 
 /* ============================================
    板块通用样式
@@ -89,13 +585,73 @@
 }
 
 /* ============================================
-   图片网格 - 使用公共 grid-container
+   特色活动：1 大 + 2 小
    ============================================ */
-.grid-image-skeleton {
-  width: 100%;
-  height: 220rpx;
+.feature-hero {
+  height: 320rpx;
   border-radius: var(--radius-image);
-  background: #E8ECEF;
+  overflow: hidden;
+  background-color: #E8ECEF;
+}
+
+.feature-hero:active {
+  opacity: 0.9;
+}
+
+.feature-hero-img {
+  width: 100%;
+  height: 100%;
+}
+
+.feature-pair {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.feature-small {
+  flex: 1;
+  height: 200rpx;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+  background-color: #E8ECEF;
+}
+
+.feature-small:active {
+  opacity: 0.9;
+}
+
+.feature-small-img {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================
+   团队风采：横向滑动流
+   ============================================ */
+.feature-strip {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.strip-track {
+  display: inline-flex;
+  gap: 16rpx;
+  padding-bottom: 6rpx;
+}
+
+.strip-card-item {
+  width: 470rpx;
+  height: 260rpx;
+  flex-shrink: 0;
+  border-radius: var(--radius-image);
+  overflow: hidden;
+  background-color: #E8ECEF;
+}
+
+.strip-card-img {
+  width: 100%;
+  height: 100%;
 }
 
 /* ============================================
@@ -118,6 +674,16 @@
   gap: 16rpx;
   height: 100%;
   white-space: nowrap;
+  /* 时长由内联样式提供，便于按总宽度动态调整 */
+  animation-name: conveyor-move;
+  animation-duration: 12000ms;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* 轻触暂停 */
+.conveyor-content.paused {
+  animation-play-state: paused;
 }
 
 .honor-card {
@@ -146,13 +712,20 @@
   background: #E8ECEF;
 }
 
+.honors-hint {
+  margin-top: 12rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--text-placeholder);
+}
+
 @keyframes conveyor-move {
   0% { transform: translate3d(0, 0, 0); }
   100% { transform: translate3d(-50%, 0, 0); }
 }
 
 /* ============================================
-   骨架屏加载动画
+   骨架屏
    ============================================ */
 /* 骨架屏用浅灰而非纯白：首屏未拿到数据时不再整屏发白 */
 .skeleton-block {

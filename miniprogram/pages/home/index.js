@@ -1,5 +1,29 @@
 const cloudImageManager = require('../../utils/cloudImageManager');
 const iconManager = require('../../utils/iconManager');
+const api = require('../../utils/apiAdapter');
+const swr = require('../../utils/swrCache');
+const dutyNow = require('../../utils/dutyNow');
+
+// 维修任务状态文案（与列表页 / 管理页 / 详情页保持一致）
+const TASK_STATUS_MAP = {
+  pending: '未受理',
+  inProgress: '处理中',
+  completed: '已完成',
+  cancelled: '已撤销'
+};
+
+// 报修进度轨的三个节点
+const REPAIR_STEPS = [
+  { key: 'pending', label: '待受理' },
+  { key: 'inProgress', label: '处理中' },
+  { key: 'completed', label: '已完成' }
+];
+
+// 工作台数据的缓存有效期（秒）与「多久算过期」
+const WIDGET_TTL = { duty: 120, todos: 60 };
+const WIDGET_STALE_MS = 60 * 1000;
+// 首页最多展开几条待办，其余用「还有 N 项」引到待办页
+const MAX_TODO_PREVIEW = 2;
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
 const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
@@ -34,14 +58,38 @@ Page({
     
     // 功能入口配置
     functionEntries: [
-      { id: 1, title: '我要报修', icon: iconManager.get('home_repair'), route: '/pages/repair/index', requireAuth: false, bgColor: '#EBF5FF' },
-      { id: 2, title: '值班表', icon: iconManager.get('home_duty'), route: '/pages/team/duty/roster/index', requireAuth: true, requiredRole: 'member', bgColor: '#E8F5E9' },
-      { id: 3, title: '维修任务', icon: iconManager.get('home_maintenance'), route: '/pages/team/maintenance/list/index', requireAuth: true, requiredRole: 'member', bgColor: '#FFF8E1' },
-      { id: 4, title: '志愿活动', icon: iconManager.get('home_volunteer'), route: '/pages/team/volunteer/list/index', requireAuth: true, requiredRole: 'member', bgColor: '#F3E5F5' }
+      { id: 1, title: '我要报修', icon: iconManager.get('home_repair'), route: '/pages/repair/index', requireAuth: false, primary: true },
+      { id: 2, title: '值班表', icon: iconManager.get('home_duty'), route: '/pages/team/duty/roster/index', requireAuth: true, requiredRole: 'member' },
+      { id: 3, title: '维修任务', icon: iconManager.get('home_maintenance'), route: '/pages/team/maintenance/list/index', requireAuth: true, requiredRole: 'member' },
+      { id: 4, title: '志愿活动', icon: iconManager.get('home_volunteer'), route: '/pages/team/volunteer/list/index', requireAuth: true, requiredRole: 'member' }
     ],
-    
+
+    // ===== 今日工作台（仅呈现普通用户可见的信息） =====
+    userRole: 'user',
+    greeting: '你好',
+    todayText: '',
+    roleText: '',
+
+    // 值班（此刻谁在值班 + 一周值班条）
+    duty: null,
+    dutyText: { main: '', sub: '', tone: 'muted' },
+    dutyLoading: true,
+
+    // 我的待办（我提交的报修进度）
+    myTodos: [],
+    myTodosTotal: 0,
+    myTodosMoreCount: 0,
+    todoConfirming: false,
+
+    // 荣誉履带：轻触暂停
+    honorsPaused: false,
+
+    // 导航栏是否已滚离顶部（决定毛玻璃的透明度档位）
+    navScrolled: false,
+
     // 内容展示
     specialEvents: INITIAL_SPECIAL_EVENTS,
+    specialSmall: INITIAL_SPECIAL_EVENTS.slice(1, 3), // 特色活动「1 大 + 2 小」中的两张小图
     teamSpirit: INITIAL_TEAM_SPIRIT,
     teamHonors: [],
     conveyorDuration: 12000,
@@ -93,6 +141,9 @@ Page({
         this.reloadTeamHonors();
       }
     }
+
+    // 今日工作台：与图片加载相互独立，不阻塞首帧
+    this.initHomeWidgets();
   },
   
   // 内容加载调度 - 并行加载策略
@@ -132,6 +183,14 @@ Page({
     this.initAnimation();
     const tab = this.getTabBar && this.getTabBar();
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+
+    // 回到首页时刷新工作台（超过 60s 才重新请求），并恢复「此刻值班」的时间刷新
+    this.initHomeWidgets();
+    this.startDutyTicker();
+  },
+
+  onHide: function () {
+    this.stopDutyTicker();
   },
 
   onReady: function () {
@@ -141,17 +200,29 @@ Page({
   
   // 页面滚动监听
   onPageScroll: function(e) {
-    // 使用节流优化性能
+    const scrollTop = (e && e.scrollTop) || 0;
+
+    // 导航栏状态：只在跨过阈值时 setData，避免逐帧刷新
+    this.applyNavbarScroll(scrollTop);
+
+    // 荣誉图懒加载：节流即可
     if (this._scrollTimer) {
       return;
     }
-    
+
     this._scrollTimer = setTimeout(() => {
       this._scrollTimer = null;
-      
-      // 检查是否需要加载剩余的荣誉图片
-      this.checkLoadRemainingHonors(e.scrollTop);
+      this.checkLoadRemainingHonors(scrollTop);
     }, 100);
+  },
+
+  // 滚过一点就切到「更实的玻璃底」，回顶时再透回头图。
+  // 阈值留了回滞（8 / 2），防止在临界点来回抖动。
+  applyNavbarScroll: function (scrollTop) {
+    const scrolled = this._navScrolled ? scrollTop > 2 : scrollTop > 8;
+    if (scrolled === this._navScrolled) return;
+    this._navScrolled = scrolled;
+    this.setData({ navScrolled: scrolled });
   },
   
   // 检查是否需要加载剩余的荣誉图片
@@ -306,22 +377,23 @@ Page({
     // 轮播图加载失败，不影响功能
   },
 
-  // 检查触摸点是否在轮播图区域内
+  // 检查触摸点是否在横向滑动区域内（轮播图 / 团队风采横滑条）
+  // 命中则不触发「滑动切 Tab」，避免横滑时误切页面
   checkIfTouchInSwiper: function(clientX, clientY) {
     const query = wx.createSelectorQuery();
-    query.select('.swiper-section').boundingClientRect((rect) => {
-      if (rect) {
-        const isInSwiper = clientX >= rect.left && 
-                          clientX <= rect.right && 
-                          clientY >= rect.top && 
-                          clientY <= rect.bottom;
-        
-        if (isInSwiper) {
-          this.setData({ swiperTouching: true });
-          this._swiperTouchTime = Date.now();
-        }
+    query.select('.swiper-section').boundingClientRect();
+    query.select('.feature-strip').boundingClientRect();
+    query.exec((res) => {
+      const rects = (res || []).filter(rect => rect);
+      const hit = rects.some(rect =>
+        clientX >= rect.left && clientX <= rect.right &&
+        clientY >= rect.top && clientY <= rect.bottom
+      );
+      if (hit) {
+        this.setData({ swiperTouching: true });
+        this._swiperTouchTime = Date.now();
       }
-    }).exec();
+    });
   },
 
   // 初始化特色活动数据
@@ -335,6 +407,7 @@ Page({
       if (!this.data.isPageUnloaded) {
         this.setData({ 
           specialEvents: withTempUrls,
+          specialSmall: withTempUrls.slice(1, 3),
           isLoadingSpecialEvents: false
         });
       }
@@ -342,6 +415,7 @@ Page({
       if (!this.data.isPageUnloaded) {
         this.setData({ 
           specialEvents,
+          specialSmall: specialEvents.slice(1, 3),
           isLoadingSpecialEvents: false
         });
       }
@@ -422,6 +496,240 @@ Page({
     // 权限验证通过，执行跳转（自动兼容 TabBar 页面）
     const router = require('../../utils/router');
     router.navigateTo(entry.route);
+  },
+
+  // ==================== 今日工作台（值班 / 我的 / 招募 / 数据） ====================
+
+  // 问候语、日期、角色文案
+  buildHeadText: function () {
+    const now = new Date();
+    const h = now.getHours();
+    let base = '你好';
+    if (h < 5) base = '夜深了';
+    else if (h < 11) base = '上午好';
+    else if (h < 14) base = '中午好';
+    else if (h < 18) base = '下午好';
+    else base = '晚上好';
+
+    let nickName = '';
+    try {
+      const app = getApp();
+      const info = (app && app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+      nickName = String(info.nickName || '').trim();
+    } catch (e) {}
+
+    const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const roleTextMap = { user: '同学', member: '组员', leader: '组长', admin: '管理员' };
+
+    return {
+      greeting: nickName ? `${base}，${nickName}` : base,
+      todayText: `${now.getMonth() + 1}月${now.getDate()}日 ${weekNames[now.getDay()]}`,
+      roleText: roleTextMap[this._role || 'user'] || '同学'
+    };
+  },
+
+  getOpenid: function () {
+    try {
+      const app = getApp();
+      if (app && app.globalData && app.globalData.openid) return app.globalData.openid;
+      const info = wx.getStorageSync('userInfo') || {};
+      return info.openid || '';
+    } catch (e) {
+      return '';
+    }
+  },
+
+  // 工作台入口：先缓存直出，再后台刷新（绝不阻塞首帧）
+  // 注意：首页只呈现「普通用户视角」的信息——当下值班状态 + 我自己的报修进度。
+  // 维修组内部的东西（EW、待认领任务池、我的值班等）一律不在首页出现。
+  initHomeWidgets: function () {
+    const app = getApp();
+    const role = (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
+
+    // setData 是异步的：角色判断同时落到实例字段，供后续同步读取
+    this._role = role;
+
+    this.setData({ userRole: role });
+    this.setData(this.buildHeadText());
+
+    this.renderWidgetsFromCache();
+
+    // 60s 内不重复请求，避免 Tab 来回切换产生风暴
+    if (Date.now() - (this._widgetsLoadedAt || 0) < WIDGET_STALE_MS) return;
+    this._widgetsLoadedAt = Date.now();
+
+    this.loadDutyStatus();
+    this.loadMyTodos();
+  },
+
+  // 用缓存填充区块，不发请求
+  renderWidgetsFromCache: function () {
+    const openid = this.getOpenid();
+
+    const cachedDuty = swr.get('home:duty');
+    if (cachedDuty && cachedDuty.exists && cachedDuty.data) {
+      this._dutyPayload = cachedDuty.data;
+      this.applyDutyStatus();
+    }
+
+    const cachedTodos = swr.get(`home:todos:${openid}`);
+    if (cachedTodos && cachedTodos.exists) {
+      this.applyTodos(cachedTodos.data || []);
+    }
+  },
+
+  // 值班数据：所有人可见（云函数未做角色限制）
+  loadDutyStatus: function () {
+    return api.call('dutySchedule', { action: 'getDutySlots', params: {} })
+      .then((res) => {
+        if (this.data.isPageUnloaded) return;
+        if (res && res.success && res.data) {
+          this._dutyPayload = res.data;
+          swr.set('home:duty', res.data, WIDGET_TTL.duty);
+        }
+        this.applyDutyStatus();
+      })
+      .catch(() => {
+        if (this.data.isPageUnloaded) return;
+        // 请求失败：保留已有缓存，否则显示「暂不可用」兜底
+        this.applyDutyStatus();
+      });
+  },
+
+  // 依据缓存的原始数据重算值班状态（可随时用当前时间刷新，不必重新请求）
+  applyDutyStatus: function () {
+    const duty = dutyNow.buildDutyStatus(this._dutyPayload, new Date());
+
+    this.setData({
+      duty,
+      dutyText: dutyNow.buildDutyText(duty),
+      dutyLoading: false
+    });
+  },
+
+  // 「此刻值班 / 还剩多久」每分钟刷新一次
+  startDutyTicker: function () {
+    this.stopDutyTicker();
+    this._dutyTicker = setInterval(() => {
+      if (this.data.isPageUnloaded) {
+        this.stopDutyTicker();
+        return;
+      }
+      if (!this._dutyPayload) return;
+      this.applyDutyStatus();
+    }, 60 * 1000);
+  },
+
+  stopDutyTicker: function () {
+    if (this._dutyTicker) {
+      clearInterval(this._dutyTicker);
+      this._dutyTicker = null;
+    }
+  },
+
+  // 我的待办：我提交的报修进度（普通用户视角，所有角色一视同仁）
+  loadMyTodos: function () {
+    const openid = this.getOpenid();
+    if (!openid) return Promise.resolve();
+
+    return api.call('userToDoList', {
+      action: 'getTodoList',
+      params: { type: 'maintenance', userId: openid }
+    }).then((res) => {
+      if (this.data.isPageUnloaded) return;
+      const list = Array.isArray(res && res.data) ? res.data : [];
+      // 只呈现进行中的：已完成 / 已撤销不再占用首页位置
+      const active = list.filter(t => t && (t.taskStatus === 'pending' || t.taskStatus === 'inProgress'));
+      swr.set(`home:todos:${openid}`, active, WIDGET_TTL.todos);
+      this.applyTodos(active);
+    }).catch(() => {});
+  },
+
+  // 最多展示 2 条，其余用「还有 N 项」引到待办页
+  applyTodos: function (active) {
+    const list = (active || []).map(t => this.buildTodoItem(t));
+    const visible = list.slice(0, MAX_TODO_PREVIEW);
+    this.setData({
+      myTodos: visible,
+      myTodosTotal: list.length,
+      myTodosMoreCount: Math.max(0, list.length - visible.length)
+    });
+  },
+
+  buildTodoItem: function (task) {
+    const stepIndex = task.taskStatus === 'inProgress' ? 1 : 0;
+    return {
+      taskId: task.taskId || '',
+      title: task.level3 || task.level2 || '维修任务',
+      category: [task.level1, task.level2].filter(Boolean).join(' · '),
+      taskStatus: task.taskStatus,
+      statusText: TASK_STATUS_MAP[task.taskStatus] || '',
+      steps: REPAIR_STEPS.map((s, i) => ({ key: s.key, label: s.label, on: i <= stepIndex, cur: i === stepIndex })),
+      assigneeName: task.assigneeName || '',
+      appointmentTime: task.appointmentTime || '',
+      canConfirm: task.taskStatus === 'inProgress'
+    };
+  },
+
+  // 打开这条报修的详情
+  onTodoItemTap: function (e) {
+    const taskId = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id) || '';
+    if (!taskId) return;
+    wx.navigateTo({ url: `/pages/team/maintenance/detail/index?taskId=${taskId}` });
+  },
+
+  // 申请人确认完成（与待办页同一套接口）
+  onConfirmTodo: async function (e) {
+    const taskId = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id) || '';
+    if (!taskId || this.data.todoConfirming) return;
+
+    const modalRes = await new Promise(resolve => {
+      wx.showModal({
+        title: '确认完成',
+        content: '确认此维修任务已完成吗？',
+        success: resolve,
+        fail: () => resolve({ confirm: false })
+      });
+    });
+    if (!modalRes || !modalRes.confirm) return;
+
+    this.setData({ todoConfirming: true });
+    wx.showLoading({ title: '处理中...' });
+    try {
+      const res = await api.call('maintenanceTasks', {
+        action: 'completeMaintenanceTask',
+        params: {
+          maintenanceTaskId: taskId,
+          completeTime: new Date().toISOString()
+        }
+      });
+      wx.hideLoading();
+      if (res && res.success) {
+        wx.showToast({ title: '任务已完成', icon: 'success', duration: 1600 });
+        swr.clear(`home:todos:${this.getOpenid()}`);
+        const app = getApp();
+        app.getTodoTotalCount && app.getTodoTotalCount();
+        setTimeout(() => { if (!this.data.isPageUnloaded) this.loadMyTodos(); }, 600);
+      } else {
+        wx.showToast({ title: (res && res.message) || '操作失败', icon: 'none' });
+      }
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+    } finally {
+      this.setData({ todoConfirming: false });
+    }
+  },
+
+  // 待办事项
+  onTodoTap: function () {
+    const router = require('../../utils/router');
+    router.navigateTo('/pages/user/todo/index');
+  },
+
+  // 荣誉履带：轻触暂停 / 继续
+  toggleHonorsPause: function () {
+    this.setData({ honorsPaused: !this.data.honorsPaused });
   },
 
 
@@ -668,8 +976,9 @@ Page({
   // 页面卸载时清理资源
   onUnload: function() {
     this.data.isPageUnloaded = true;
-    
+
     // 清理定时器
+    this.stopDutyTicker();
     if (this.swiperChangeTimer) {
       clearTimeout(this.swiperChangeTimer);
       this.swiperChangeTimer = null;

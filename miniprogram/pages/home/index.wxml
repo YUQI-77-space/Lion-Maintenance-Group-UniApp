@@ -1,34 +1,35 @@
 <!--pages/home/index.wxml-->
-<!-- 自定义导航栏 -->
-<view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
+<!-- 自定义导航栏：毛玻璃底，内容滑到栏下时透出虚化底色，与头图形成纵深 -->
+<view class="custom-navbar {{navScrolled ? 'is-scrolled' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="navbar-content">
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
     <text class="navbar-title">物科院维修组</text>
   </view>
 </view>
 
-<view class="home-container" style="padding-top: {{navBarHeight + 20}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
-  <!-- 轮播图区域 -->
-  <view class="swiper-section">
+<!-- 顶部复位内边距：首屏从导航栏下方开始，轮播图完整可见，
+     不会被顶部毛玻璃吞掉 -->
+<view class="home-container" style="padding-top: {{navBarHeight + 0}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+
+  <!-- ========== 首屏：问候头（原轮播降级为背景） ========== -->
+  <view class="swiper-section hero-section">
     <block wx:if="{{swiperImages.length}}">
-      <swiper 
-        class="home-swiper" 
-        indicator-dots="{{true}}" 
-        indicator-color="rgba(255,255,255,0.5)"
-        indicator-active-color="#fff"
-        autoplay="{{true}}" 
-        interval="{{swiperInterval}}" 
+      <swiper
+        class="hero-swiper"
+        autoplay="{{true}}"
+        interval="{{swiperInterval}}"
         duration="{{swiperDuration}}"
         circular="{{true}}"
         current="{{swiperCurrent}}"
+        indicator-dots="{{false}}"
         bindchange="onSwiperChange"
         bindtouchstart="onSwiperTouchStart"
         bindtouchend="onSwiperTouchEnd"
         bindtouchmove="onSwiperTouchMove">
         <swiper-item wx:for="{{swiperImages}}" wx:key="id" class="swiper-item">
-          <image 
-            class="swiper-image" 
-            src="{{item.url}}" 
+          <image
+            class="hero-bg"
+            src="{{item.url}}"
             mode="aspectFill"
             lazy-load="{{true}}"
             binderror="onImageError"
@@ -38,59 +39,169 @@
       </swiper>
     </block>
     <block wx:else>
-      <view class="swiper-skeleton"></view>
+      <view class="hero-bg hero-skeleton"></view>
     </block>
+
+    <view class="hero-veil"></view>
+    <view class="hero-content entrance" style="animation-delay: 0ms;">
+      <view class="hero-greeting">{{greeting}}</view>
+      <view class="hero-meta">
+        <text>{{todayText}}</text>
+        <text wx:if="{{roleText}}"> · {{roleText}}</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 功能入口区域 -->
-  <view class="function-entries-section entry-grid">
-    <entry-item
-      wx:for="{{functionEntries}}" 
-      wx:for-item="entry"
-      wx:key="id"
-      icon="{{entry.icon}}"
-      title="{{entry.title}}"
-      itemIndex="{{index}}"
-      bgColor="{{entry.bgColor}}"
-      customClass="{{entry.title === '我要报修' ? 'entry-item-primary' : ''}}"
-      bind:tap="onEntryItemTap">
-    </entry-item>
+  <!-- ========== 今日状态卡：压在问候头下缘 ========== -->
+  <view class="today-card entrance" style="animation-delay: 60ms;">
+
+    <!-- 值班：只呈现当前状态，不提供跳转入口（值班表在维修组 Tab 内） -->
+    <view class="today-block">
+      <view class="block-head">
+        <view class="block-title">
+          <view class="live-dot {{duty.current ? 'on' : ''}}"></view>
+          <text>值班</text>
+        </view>
+        <view class="block-more muted" wx:if="{{duty && duty.summaryText}}">{{duty.summaryText}}</view>
+      </view>
+
+      <!-- 此刻有人值班 -->
+      <block wx:if="{{duty && duty.current}}">
+        <view class="duty-live-row">
+          <text class="duty-name">{{duty.current.holderName}}</text>
+          <text class="duty-flag">值班中</text>
+          <text class="duty-remain">{{duty.current.remainingText}}</text>
+        </view>
+        <view class="duty-time">{{duty.current.timeSlot}} {{duty.current.startTime}}-{{duty.current.endTime}}</view>
+        <view class="duty-progress">
+          <view class="duty-progress-inner" style="width: {{duty.current.progress * 100}}%;"></view>
+        </view>
+      </block>
+
+      <!-- 无人值班 / 非值班时段 / 数据不可用：统一兜底 -->
+      <block wx:elif="{{!dutyLoading}}">
+        <view class="duty-empty-title">{{dutyText.main}}</view>
+        <view class="duty-empty-sub" wx:if="{{dutyText.sub}}">{{dutyText.sub}}</view>
+      </block>
+
+      <block wx:else>
+        <view class="skeleton-block skeleton-line w70"></view>
+        <view class="skeleton-block skeleton-line w45"></view>
+      </block>
+
+      <!-- 一周值班条（仅呈现，不可点击） -->
+      <view class="week-strip" wx:if="{{duty && duty.week.length}}">
+        <view class="week-cell {{item.isToday ? 'is-today' : ''}}" wx:for="{{duty.week}}" wx:key="dayName">
+          <text class="week-name">{{item.dayName}}</text>
+          <view class="week-bar {{item.hasDuty ? 'on' : ''}}"></view>
+          <text class="week-date">{{item.dateDisplay}}</text>
+        </view>
+      </view>
+    </view>
   </view>
 
-  <!-- 特色活动板块 -->
+  <!-- ========== 我的待办：我提交的报修进度 ========== -->
+  <view class="todo-card entrance" style="animation-delay: 100ms;">
+    <view class="todo-head">
+      <view class="todo-title">
+        <text>我的待办</text>
+        <view class="todo-count" wx:if="{{myTodosTotal}}">{{myTodosTotal}}</view>
+      </view>
+      <view class="todo-more" bindtap="onTodoTap">全部 ></view>
+    </view>
+
+    <block wx:if="{{myTodos.length}}">
+      <view class="todo-item"
+            wx:for="{{myTodos}}"
+            wx:key="taskId"
+            data-id="{{item.taskId}}"
+            bindtap="onTodoItemTap">
+        <view class="todo-item-head">
+          <text class="todo-item-title">{{item.title}}</text>
+          <view class="todo-status status-{{item.taskStatus}}">{{item.statusText}}</view>
+        </view>
+        <view class="todo-item-meta" wx:if="{{item.category}}">
+          <text class="todo-item-category">{{item.category}}</text>
+          <text class="todo-item-id">#{{item.taskId}}</text>
+        </view>
+
+        <!-- 进度：三段式，已到的阶段填色，当前阶段高亮 -->
+        <view class="todo-progress">
+          <view class="todo-progress-seg {{seg.on ? 'on' : ''}}" wx:for="{{item.steps}}" wx:for-item="seg" wx:key="key"></view>
+        </view>
+        <view class="todo-stages">
+          <text class="todo-stage {{seg.cur ? 'cur' : ''}}" wx:for="{{item.steps}}" wx:for-item="seg" wx:key="key">{{seg.label}}</text>
+        </view>
+
+        <view class="todo-item-foot">
+          <view class="todo-item-info">
+            <text wx:if="{{item.assigneeName}}">受理人 {{item.assigneeName}}</text>
+            <text wx:if="{{item.appointmentTime}}">预约 {{item.appointmentTime}}</text>
+            <text wx:if="{{!item.assigneeName && !item.appointmentTime}}">等待受理人联系</text>
+          </view>
+          <view class="todo-item-btn {{todoConfirming ? 'disabled' : ''}}"
+                wx:if="{{item.canConfirm}}"
+                data-id="{{item.taskId}}"
+                catchtap="onConfirmTodo">确认完成</view>
+        </view>
+      </view>
+
+      <view class="todo-more-row" wx:if="{{myTodosMoreCount > 0}}" bindtap="onTodoTap">
+        还有 {{myTodosMoreCount}} 项待办
+      </view>
+    </block>
+
+    <!-- 空态：没有任何进行中的报修 -->
+    <view class="todo-empty" wx:else>
+      <view class="todo-empty-text">当前没有进行中的报修</view>
+      <view class="todo-empty-btn" data-index="0" bindtap="onFunctionEntryTap">我要报修</view>
+    </view>
+  </view>
+
+  <!-- ========== 快捷入口（动作条：描边图标） ========== -->
+  <view class="quick-actions entrance" style="animation-delay: 140ms;">
+    <view class="quick-item {{item.primary ? 'primary' : ''}}"
+          wx:for="{{functionEntries}}"
+          wx:key="id"
+          data-index="{{index}}"
+          bindtap="onFunctionEntryTap">
+      <view class="quick-icon-wrap">
+        <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      </view>
+      <text class="quick-title">{{item.title}}</text>
+    </view>
+  </view>
+
+  <!-- ========== 特色活动：1 大 + 2 小 ========== -->
   <view class="section">
     <section-header
       title="特色活动"
       titleClass="section-title-border"
       showMore="{{true}}"
-      moreText="更多"
+      moreText="{{specialEvents.length > 3 ? '更多' : '全部'}}"
       bind:more="onSpecialEventsMore">
     </section-header>
+
     <block wx:if="{{specialEvents.length === 0}}">
-      <view class="grid-container">
-        <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
-          <view class="skeleton-block grid-image-skeleton"></view>
-        </view>
+      <view class="feature-hero skeleton-block"></view>
+      <view class="feature-pair">
+        <view class="feature-small skeleton-block"></view>
+        <view class="feature-small skeleton-block"></view>
       </view>
     </block>
     <block wx:else>
-      <view class="grid-container">
-        <view 
-          class="grid-item" 
-          wx:for="{{specialEvents}}" 
-          wx:key="id">
-          <image 
-            class="grid-image" 
-            src="{{item.url}}" 
-            mode="aspectFill"
-            lazy-load="{{true}}">
-          </image>
+      <view class="feature-hero" wx:if="{{specialEvents[0]}}" bindtap="onSpecialEventsMore">
+        <image class="feature-hero-img" src="{{specialEvents[0].url}}" mode="aspectFill" lazy-load="{{true}}"></image>
+      </view>
+      <view class="feature-pair" wx:if="{{specialSmall.length}}">
+        <view class="feature-small" wx:for="{{specialSmall}}" wx:key="id" bindtap="onSpecialEventsMore">
+          <image class="feature-small-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}"></image>
         </view>
       </view>
     </block>
   </view>
 
-  <!-- 团队风采板块 -->
+  <!-- ========== 团队风采：横向滑动流 ========== -->
   <view class="section">
     <section-header
       title="团队风采"
@@ -99,51 +210,44 @@
       moreText="更多"
       bind:more="onTeamSpiritMore">
     </section-header>
+
     <block wx:if="{{teamSpirit.length === 0}}">
-      <view class="grid-container">
-        <view class="grid-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
-          <view class="skeleton-block grid-image-skeleton"></view>
-        </view>
+      <view class="feature-strip">
+        <view class="strip-card-item skeleton-block" wx:for="{{[1,2]}}" wx:key="*this"></view>
       </view>
     </block>
     <block wx:else>
-      <view class="grid-container">
-        <view 
-          class="grid-item" 
-          wx:for="{{teamSpirit}}" 
-          wx:key="id">
-          <image 
-            class="grid-image" 
-            src="{{item.url}}" 
-            mode="aspectFill"
-            lazy-load="{{true}}">
-          </image>
+      <scroll-view class="feature-strip" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="strip-track">
+          <view class="strip-card-item" wx:for="{{teamSpirit}}" wx:key="id">
+            <image class="strip-card-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}"></image>
+          </view>
         </view>
-      </view>
+      </scroll-view>
     </block>
   </view>
 
-  <!-- 团队荣誉板块 -->
-  <view class="section">
+  <!-- ========== 团队荣誉：自动履带（轻触暂停） ========== -->
+  <view class="section team-honors-section">
     <section-header
       title="团队荣誉"
       titleClass="section-title-border">
     </section-header>
+
     <block wx:if="{{teamHonors.length}}">
-      <view class="honors-conveyor">
+      <view class="honors-conveyor" bindtap="toggleHonorsPause">
         <view class="conveyor-track">
-          <view class="conveyor-content" style="animation: conveyor-move {{conveyorDuration}}ms linear infinite;">
+          <view class="conveyor-content {{honorsPaused ? 'paused' : ''}}" style="animation-duration: {{conveyorDuration}}ms;">
             <!-- 第一组图片 -->
-            <view 
-              class="honor-card" 
-              wx:for="{{teamHonors}}" 
+            <view
+              class="honor-card"
+              wx:for="{{teamHonors}}"
               wx:key="id"
               style="width: {{item.displayWidth}}rpx;"
-              bindtap="onHonorTap"
               data-honor="{{item}}">
-              <image 
-                class="honor-card-image" 
-                src="{{item.url}}" 
+              <image
+                class="honor-card-image"
+                src="{{item.url}}"
                 mode="aspectFit"
                 lazy-load="{{true}}"
                 binderror="onHonorImageError"
@@ -152,16 +256,15 @@
               </image>
             </view>
             <!-- 第二组图片（复制，用于无缝循环） -->
-            <view 
-              class="honor-card" 
-              wx:for="{{teamHonors}}" 
+            <view
+              class="honor-card"
+              wx:for="{{teamHonors}}"
               wx:key="index"
               style="width: {{item.displayWidth}}rpx;"
-              bindtap="onHonorTap"
               data-honor="{{item}}">
-              <image 
-                class="honor-card-image" 
-                src="{{item.url}}" 
+              <image
+                class="honor-card-image"
+                src="{{item.url}}"
                 mode="aspectFit"
                 lazy-load="{{true}}">
               </image>
@@ -169,11 +272,13 @@
           </view>
         </view>
       </view>
+      <view class="honors-hint">{{honorsPaused ? '已暂停 · 轻触继续' : '轻触暂停'}}</view>
     </block>
+
     <block wx:else>
       <view class="honors-conveyor">
         <view class="conveyor-track">
-          <view class="conveyor-content" style="animation: conveyor-move 16000ms linear infinite;">
+          <view class="conveyor-content">
             <view class="honor-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" style="width: 200rpx;">
               <view class="skeleton-block honor-card-skeleton"></view>
             </view>
