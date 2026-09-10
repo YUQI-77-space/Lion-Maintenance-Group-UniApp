@@ -48,6 +48,11 @@
   height: calc(100vh - 120rpx);
 }
 
+/* 每页独立纵向滚动：swiper 高度固定，内容超出时仍可滚动查看 */
+.page-scroll {
+  height: calc(100vh - 120rpx);
+}
+
 .page-section {
   box-sizing: border-box;
   padding-bottom: 40rpx;
@@ -57,6 +62,12 @@
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+  padding: 0 20rpx 40rpx;
+}
+
+/* 删除模式下为固定操作栏留出空间 */
+.page-duty.in-delete-mode {
+  padding-bottom: 200rpx;
 }
 
 .page-header {
@@ -67,11 +78,55 @@
   border: 2rpx solid #191970;
 }
 
+/* 标题行 */
 .page-title-row {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
   margin-bottom: 16rpx;
+}
+
+/* 页面底部的独立操作区 */
+.page-action-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 4rpx 0 8rpx;
+}
+
+.delete-entry-btn {
+  width: 100%;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid var(--danger-color);
+  background: rgba(255, 77, 79, 0.06);
+  color: var(--danger-color);
+}
+
+.delete-entry-btn:active {
+  background: rgba(255, 77, 79, 0.16);
+}
+
+.delete-entry-btn .entry-icon {
+  width: 30rpx;
+  height: 30rpx;
+  flex-shrink: 0;
+}
+
+.delete-entry-btn .entry-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.page-action-area .entry-hint {
+  font-size: 22rpx;
+  color: var(--text-placeholder);
 }
 
 .page-main-title {
@@ -600,7 +655,7 @@
 /* 值班表格区域样式 - 完全复刻值班表样式 */
 .duty-table-section {
   background-color: var(--background-color);
-  padding: 20rpx;
+  padding: 0;
 }
 
 /* 自动切周弹窗布局 */
@@ -909,24 +964,17 @@
   font-size: 22rpx;
 }
 
-/* 状态说明 */
-.legend-container {
-  background: var(--card-background);
-  border-radius: 16rpx;
-  padding: 24rpx 30rpx;
-  box-shadow: var(--box-shadow);
-}
-
-.legend-title {
-  font-size: 26rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  margin-bottom: 16rpx;
+/* 状态说明（内联在头部卡片中，紧凑一行） */
+.legend-inline {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-light);
 }
 
 .legend-items {
   display: flex;
   gap: 24rpx;
+  flex-wrap: wrap;
 }
 
 .legend-item {
@@ -1180,19 +1228,7 @@
   border: 2rpx solid #191970;
 }
 
-/* ============ 新的底部操作栏样式 ============ */
-
-/* 底部操作栏：状态说明 + 删除操作 */
-.bottom-action-bar {
-  display: flex;
-  gap: 20rpx;
-  background: var(--card-background);
-  border-radius: 16rpx;
-  padding: 24rpx 30rpx;
-  box-shadow: var(--box-shadow);
-  align-items: flex-start;
-  border: 2rpx solid #191970;
-}
+/* ============ 危险设置区域样式 ============ */
 
 /* 危险设置外层 */
 .settings-danger-wrapper {
@@ -1217,259 +1253,215 @@
   font-weight: 600;
 }
 
-/* 状态说明部分 */
-.legend-section {
-  flex: 1;
-  min-width: 0; /* 防止flex子项溢出 */
-}
+/* ============ 删除模式：提示条与底部操作栏 ============ */
 
-.legend-section .legend-title {
-  font-size: 26rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  margin-bottom: 16rpx;
-}
-
-.legend-section .legend-items {
-  display: flex;
-  gap: 24rpx;
-  flex-wrap: wrap;
-}
-
-.legend-section .legend-item {
+/* 删除模式提示条 */
+.delete-mode-banner {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid var(--warning-color);
+  background: rgba(250, 173, 20, 0.1);
 }
 
-.legend-section .legend-dot {
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  border: 2rpx solid;
+.delete-mode-banner .banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  flex: 1;
+  min-width: 0;
 }
 
-.legend-section .legend-dot.can-duty {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-  border-color: #90cdf4;
+.delete-mode-banner .banner-icon {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
 }
 
-.legend-section .legend-dot.assigned {
-  background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
-  border-color: #9ae6b4;
-}
-
-.legend-section .legend-dot.no-duty {
-  background: linear-gradient(135deg, var(--background-color) 0%, var(--border-light) 100%);
-  border-color: var(--border-light);
-}
-
-.legend-section .legend-text {
-  font-size: 24rpx;
-  color: var(--text-regular);
-}
-
-/* 删除操作部分 */
-.delete-action-section {
+.delete-mode-banner .banner-texts {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
-  align-items: flex-end;
-  /* 移除固定宽度，改为最大宽度 */
-  max-width: 300rpx;
-  flex-shrink: 0; /* 防止被压缩 */
+  min-width: 0;
 }
 
-/* 删除模式提示 - 紧凑版 */
-.delete-action-section .delete-mode-tip {
-  background: rgba(33, 150, 243, 0.1);
-  padding: 8rpx 12rpx;
-  border-radius: 6rpx;
-  border-left: 3rpx solid var(--info-color);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.delete-action-section .tip-text {
-  font-size: 22rpx;
-  color: var(--info-color);
-  line-height: 1.3;
-  text-align: center;
-}
-
-/* 删除按钮组 */
-.delete-buttons-group {
-  display: flex;
-  gap: 10rpx;
-  align-items: center;
-  flex-wrap: nowrap; /* 不换行 */
-  justify-content: flex-end;
-  width: 100%;
-}
-
-/* 删除操作按钮 - 固定宽度版本 */
-.delete-buttons-group .delete-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 10rpx 16rpx;
-  border-radius: 6rpx;
-  font-size: 24rpx;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  min-height: 56rpx;
+.delete-mode-banner .banner-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #b45309;
   white-space: nowrap;
-  /* 设置固定宽度，不被flex拉伸 */
-  width: auto;
-  flex-shrink: 0;
-  flex-grow: 0;
-  min-width: 120rpx; /* 最小宽度确保按钮不会太小 */
 }
 
-/* 初始删除按钮样式 - 紧凑版 */
-.delete-buttons-group .delete-action-btn.delete-init {
-  background: transparent;
-  color: var(--danger-color);
-  border: 2rpx solid var(--danger-color);
+.delete-mode-banner .banner-desc {
+  font-size: 22rpx;
+  color: var(--text-regular);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.delete-buttons-group .delete-action-btn.delete-init:active {
-  background: rgba(255, 152, 0, 0.2);
-  transform: scale(0.98);
-}
-
-/* 确认删除按钮样式 - 紧凑版 */
-.delete-buttons-group .delete-action-btn.delete-confirm {
-  background: var(--danger-color);
-  color: white;
-  border: 2rpx solid var(--danger-color);
-}
-
-.delete-buttons-group .delete-action-btn.delete-confirm:active {
-  background: #c73531;
-  transform: scale(0.98);
-}
-
-.delete-buttons-group .delete-action-btn[disabled] {
-  background: var(--border-light);
-  color: var(--text-secondary);
-  border-color: var(--border-light);
-}
-
-.delete-buttons-group .delete-icon {
-  width: 24rpx;
-  height: 24rpx;
-  flex-shrink: 0; /* 图标不缩放 */
-}
-
-.delete-buttons-group .delete-text {
-  font-size: 24rpx;
-  font-weight: bold;
-}
-
-.delete-buttons-group .selected-count {
-  background: rgba(255, 255, 255, 0.3);
-  padding: 2rpx 6rpx;
-  border-radius: 10rpx;
-  font-size: 20rpx;
-  font-weight: bold;
-}
-
-/* 取消删除按钮 - 固定宽度版本 */
-.delete-buttons-group .cancel-delete-btn {
+.delete-mode-banner .banner-actions {
   display: flex;
   align-items: center;
-  gap: 6rpx;
-  padding: 10rpx 12rpx;
-  background: var(--border-light);
-  color: var(--text-regular);
-  border: 2rpx solid var(--border-light);
-  border-radius: 6rpx;
-  font-size: 22rpx;
-  transition: all 0.3s ease;
-  min-height: 56rpx;
-  /* 设置固定宽度 */
-  width: auto;
+  gap: 12rpx;
   flex-shrink: 0;
-  flex-grow: 0;
-  min-width: 80rpx;
 }
 
-.delete-buttons-group .cancel-delete-btn:active {
-  background: var(--border-color);
-  transform: scale(0.98);
+.delete-mode-banner .banner-link {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--primary-color);
+  padding: 6rpx 4rpx;
 }
 
-.delete-buttons-group .cancel-icon {
-  width: 20rpx;
-  height: 20rpx;
-  flex-shrink: 0; /* 图标不缩放 */
+.delete-mode-banner .banner-link.disabled {
+  color: var(--text-placeholder);
 }
 
-/* 响应式布局（移除不被支持的@media） */
-
-/* ============ 删除功能相关样式 ============ */
-
-/* 删除模式下的值班格子样式 */
-.duty-cell.deletable {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  border: 3rpx solid var(--warning-color) !important;
-  box-shadow: 0 4rpx 12rpx rgba(255, 152, 0, 0.3) !important;
+.delete-mode-banner .banner-sep {
+  font-size: 22rpx;
+  color: var(--border-light);
 }
 
-.duty-cell.deletable:active {
-  transform: scale(0.95);
-  box-shadow: 0 2rpx 8rpx rgba(255, 152, 0, 0.5) !important;
-}
-
-.duty-cell.deletable::before {
-  content: '';
-  position: absolute;
-  top: 0;
+/* 固定底部操作栏 */
+.delete-bottom-bar {
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 152, 0, 0.1);
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-/* 复选框容器 */
-.checkbox-container {
-  position: absolute;
-  top: 8rpx;
-  left: 8rpx;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  padding: 2rpx;
-}
-
-.checkbox {
-  width: 36rpx;
-  height: 36rpx;
-  border: 3rpx solid var(--warning-color);
-  border-radius: 8rpx;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 20rpx 24rpx;
   background: var(--card-background);
+  border-top: 2rpx solid var(--border-color);
+}
+
+.delete-bottom-bar .bar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.delete-bottom-bar .bar-count {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.delete-bottom-bar .bar-num {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--danger-color);
+}
+
+.delete-bottom-bar .bar-hint {
+  font-size: 22rpx;
+  color: var(--text-placeholder);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.delete-bottom-bar .bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 0 0 auto;
+}
+
+.delete-bottom-bar .bar-btn {
+  flex: 0 0 auto;
+  min-width: 176rpx;
+  height: 76rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
-.checkbox.checked {
+.delete-bottom-bar .bar-btn.ghost {
+  background: transparent;
+  color: var(--text-regular);
+  border: 2rpx solid var(--border-light);
+}
+
+.delete-bottom-bar .bar-btn.ghost:active {
+  background: var(--background-color);
+}
+
+.delete-bottom-bar .bar-btn.danger {
+  background: var(--danger-color);
+  color: #ffffff;
+}
+
+.delete-bottom-bar .bar-btn.danger:active {
+  background: #d9363e;
+}
+
+.delete-bottom-bar .bar-btn.is-disabled {
+  background: var(--border-light);
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+  pointer-events: none;
+}
+
+/* ============ 删除功能相关样式 ============ */
+
+/* 删除模式下可选（未选中）的格子：虚线描边提示可点 */
+.duty-cell.selectable {
+  cursor: pointer;
+  border: 2rpx dashed var(--warning-color);
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.duty-cell.selectable:active {
+  transform: scale(0.96);
+}
+
+/* 删除模式下不可选的格子：弱化，避免误点 */
+.duty-cell.dimmed {
+  opacity: 0.4;
+}
+
+/* 已选中的格子：橙色实心高亮 + 右上角对勾 */
+.duty-cell.selected {
+  border: 3rpx solid var(--warning-color);
+  box-shadow: none;
+}
+
+.select-badge {
+  position: absolute;
+  top: 6rpx;
+  right: 6rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
   background: var(--warning-color);
-  border-color: var(--warning-color);
-  transform: scale(1.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
-.check-icon {
-  width: 24rpx;
-  height: 24rpx;
-  filter: brightness(0) invert(1); /* 使图标变白 */
+.select-badge .badge-icon {
+  width: 22rpx;
+  height: 22rpx;
+  filter: brightness(0) invert(1);
 }
 
 /* 删除预览弹窗样式 */

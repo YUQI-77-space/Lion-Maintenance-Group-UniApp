@@ -34,102 +34,26 @@
     duration="300"
     indicator-dots="false"
     autoplay="{{false}}"
+    disable-touch="{{isDeleteMode}}"
   >
     <!-- 页 1：本周值班 -->
     <swiper-item>
-      <view class="page-section page-duty">
-        <!-- 页面头部汇总 -->
-        <view class="page-header">
-          <view class="page-title-row">
-            <text class="page-main-title">第{{currentWeek}}周 值班表</text>
-            <text class="page-date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
-          </view>
-          <view class="page-stats" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
-            <text class="page-stat-chip">可选 {{availableSlots}}</text>
-            <text class="page-stat-chip">已排 {{assignedSlots}}</text>
-            <text class="page-stat-chip warning" wx:if="{{isDeleteMode && selectedSlots.length > 0}}">
-              已选 {{selectedSlots.length}}
-            </text>
-          </view>
-        </view>
-
-        <!-- 值班表格显示 -->
-        <view class="duty-table-section">
-    <!-- 表格加载状态（全局 loading 时不再重复显示） -->
-    <view class="table-loading-container" wx:if="{{tableLoading && !isLoading}}">
-            <image class="loading-icon" src="{{iconLoading}}" mode="aspectFit"></image>
-            <text class="loading-text">正在加载值班数据...</text>
-          </view>
-
-          <!-- 表格错误状态 -->
-          <view class="table-error-container" wx:if="{{tableError && !tableLoading}}">
-            <image class="error-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
-            <text class="error-text">{{tableErrorMessage}}</text>
-            <button class="retry-btn" bindtap="retryLoadTableData">重新加载</button>
-          </view>
-
-          <!-- 值班表格 -->
-          <view class="duty-table-container" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
-            <view class="duty-table">
-              <!-- 左侧固定列 -->
-              <view class="fixed-column">
-                <!-- 固定表头 -->
-                <view class="fixed-header-cell">
-                  <text class="header-text">时间段</text>
-                </view>
-                
-                <!-- 固定时间列 -->
-                <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
-                  <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
-                  <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
-                </view>
-              </view>
-              
-              <!-- 右侧滚动区域 -->
-              <scroll-view class="scrollable-area" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
-                <view class="scrollable-content">
-                  <!-- 滚动表头 -->
-                  <view class="scrollable-header-row">
-                    <view class="header-cell" wx:for="{{weekDates}}" wx:key="dayOfWeek">
-                      <text class="day-name">{{item.dayName}}</text>
-                      <text class="day-date">{{item.dateDisplay}}</text>
-                    </view>
-                  </view>
-                  
-                  <!-- 滚动内容行 -->
-                  <view class="scrollable-content-row" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData" wx:for-index="rowIndex">
-                    <view class="duty-cell {{slotData.statusClass}} {{isDeleteMode && slotData.canDelete ? 'deletable' : ''}}" 
-                          wx:for="{{timeSlotData.dailySlots}}" wx:key="dayOfWeek" wx:for-item="slotData" wx:for-index="colIndex"
-                          bindtap="toggleSlotSelection"
-                          data-slot-id="{{slotData.dutySlotId || ''}}"
-                          data-can-delete="{{slotData.canDelete || false}}"
-                          data-is-delete-mode="{{isDeleteMode}}"
-                          data-status-text="{{slotData.statusText || ''}}"
-                          data-row-index="{{rowIndex}}"
-                          data-col-index="{{colIndex}}">
-                          
-                      <!-- 删除模式下的复选框 -->
-                      <view class="checkbox-container" wx:if="{{isDeleteMode && slotData.canDelete}}">
-                        <view class="checkbox {{slotData.isSelected ? 'checked' : ''}}">
-                          <image class="check-icon" src="{{iconCheck}}" mode="aspectFit" wx:if="{{slotData.isSelected}}"></image>
-                        </view>
-                      </view>
-                      
-                      <text class="slot-text">{{slotData.statusText}}</text>
-                    </view>
-                  </view>
-                </view>
-              </scroll-view>
+      <scroll-view class="page-scroll" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="page-section page-duty {{isDeleteMode ? 'in-delete-mode' : ''}}">
+          <!-- 页面头部汇总 -->
+          <view class="page-header">
+            <view class="page-title-row">
+              <text class="page-main-title">第{{currentWeek}}周 值班表</text>
+              <text class="page-date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
             </view>
-          </view>
-        </view>
-        
-        <!-- 底部操作栏：状态说明 + 删除操作 -->
-        <view class="bottom-action-bar" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
-          <!-- 状态说明 -->
-          <view class="legend-section">
-            <view class="legend-title">状态说明</view>
-            <view class="legend-items">
+
+            <view class="page-stats" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+              <text class="page-stat-chip">可选 {{availableSlots}}</text>
+              <text class="page-stat-chip">已排 {{assignedSlots}}</text>
+            </view>
+
+            <!-- 状态说明 -->
+            <view class="legend-items legend-inline" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
               <view class="legend-item">
                 <view class="legend-dot can-duty"></view>
                 <text class="legend-text">可选</text>
@@ -144,33 +68,104 @@
               </view>
             </view>
           </view>
-          
-          <!-- 删除操作区域 -->
-          <view class="delete-action-section" wx:if="{{assignedSlots > 0}}">
-            <!-- 删除模式提示 -->
-            <view class="delete-mode-tip" wx:if="{{isDeleteMode}}">
-              <text class="tip-text">删除模式中，点击表格中的已分配时段进行选择</text>
+
+          <!-- 删除模式提示条：常驻显示，替代一次性 toast -->
+          <view class="delete-mode-banner" wx:if="{{isDeleteMode}}">
+            <view class="banner-left">
+              <image class="banner-icon" src="{{iconDelete}}" mode="aspectFit"></image>
+              <view class="banner-texts">
+                <text class="banner-title">删除模式</text>
+                <text class="banner-desc">点击已排班时段进行选择</text>
+              </view>
             </view>
-            
-            <!-- 删除操作按钮 -->
-            <view class="delete-buttons-group">
-              <button class="delete-action-btn {{isDeleteMode ? 'delete-confirm' : 'delete-init'}}" 
-                      bindtap="toggleDeleteMode"
-                      disabled="{{isLoading}}">
-                <image class="delete-icon" src="{{isDeleteMode ? iconCheck : iconDelete}}" mode="aspectFit"></image>
-                <text class="delete-text">{{isDeleteMode ? '确认删除' : '删除值班'}}</text>
-                <text class="selected-count" wx:if="{{isDeleteMode && selectedSlots.length > 0}}">({{selectedSlots.length}})</text>
-              </button>
-              
-              <!-- 取消删除按钮 -->
-              <button class="cancel-delete-btn" wx:if="{{isDeleteMode}}" bindtap="cancelDeleteMode">
-                <image class="cancel-icon" src="{{iconClose}}" mode="aspectFit"></image>
-                <text>取消</text>
-              </button>
+            <view class="banner-actions">
+              <text class="banner-link" bindtap="selectAllSlots">全选</text>
+              <text class="banner-sep">|</text>
+              <text class="banner-link {{selectedSlots.length === 0 ? 'disabled' : ''}}" bindtap="clearSelectedSlots">清空</text>
+              <text class="banner-sep">|</text>
+              <text class="banner-link" bindtap="cancelDeleteMode">退出</text>
             </view>
           </view>
+
+          <!-- 值班表格显示 -->
+          <view class="duty-table-section">
+            <!-- 表格加载状态（全局 loading 时不再重复显示） -->
+            <view class="table-loading-container" wx:if="{{tableLoading && !isLoading}}">
+              <image class="loading-icon" src="{{iconLoading}}" mode="aspectFit"></image>
+              <text class="loading-text">正在加载值班数据...</text>
+            </view>
+
+            <!-- 表格错误状态 -->
+            <view class="table-error-container" wx:if="{{tableError && !tableLoading}}">
+              <image class="error-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
+              <text class="error-text">{{tableErrorMessage}}</text>
+              <button class="retry-btn" bindtap="retryLoadTableData">重新加载</button>
+            </view>
+
+            <!-- 值班表格 -->
+            <view class="duty-table-container" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+              <view class="duty-table">
+                <!-- 左侧固定列 -->
+                <view class="fixed-column">
+                  <!-- 固定表头 -->
+                  <view class="fixed-header-cell">
+                    <text class="header-text">时间段</text>
+                  </view>
+
+                  <!-- 固定时间列 -->
+                  <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
+                    <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
+                    <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
+                  </view>
+                </view>
+
+                <!-- 右侧滚动区域 -->
+                <scroll-view class="scrollable-area" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+                  <view class="scrollable-content">
+                    <!-- 滚动表头 -->
+                    <view class="scrollable-header-row">
+                      <view class="header-cell" wx:for="{{weekDates}}" wx:key="dayOfWeek">
+                        <text class="day-name">{{item.dayName}}</text>
+                        <text class="day-date">{{item.dateDisplay}}</text>
+                      </view>
+                    </view>
+
+                    <!-- 滚动内容行 -->
+                    <view class="scrollable-content-row" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData" wx:for-index="rowIndex">
+                      <view class="duty-cell {{slotData.statusClass}} {{isDeleteMode ? (slotData.canDelete ? (slotData.isSelected ? 'selected' : 'selectable') : 'dimmed') : ''}}"
+                            wx:for="{{timeSlotData.dailySlots}}" wx:key="dayOfWeek" wx:for-item="slotData" wx:for-index="colIndex"
+                            bindtap="toggleSlotSelection"
+                            data-slot-id="{{slotData.dutySlotId || ''}}"
+                            data-can-delete="{{slotData.canDelete || false}}"
+                            data-is-delete-mode="{{isDeleteMode}}"
+                            data-status-text="{{slotData.statusText || ''}}"
+                            data-row-index="{{rowIndex}}"
+                            data-col-index="{{colIndex}}">
+
+                        <!-- 选中标记 -->
+                        <view class="select-badge" wx:if="{{isDeleteMode && slotData.canDelete && slotData.isSelected}}">
+                          <image class="badge-icon" src="{{iconCheck}}" mode="aspectFit"></image>
+                        </view>
+
+                        <text class="slot-text">{{slotData.statusText}}</text>
+                      </view>
+                    </view>
+                  </view>
+                </scroll-view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 删除入口：独立在页面底部，不挤进信息卡片 -->
+          <view class="page-action-area" wx:if="{{!isDeleteMode && dutyTableData && !tableLoading && !tableError && assignedSlots > 0}}">
+            <view class="delete-entry-btn" bindtap="onDeleteEntryTap">
+              <image class="entry-icon" src="{{iconDelete}}" mode="aspectFit"></image>
+              <text class="entry-text">删除值班</text>
+            </view>
+            <text class="entry-hint">进入后可勾选多个已排班时段，批量删除</text>
+          </view>
         </view>
-      </view>
+      </scroll-view>
     </swiper-item>
 
     <!-- 页 2：值班设置 -->
@@ -334,6 +329,18 @@
       </view>
     </swiper-item>
   </swiper>
+
+  <!-- 删除模式底部操作栏：固定在底部，选中数与删除操作始终可达 -->
+  <view class="delete-bottom-bar" wx:if="{{isDeleteMode}}">
+    <view class="bar-info">
+      <text class="bar-count">已选 <text class="bar-num">{{selectedSlots.length}}</text> 个时段</text>
+      <text class="bar-hint">{{selectedSlots.length === 0 ? '点击表格中已排班的时段' : '删除后无法恢复'}}</text>
+    </view>
+    <view class="bar-actions">
+      <view class="bar-btn ghost" bindtap="cancelDeleteMode">取消</view>
+      <view class="bar-btn danger {{selectedSlots.length === 0 || isLoading ? 'is-disabled' : ''}}" bindtap="showDeleteConfirm">删除{{selectedSlots.length > 0 ? '(' + selectedSlots.length + ')' : ''}}</view>
+    </view>
+  </view>
 
   <!-- 设置进度显示 -->
   <view class="progress-section" wx:if="{{setupProgress}}">

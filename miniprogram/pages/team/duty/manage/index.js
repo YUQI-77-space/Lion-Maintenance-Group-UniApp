@@ -16,7 +16,6 @@ Page({
     iconEmpty: iconManager.get('common_empty'),
     iconCheck: iconManager.get('common_check'),
     iconDelete: iconManager.get('common_delete'),
-    iconClose: iconManager.get('common_close'),
     iconCalendar: iconManager.get('team_calendar'),
     iconSwitch: iconManager.get('other_switch'),
     iconTools: iconManager.get('other_info'),
@@ -85,6 +84,8 @@ Page({
   onTabClick: function (e) {
     const index = Number(e.currentTarget.dataset.index)
     if (isNaN(index)) return
+    // 离开本周值班页时结束删除模式，避免选择状态被带到后台
+    this.exitDeleteModeIfLeaving(index)
     this.setData({
       currentTab: index,
       swiperCurrent: index
@@ -94,10 +95,18 @@ Page({
   // swiper 滑动切换
   onSwiperChange: function (e) {
     const index = e.detail.current || 0
+    this.exitDeleteModeIfLeaving(index)
     this.setData({
       currentTab: index,
       swiperCurrent: index
     })
+  },
+
+  // 切换到本周值班以外的页面时自动退出删除模式
+  exitDeleteModeIfLeaving: function (index) {
+    if (index !== 0 && this.data.isDeleteMode) {
+      this.cancelDeleteMode()
+    }
   },
 
   // 切换危险设置区域展开/收起
@@ -822,23 +831,18 @@ Page({
           // 从slotData.slotData中提取真正的slot数据
           const originalSlot = slotData.slotData
           
-          // 判断是否可删除：已分配的时间段才能删除
-          // 检查多个可能的字段，确保能识别已分配的值班
-          const hasAssignedUser = !!(originalSlot?.dutyHolderId || originalSlot?.assignedUser)
-          const hasAssignedName = !!(originalSlot?.dutyHolderName && originalSlot?.dutyHolderName !== '' && originalSlot?.dutyHolderName !== '可选')
-          const isAssigned = slotData.statusClass === 'assigned'
-          
-          const canDelete = hasAssignedUser || hasAssignedName || isAssigned
-          
           // 提取关键字段
           const dutySlotId = originalSlot?.dutySlotId || originalSlot?._id
           const dutyHolderId = originalSlot?.dutyHolderId
           const dutyHolderName = originalSlot?.dutyHolderName
           
-          // 调试日志 - 只显示可删除的时间段
-          if (canDelete) {
-            
-          }
+          // 判断是否可删除：已分配、且能拿到 dutySlotId（没有 ID 无法提交删除）
+          // 检查多个可能的字段，确保能识别已分配的值班
+          const hasAssignedUser = !!(dutyHolderId || originalSlot?.assignedUser)
+          const hasAssignedName = !!(dutyHolderName && dutyHolderName !== '' && dutyHolderName !== '可选')
+          const isAssigned = slotData.statusClass === 'assigned'
+
+          const canDelete = !!dutySlotId && (hasAssignedUser || hasAssignedName || isAssigned)
           
           return {
             ...slotData,
@@ -907,54 +911,38 @@ Page({
 
   // ============ 删除值班分配功能 ============
 
-  // 切换删除模式
-  toggleDeleteMode: function () {
-    
-    
-    if (this.data.isDeleteMode) {
-      // 当前是删除模式，点击确认删除
-      if (this.data.selectedSlots.length === 0) {
-        wx.showToast({
-          title: '请选择要删除的值班',
-          icon: 'none'
-        })
-        return
-      }
-      this.showDeleteConfirm()
-    } else {
-      // 进入删除模式
-      this.setData({
-        isDeleteMode: true,
-        selectedSlots: []
-      })
-      
-      // 清除所有选择状态
-      this.clearAllSelections()
-      
-      // 显示操作提示
-      wx.showToast({
-        title: '请点击要删除的值班时段',
-        icon: 'none',
-        duration: 2000
-      })
+  // 底部删除入口：进入删除模式
+  onDeleteEntryTap: function () {
+    if (this.data.isLoading) {
+      return
     }
+    this.enterDeleteMode()
+  },
+
+  // 进入删除模式
+  enterDeleteMode: function () {
+    this.setData({
+      isDeleteMode: true,
+      selectedSlots: [],
+      tableData: this.resetSelectionState()
+    })
   },
 
   // 取消删除模式
   cancelDeleteMode: function () {
-    
+    if (this.data.isLoading) {
+      return
+    }
     this.setData({
       isDeleteMode: false,
-      selectedSlots: []
+      selectedSlots: [],
+      tableData: this.resetSelectionState()
     })
-    
-    // 清除所有选择状态
-    this.clearAllSelections()
   },
 
-  // 清除所有选择状态
-  clearAllSelections: function () {
-    const tableData = this.data.tableData.map(timeSlotData => {
+  // 重置所有格子的选中状态，返回新的表格数据
+  resetSelectionState: function () {
+    return this.data.tableData.map(timeSlotData => {
       return {
         ...timeSlotData,
         dailySlots: timeSlotData.dailySlots.map(slotData => {
@@ -965,37 +953,76 @@ Page({
         })
       }
     })
-    
-    this.setData({ tableData })
+  },
+
+  // 全选可删除的值班时段
+  selectAllSlots: function () {
+    const selectedSlots = []
+
+    const tableData = this.data.tableData.map(timeSlotData => {
+      return {
+        ...timeSlotData,
+        dailySlots: timeSlotData.dailySlots.map(slotData => {
+          if (!slotData.canDelete || !slotData.dutySlotId) {
+            return { ...slotData, isSelected: false }
+          }
+          if (!selectedSlots.includes(slotData.dutySlotId)) {
+            selectedSlots.push(slotData.dutySlotId)
+          }
+          return { ...slotData, isSelected: true }
+        })
+      }
+    })
+
+    if (selectedSlots.length === 0) {
+      wx.showToast({
+        title: '没有可删除的值班时段',
+        icon: 'none'
+      })
+      return
+    }
+
+    this.setData({ tableData, selectedSlots })
+  },
+
+  // 清空已选时段
+  clearSelectedSlots: function () {
+    if (this.data.selectedSlots.length === 0) {
+      return
+    }
+    this.setData({
+      tableData: this.resetSelectionState(),
+      selectedSlots: []
+    })
+  },
+
+  // 点到不可删除的时段时的轻反馈：优先震动，避免弹窗打断
+  notifyUnselectable: function () {
+    try {
+      if (wx.vibrateShort) {
+        wx.vibrateShort({ type: 'light' })
+      }
+    } catch (err) {
+      // 开发者工具等不支持震动的环境下静默忽略
+    }
   },
 
   // 切换时间段选择状态
   toggleSlotSelection: function (e) {
     const { slotId, canDelete } = e.currentTarget.dataset
     
-    
-    
     // 检查是否在删除模式
     if (!this.data.isDeleteMode) {
       return
     }
     
-    // 检查时间段ID
-    if (!slotId || slotId === '') {
-      console.warn('[值班管理] 未找到时间段ID，dataset：', e.currentTarget.dataset)
-      wx.showToast({
-        title: '获取时间段信息失败',
-        icon: 'none'
-      })
-      return
-    }
-    
-    // 检查是否可删除
-    if (!canDelete || canDelete === 'false' || canDelete === false) {
-      wx.showToast({
-        title: '该时间段无法删除',
-        icon: 'none'
-      })
+    // 不可删除或数据异常的时段：静默忽略（仅震动反馈），不弹窗打断
+    const cannotDelete = !canDelete || canDelete === 'false' || canDelete === false
+    if (!slotId || slotId === '' || cannotDelete) {
+      if (!slotId || slotId === '') {
+        console.warn('[值班管理] 未找到时间段ID，dataset：', e.currentTarget.dataset)
+      }
+      this.notifyUnselectable()
       return
     }
     
@@ -1034,14 +1061,14 @@ Page({
       tableData,
       selectedSlots
     })
-    
-    
   },
 
   // 显示删除确认弹窗
   showDeleteConfirm: function () {
-    
-    
+    if (this.data.isLoading) {
+      return
+    }
+
     if (this.data.selectedSlots.length === 0) {
       wx.showToast({
         title: '请选择要删除的值班',
@@ -1135,21 +1162,25 @@ Page({
       });
       
       if (res.success) {
-        const result = res.data;
-        wx.showModal({
-          title: '删除成功',
-          content: `成功删除 ${result.totalDeleted} 个值班分配\n（包括 ${result.confirmedDeleted} 个已确认、${result.preSelectedDeleted} 个预选）`,
-          showCancel: false,
-          success: () => {
-            this.setData({
-              isDeleteMode: false,
-              selectedSlots: [],
-              deletePreviewList: []
-            });
-            this.loadCurrentConfig();
-            this.loadDutyTableData();
-          }
+        const result = res.data || {};
+        const totalDeleted = result.totalDeleted || 0;
+        const breakdown = `已确认 ${result.confirmedDeleted || 0} · 预选 ${result.preSelectedDeleted || 0}`;
+        
+        this.setData({
+          isDeleteMode: false,
+          selectedSlots: [],
+          deletePreviewList: []
         });
+        
+        // 用 toast 替代弹窗：少一次点击，表格立即刷新
+        wx.showToast({
+          title: `已删除 ${totalDeleted} 个值班分配\n${breakdown}`,
+          icon: 'none',
+          duration: 2500
+        });
+        
+        this.loadCurrentConfig();
+        this.loadDutyTableData();
       } else {
         wx.showModal({
           title: '删除失败',
