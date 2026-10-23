@@ -7,7 +7,7 @@ const { updateDutyConfig } = require('./updateDutyConfig')
 const { regenerateDutySlots } = require('./regenerateDutySlots')
 const { clearAllDutySlots } = require('./clearAllDutySlots')
 const { checkWeekExists } = require('./checkWeekExists')
-const { switchToWeek } = require('./switchToWeek')
+const { switchToWeek, calibrateCurrentWeek } = require('./switchToWeek')
 const { resetCurrentWeekData } = require('./resetCurrentWeekData')
 const { getDutySlots } = require('./getDutySlots')
 const { selectDutySlots } = require('./selectDutySlots')
@@ -26,11 +26,13 @@ exports.main = async (event, context) => {
   const triggerNameRaw = (context && context.TriggerName) || event?.TriggerName
   const triggerName = triggerNameRaw ? String(triggerNameRaw).toLowerCase() : ''
   console.log('[dutySchedule] TriggerName:', triggerNameRaw, 'event:', event)
-  if (triggerName === 'autoweekswitchertimer' || triggerName.includes('autoweekswitcher')) {
+  // 小程序调用不能通过伪造 TriggerName 进入系统权限分支。
+  const callerOpenid = cloud.getWXContext().OPENID
+  if (!callerOpenid && (triggerName === 'autoweekswitchertimer' || triggerName.includes('autoweekswitcher'))) {
     console.log('[dutySchedule] 命中自动切周触发器，开始执行 autoWeekSwitcher')
     return await autoWeekSwitcher.main(event, context)
   }
-  if (triggerName.includes('dutyreminder')) {
+  if (!callerOpenid && triggerName.includes('dutyreminder')) {
     console.log('[dutySchedule] 命中值班提醒触发器，开始执行 dutyReminderScheduler')
     return await dutyReminderScheduler.main(event, context)
   }
@@ -63,6 +65,9 @@ exports.main = async (event, context) => {
       case 'checkWeekExists':
         return await checkWeekExists(processedEvent, OPENID)
         
+      case 'calibrateCurrentWeek':
+        return await calibrateCurrentWeek(processedEvent, OPENID)
+
       case 'switchToWeek':
         return await switchToWeek(processedEvent, OPENID)
         

@@ -2,6 +2,8 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
+const { requireLeader } = require('./switchToWeek')
+const { parseStartDate } = require('./weekCalendar')
 
 /**
  * 更新值班配置
@@ -33,8 +35,10 @@ exports.updateDutyConfig = async (event, openid) => {
       }
     }
 
-    // TODO: 这里应该添加权限检查，确保只有组长可以更新配置
-    // const userResult = await checkLeaderPermission(openid)
+    await requireLeader(openid)
+    if (['currentWeek', 'currentYear', 'lastAutoSwitchWeek', 'lastAutoSwitchAt'].includes(event.configType)) {
+      return { code: 400, data: null, message: '周次请通过切换当前周或日期校准维护' }
+    }
 
     // 验证配置类型
     const allowedConfigTypes = [
@@ -72,8 +76,8 @@ exports.updateDutyConfig = async (event, openid) => {
       }
       
       // 验证是否为周一
-      const date = new Date(event.value)
-      if (date.getDay() !== 1) {
+      const date = new Date(parseStartDate(event.value))
+      if (date.getUTCDay() !== 1) {
         return {
           code: 400,
           data: null,

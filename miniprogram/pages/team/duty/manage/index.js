@@ -522,8 +522,8 @@ Page({
     try {
       const res = await api.call('dutySchedule', {
         action: 'switchToWeek',
-        params: { weekNumber: weekNumber, year: new Date().getFullYear() },
-        config: { timeout: 15000 }
+        params: { weekNumber: weekNumber },
+        timeout: 30000
       });
 
       this.setData({ 
@@ -559,6 +559,40 @@ Page({
         content: err.message || '切换周次过程中发生错误',
         showCancel: false
       });
+    }
+  },
+
+  // 先取得云端日期与配置快照，再由组长确认，不使用手机时间推算。
+  calibrateCurrentWeek: async function () {
+    if (this.data.isLoading) return
+    this.setData({ isLoading: true, setupProgress: '正在核对云端北京时间...' })
+    try {
+      const preview = await api.call('dutySchedule', { action: 'calibrateCurrentWeek' })
+      if (!preview.success || !preview.data) throw new Error(preview.message || '无法取得校准预览')
+      const target = preview.data
+      const confirmation = await new Promise(resolve => wx.showModal({
+        title: '校准到实际本周',
+        content: `云端北京时间日期：${target.today}\n当前配置：第${target.expected.currentWeek}周\n校准目标：第${target.weekNumber}周（${target.startDate} 至 ${target.endDate}）\n保留各周已有排班、待办与工作量，只切换当前周并补齐缺失时段。开学日如有错误，请取消并先核查。`,
+        confirmText: '确认校准',
+        success: resolve,
+        fail: () => resolve({ confirm: false })
+      }))
+      if (!confirmation.confirm) return
+      this.setData({ setupProgress: '正在安全校准当前周...' })
+      const res = await api.call('dutySchedule', {
+        action: 'calibrateCurrentWeek',
+        params: { preview: false, expected: target.expected, targetWeek: target.weekNumber },
+        timeout: 30000,
+        config: { retries: 0 }
+      })
+      if (!res.success || !res.data) throw new Error(res.message || '校准失败，请刷新后核对')
+      await this.loadCurrentConfig()
+      await this.loadDutyTableData()
+      wx.showToast({ title: '当前周已校准', icon: 'success' })
+    } catch (err) {
+      wx.showModal({ title: '校准未完成', content: err.message || '请刷新后核对当前周', showCancel: false })
+    } finally {
+      this.setData({ isLoading: false, setupProgress: null })
     }
   },
 

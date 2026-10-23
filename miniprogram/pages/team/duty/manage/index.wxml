@@ -196,6 +196,19 @@
           </view>
         </view>
 
+        <view class="settings-card">
+          <view class="settings-card-header">
+            <text class="settings-card-title">日期校准</text>
+          </view>
+          <view class="settings-row">
+            <view class="settings-row-left">
+              <text class="settings-label">按云端北京时间核对本周</text>
+              <text class="settings-value">保留已有排班，确认前可预览日期</text>
+            </view>
+            <button class="settings-btn primary" bindtap="calibrateCurrentWeek" disabled="{{isLoading || !configData.startDate}}">校准本周</button>
+          </view>
+        </view>
+
         <!-- 编辑权限 & 自动切周（合并模块，开关型） -->
         <view class="settings-card" wx:if="{{configData}}">
           <view class="settings-card-header">

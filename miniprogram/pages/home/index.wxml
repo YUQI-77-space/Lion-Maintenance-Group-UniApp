@@ -271,7 +271,6 @@
           </view>
         </view>
       </view>
-      <view class="honors-hint">{{honorsPaused ? '已暂停 · 轻触继续' : '轻触暂停'}}</view>
     </block>
 
     <block wx:else>

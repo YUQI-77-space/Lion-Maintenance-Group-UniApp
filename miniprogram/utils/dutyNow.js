@@ -115,9 +115,10 @@ function buildDutyStatus(payload, now) {
 
   // 今天在值班表里的位置
   const todayDow = current.getDay();
-  const todayIndex = weekDates.findIndex(d => d && d.dayOfWeek === todayDow);
+  const todayDate = `${current.getFullYear()}-${pad2(current.getMonth() + 1)}-${pad2(current.getDate())}`;
+  const todayIndex = weekDates.findIndex(d => d && d.date === todayDate);
   if (todayIndex < 0) {
-    return emptyResult(false, TEXT.noSchedule);
+    return emptyResult(false, '值班表日期与本周不一致，请联系组长校准');
   }
 
   const nowMin = current.getHours() * 60 + current.getMinutes();
@@ -166,8 +167,8 @@ function buildDutyStatus(payload, now) {
   //    整周都没人认领时，退化为第一个可排班的时段（文案里说明"暂无人值班"）。
   const candidates = [];
   const dayCount = weekDates.length;
-  for (let step = 0; step < dayCount; step++) {
-    const dayIndex = (todayIndex + step) % dayCount;
+  for (let step = 0; todayIndex + step < dayCount; step++) {
+    const dayIndex = todayIndex + step;
     const dayInfo = weekDates[dayIndex] || {};
     const dayText = step === 0 ? '今天' : (step === 1 ? '明天' : (dayInfo.dayName || DAY_NAMES[dayInfo.dayOfWeek || 0]));
     rowTimes.forEach(t => {
@@ -270,7 +271,8 @@ function findMySlotsToday(payload, openid, now) {
   if (!openid || !payload || !Array.isArray(payload.weekDates) || !Array.isArray(payload.tableData)) return null;
 
   const current = normalizeNow(now);
-  const todayIndex = payload.weekDates.findIndex(d => d && d.dayOfWeek === current.getDay());
+  const todayDate = `${current.getFullYear()}-${pad2(current.getMonth() + 1)}-${pad2(current.getDate())}`;
+  const todayIndex = payload.weekDates.findIndex(d => d && d.date === todayDate);
   if (todayIndex < 0) return null;
 
   const slots = [];

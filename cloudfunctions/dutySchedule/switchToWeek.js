@@ -1,7 +1,8 @@
 // 切换到指定周
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
-const db = cloud.database()
+const db = cloud.database({ throwOnNotFound: false })
+const { getActualWeek, getWeekCalendar } = require('./weekCalendar')
 
 /**
  * 判断时间段是否可用
@@ -61,7 +62,7 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
 
   // 计算该周的起始日期
   const weekStartDate = new Date(semesterStartDate)
-  weekStartDate.setDate(semesterStartDate.getDate() + (weekNumber - 1) * 7)
+  weekStartDate.setUTCDate(semesterStartDate.getUTCDate() + (weekNumber - 1) * 7)
 
   // 按天循环（周一到周日的顺序：1,2,3,4,5,6,0）
   const dayOrder = [1, 2, 3, 4, 5, 6, 0] // 周一到周日
@@ -71,10 +72,10 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
     
     // 计算实际日期
     const currentDate = new Date(weekStartDate)
-    currentDate.setDate(weekStartDate.getDate() + dayIndex)
+    currentDate.setUTCDate(weekStartDate.getUTCDate() + dayIndex)
     
     // 验证日期计算是否正确
-    const actualDayOfWeek = currentDate.getDay()
+    const actualDayOfWeek = currentDate.getUTCDay()
     if (actualDayOfWeek !== targetDayOfWeek) {
       console.warn(`[switchToWeek] 日期计算警告：期望${targetDayOfWeek}，实际${actualDayOfWeek}`)
     }
@@ -84,7 +85,7 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
     // 按时间段循环（从早到晚：0,1,2,3,4）
     for (let slotIndex = 0; slotIndex < timeSlotConfigs.length; slotIndex++) {
       const slotConfig = timeSlotConfigs[slotIndex]
-      const slotId = `${year}${String(currentDate.getMonth() + 1).padStart(2, '0')}${String(currentDate.getDate()).padStart(2, '0')}${slotIndex + 1}`
+      const slotId = `${currentDate.getUTCFullYear()}${String(currentDate.getUTCMonth() + 1).padStart(2, '0')}${String(currentDate.getUTCDate()).padStart(2, '0')}${slotIndex + 1}`
 
       // 根据星期和时间段确定是否可用
       const isAvailable = isSlotAvailable(targetDayOfWeek, slotIndex)
@@ -103,8 +104,8 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
         dutyHolderName: '',
         isAvailable: isAvailable,
         sortOrder: sortOrderCounter++, // 添加排序字段
-        createTime: new Date(),
-        updateTime: new Date()
+        createTime: db.serverDate(),
+        updateTime: db.serverDate()
       }
 
       generatedSlots.push(dutySlot)
@@ -121,185 +122,115 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
   return generatedSlots
 }
 
-/**
- * 批量插入值班数据（保持顺序）
- * @param {Array} slots 值班时间段数组
- * @returns {Object} 插入结果
- */
-async function batchInsertSlots(slots) {
-  console.log(`[switchToWeek] 开始有序插入${slots.length}条记录`)
-
-  try {
-    // 使用并行插入保持性能，sortOrder字段确保顺序
-    const insertPromises = slots.map(async (slot) => {
-      try {
-        await db.collection('duty_slots').doc(slot.dutySlotId).set({ data: slot })
-        return { success: true, slotId: slot.dutySlotId, sortOrder: slot.sortOrder }
-      } catch (err) {
-        console.log(`[switchToWeek] 时间段 ${slot.dutySlotId} 插入失败：${err.message}`)
-        return { success: false, slotId: slot.dutySlotId, sortOrder: slot.sortOrder, error: err.message }
-      }
-    })
-
-    const results = await Promise.all(insertPromises)
-    
-    // 统计结果
-    const successResults = results.filter(r => r.success)
-    const failedResults = results.filter(r => !r.success)
-    
-    console.log(`[switchToWeek] 插入完成：成功 ${successResults.length}，失败 ${failedResults.length}`)
-    
-    if (failedResults.length > 0) {
-      console.log('[switchToWeek] 失败的记录：', failedResults.map(r => `${r.slotId}(${r.sortOrder})`))
-    }
-
-    return {
-      totalCount: slots.length,
-      successCount: successResults.length,
-      failedCount: failedResults.length,
-      failedRecords: failedResults
-    }
-    
-  } catch (globalErr) {
-    console.error('[switchToWeek] 批量插入全局错误：', globalErr)
-    throw globalErr
+// 只信任微信上下文传入的 openid，系统调用由模块内部第三参数控制。
+async function requireLeader(openid) {
+  if (!openid) throw new Error('只有组长或管理员可以维护值班周次')
+  const users = await db.collection('users').where({ openid }).get()
+  if (!users.data.some(user => ['leader', 'admin'].includes(user.role))) {
+    throw new Error('只有组长或管理员可以维护值班周次')
   }
 }
 
-/**
- * 切换到指定周
- * @param {Object} event 事件参数
- * @param {Number} event.weekNumber 目标周次
- * @param {Number} event.year 年份（可选，默认当前年份）
- * @param {String} openid 用户openid
- * @returns {Object} 返回切换结果
- */
-exports.switchToWeek = async (event, openid) => {
-  const startTime = Date.now()
-  
+function matchesConfig(config, expected) {
+  return expected && ['startDate', 'currentWeek', 'currentYear'].every(key => config[key] === expected[key])
+}
+
+exports.calibrateCurrentWeek = async (event, openid) => {
   try {
-    console.log('[switchToWeek] 开始切换到指定周（有序生成策略）')
-    console.log('[switchToWeek] 参数：', { weekNumber: event.weekNumber, year: event.year })
-
-    // 验证必要参数
-    if (!event.weekNumber) {
-      return {
-        code: 400,
-        data: null,
-        message: '缺少周次参数 weekNumber'
-      }
+    await requireLeader(openid)
+    if (event.preview !== false) {
+      const { data: config } = await db.collection('duty_config').doc('global').get()
+      if (!config) throw new Error('值班配置不存在')
+      const target = getActualWeek(config.startDate)
+      return { code: 200, data: {
+        ...target,
+        expected: { startDate: config.startDate, currentWeek: config.currentWeek, currentYear: config.currentYear }
+      }, message: '校准预览成功' }
     }
-
-    // TODO: 这里应该添加权限检查，确保只有组长可以切换周次
-    // const userResult = await checkLeaderPermission(openid)
-
-    // 获取年份，默认为当前年份
-    const year = event.year || new Date().getFullYear()
-    const weekNumber = parseInt(event.weekNumber)
-
-    console.log('[switchToWeek] 切换参数：', { weekNumber, year })
-
-    // 获取配置
-    const configResult = await db.collection('duty_config').doc('global').get()
-    if (!configResult.data) {
-      return {
-        code: 404,
-        data: null,
-        message: '值班配置不存在，请先初始化系统'
-      }
-    }
-
-    const config = configResult.data
-    if (!config.startDate) {
-      return {
-        code: 400,
-        data: null,
-        message: '学期开始日期未设置，请先设置 startDate'
-      }
-    }
-
-    console.log('[switchToWeek] 当前配置：', config)
-
-    // 第一步：检查目标周是否已存在数据
-    console.log('[switchToWeek] 检查目标周数据是否存在')
-    const queryResult = await db.collection('duty_slots')
-      .where({
-        weekNumber: weekNumber,
-        year: year
-      })
-      .limit(1)
-      .get()
-
-    const weekExists = queryResult.data.length > 0
-    console.log('[switchToWeek] 目标周存在状态：', weekExists)
-
-    let createResult = null
-
-    // 第二步：如果目标周不存在，则创建有序数据
-    if (!weekExists) {
-      console.log('[switchToWeek] 目标周不存在，开始创建有序数据')
-      
-      const semesterStartDate = new Date(config.startDate)
-      const slots = await createWeekData(weekNumber, year, semesterStartDate)
-      
-      // 插入数据
-      createResult = await batchInsertSlots(slots)
-      
-      console.log('[switchToWeek] 有序数据创建结果：', createResult)
-      
-      if (createResult.failedCount > 0) {
-        return {
-          code: 206,
-          data: {
-            weekNumber,
-            year,
-            created: true,
-            createResult
-          },
-          message: `第${weekNumber}周有序数据创建部分成功，成功${createResult.successCount}条，失败${createResult.failedCount}条`
-        }
-      }
-    }
-
-    // 第三步：更新当前周配置
-    console.log('[switchToWeek] 开始更新当前周配置')
-    const updateResult = await db.collection('duty_config').doc('global').update({
-      data: {
-        currentWeek: weekNumber,
-        currentYear: year,
-        updateTime: new Date()
-      }
-    })
-
-    console.log('[switchToWeek] 配置更新结果：', updateResult)
-
-    // 获取更新后的配置
-    const newConfigResult = await db.collection('duty_config').doc('global').get()
-
-    const totalTime = Date.now() - startTime
-    console.log(`[switchToWeek] 切换完成，总用时 ${totalTime}ms`)
-
-    return {
-      code: 200,
-      data: {
-        weekNumber,
-        year,
-        created: !weekExists,
-        createResult,
-        config: newConfigResult.data,
-        executionTime: totalTime
-      },
-      message: weekExists 
-        ? `成功切换到第${weekNumber}周（已存在数据）` 
-        : `成功切换到第${weekNumber}周并创建了${createResult?.successCount || 0}条有序新记录`
-    }
-
+    if (!event.expected || !Number.isInteger(event.targetWeek)) throw new Error('请先预览校准日期')
+    return await exports.switchToWeek(event, openid, { calibrate: true })
   } catch (err) {
-    console.error('[switchToWeek] 错误：', err)
-    return {
-      code: 500,
-      data: null,
-      message: err.message || '切换周次失败'
-    }
+    return { code: 400, data: null, message: err.message }
   }
-} 
+}
+
+exports.switchToWeek = async (event, openid, options = {}) => {
+  try {
+    if (!options.automatic) await requireLeader(openid)
+    const { data: initial } = await db.collection('duty_config').doc('global').get()
+    if (!initial) throw new Error('值班配置不存在')
+    const expected = options.calibrate ? event.expected : initial
+    let result
+    // 显式回滚兼容项目现有 SDK；冲突时返回失败，由调用方刷新重试。
+    const transaction = await db.startTransaction()
+    try {
+      await (async () => {
+        const configRef = transaction.collection('duty_config').doc('global')
+        const { data: config } = await configRef.get()
+        if (!config) throw new Error('值班配置不存在')
+        if (!options.automatic && !matchesConfig(config, expected)) throw new Error('配置已变化，请刷新后重新预览或切换')
+        if (options.automatic && config.autoSwitchEnabled === false) {
+          result = { code: 200, data: { skipped: true }, message: '自动切周已关闭' }
+          return
+        }
+        const target = options.automatic || options.calibrate
+          ? getActualWeek(config.startDate)
+          : getWeekCalendar(config.startDate, Number(event.weekNumber))
+        // 保留原有周一 10:30 的生效时刻，提前唤醒不切周。
+        const scheduledMs = Date.parse(`${target.startDate}T10:30:00+08:00`)
+        if (options.automatic && Date.now() < scheduledMs) {
+          result = { code: 200, data: { skipped: true }, message: '尚未到周一 10:30' }
+          return
+        }
+        if (options.calibrate && target.weekNumber !== event.targetWeek) throw new Error('日期已跨周，请重新预览校准')
+        // 自动任务只追赶落后的周次；超前配置交由组长预览后回调。
+        if (options.automatic && Number(config.currentWeek) >= target.weekNumber) {
+          result = { code: 200, data: { skipped: true, ...target }, message: '当前周无需自动前进，超前时请手动校准' }
+          return
+        }
+        const slots = await createWeekData(target.weekNumber, target.year, new Date(`${config.startDate}T00:00:00Z`))
+        let createdCount = 0
+        for (const slot of slots) {
+          const ref = transaction.collection('duty_slots').doc(slot.dutySlotId)
+          const { data: existing } = await ref.get()
+          if (existing) {
+            // 不覆盖排班；发现旧学期/异常日期占用了同一 ID 时中止。
+            if (existing.date !== slot.date || Number(existing.weekNumber) !== target.weekNumber || Number(existing.year) !== target.year) {
+              throw new Error('目标日期存在不匹配的旧数据，请先人工核查，校准未执行')
+            }
+          } else {
+            await ref.set({ data: slot })
+            createdCount++
+          }
+        }
+        const update = {
+          currentWeek: target.weekNumber,
+          currentYear: target.year,
+          updateTime: db.serverDate()
+        }
+        if (options.automatic) {
+          update.lastAutoSwitchWeek = target.weekNumber
+          update.lastAutoSwitchAt = db.serverDate()
+        }
+        if (options.calibrate) {
+          update.lastCalibration = {
+            fromWeek: config.currentWeek, toWeek: target.weekNumber,
+            operator: openid, at: db.serverDate()
+          }
+        }
+        await configRef.update({ data: update })
+        result = { code: 200, data: { ...target, createdCount }, message: `已切换到第${target.weekNumber}周，保留已有排班` }
+      })()
+      await transaction.commit()
+    } catch (err) {
+      await transaction.rollback().catch(rollbackErr => console.error('[switchToWeek] 回滚失败：', rollbackErr))
+      throw err
+    }
+    return result
+  } catch (err) {
+    console.error('[switchToWeek] 切周未完成：', err)
+    return { code: 400, data: null, message: err.message || '切换失败，请刷新后重试' }
+  }
+}
+
+exports.requireLeader = requireLeader
