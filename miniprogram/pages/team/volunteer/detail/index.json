@@ -1,7 +1,7 @@
 {
   "navigationBarTitleText": "活动详情",
   "enablePullDownRefresh": true,
-  "backgroundColor": "#f6f6f6",
+  "backgroundColor": "#F5F7FA",
   "usingComponents": {
     "avatar-display": "../../../../components/avatar-display/index",
     "loading-animation": "../../../../components/loading-animation/index"

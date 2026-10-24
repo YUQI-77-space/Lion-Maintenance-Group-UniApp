@@ -6,10 +6,10 @@ const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 
 // 任务状态文案，与列表页 / 管理页保持一致
 const STATUS_MAP = {
-  pending: '未受理',
-  inProgress: '处理中',
+  pending: '待受理',
+  inProgress: '进行中',
   completed: '已完成',
-  cancelled: '已撤销'
+  cancelled: '已取消'
 };
 
 Page({
@@ -17,7 +17,9 @@ Page({
   /**
    * 页面的初始数据
    */
+  returnToList() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/user/profile/index' }) }); },
   data: {
+    detailError: '',
     taskId: '', // 任务ID
     taskDetail: {}, // 任务详情
     userRole: '', // 用户角色
@@ -171,7 +173,7 @@ Page({
 
   // 获取任务详情
   getTaskDetail: async function() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, detailError: '' });
     
     try {
       const result = await api.call('maintenanceTasks', {
@@ -225,130 +227,38 @@ Page({
           canManageAssignees: this.shouldEnableAssigneeManagement(nextStatus)
         });
       } else {
-        wx.showToast({ title: '获取任务详情失败', icon: 'none' });
+        this.setData({ detailError: result.message || '无法查看此记录，可能已删除或权限已变化' });
       }
     } catch (err) {
       console.error('获取任务详情失败', err);
-      wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+      this.setData({ detailError: '读取失败，请重新加载或返回列表' });
     } finally {
       this.setData({ loading: false });
     }
   },
 
   // 认领任务
-  claimTask: async function(e) {
-    const taskId = (e && e.currentTarget && e.currentTarget.dataset) ? e.currentTarget.dataset.taskId : this.data.taskId;
-    
-    // 检查是否为申请人
-    const currentUserOpenid = this.data.userOpenid;
+  async claimTask(e) {
+    if (this.data.claiming) return;
+    const taskId = this.data.taskId;
     const task = this.data.taskDetail;
-    
-    if (task && task.applicantId === currentUserOpenid) {
-      wx.showModal({
-        title: '无法认领',
-        content: '申请人无法认领自己的维修任务',
-        showCancel: false,
-        confirmText: '我知道了'
-      });
-      return;
-    }
-    
-    // 请求订阅消息授权
-    let authResult = null;
-    let needReAuthCancel = false;
+    if (!taskId || !task || task.applicantId === app.globalData.openid) { wx.showToast({ title: '不能受理自己的报修', icon: 'none' }); return; }
+    this.setData({ claiming: true });
     try {
-      authResult = await SubscriptionAuth.requestAssigneeAuth({
-        showTip: true,
-        allowPartialSuccess: true
-      });
-      const details = (authResult && authResult.analysis && authResult.analysis.details) || [];
-      const cancelTemplateId = SubscriptionAuth.TEMPLATES.TASK_CANCELLED;
-      const cancelAuth = details.find(d => d.templateId === cancelTemplateId);
-      needReAuthCancel = !cancelAuth || cancelAuth.status !== 'accept';
-      if (authResult.success && authResult.analysis.acceptedCount > 0) {
-        wx.showToast({ title: `已授权${authResult.analysis.acceptedCount}个消息通知`, icon: 'success', duration: 1200 });
-        await new Promise(resolve => setTimeout(resolve, 1300));
+      const confirmation = await wx.showModal({ title: '受理维修任务', content: `受理任务 ${taskId}？请核对问题与预约时间。`, confirmText: '受理任务', cancelText: '返回' });
+      if (!confirmation.confirm) return;
+      try { await SubscriptionAuth.requestAssigneeAuth({ showTip: true, allowPartialSuccess: true }); } catch (_) {}
+      const latest = await api.call('maintenanceTasks', { action: 'getMaintenanceTaskDetail', params: { maintenanceTaskId: taskId } });
+      if (!latest.success || !latest.data || latest.data.taskStatus !== 'pending') {
+        wx.showToast({ title: latest.success ? '该任务状态已变化，请查看最新受理信息' : (latest.message || '无法核对任务状态'), icon: 'none' });
+        await this.getTaskDetail(); return;
       }
-    } catch (error) {
-      console.error('订阅授权异常:', error);
-      // 授权异常不影响认领流程
-    }
-    
-    // 在 showModal 前再次读取取消模板的最新授权状态，确保基于用户最新选择
-    const latestCancelAuth = SubscriptionAuth.getAuthStatus(SubscriptionAuth.TEMPLATES.TASK_CANCELLED);
-    needReAuthCancel = !latestCancelAuth.hasAuth || latestCancelAuth.status !== 'accept';
-
-    wx.showModal({
-      title: '确认认领',
-      content: '确定要认领此维修任务吗？',
-      success: async (res) => {
-        if (res.confirm) {
-          // 确认点击（用户手势）内做一次取消模板补授权，避免“非用户手势”错误
-          if (needReAuthCancel) {
-            try {
-              const reAuth = await SubscriptionAuth.requestSubscribeMessage(
-                [SubscriptionAuth.TEMPLATES.TASK_CANCELLED],
-                SubscriptionAuth.SCENES.TASK_CLAIM,
-                { showTip: false, allowPartialSuccess: true }
-              );
-            } catch (reErr) {
-            }
-          }
-          wx.showLoading({
-            title: '处理中...',
-          });
-          
-          try {
-            const result = await api.call('maintenanceTasks', {
-              action: 'assignMaintenanceTask',
-              params: {
-                maintenanceTaskId: taskId,
-                assigneeId: this.data.userOpenid
-              }
-            });
-
-            wx.hideLoading();
-            
-            if (result.success) {
-              // 检查是否是重复认领的情况
-              if (result.data && result.data.alreadyClaimed) {
-                wx.showModal({
-                  title: '任务认领状态',
-                  content: result.message || '您已经认领了此维修任务。任务详情已刷新。',
-                  showCancel: false,
-                  success: (modalRes) => {
-                    this.getTaskDetail();
-                  }
-                });
-              } else {
-                wx.showModal({
-                  title: '认领成功',
-                  content: '您已成功认领此维修任务，请及时与申请人联系并完成维修。任务已添加到您的待办事项中。',
-                  showCancel: false,
-                  success: (modalRes) => {
-                    this.getTaskDetail();
-                  }
-                });
-              }
-            } else {
-              wx.showToast({
-                title: result.message || '认领失败',
-                icon: 'none'
-              });
-            }
-          } catch (err) {
-            wx.hideLoading();
-            console.error('认领任务失败', err);
-            wx.showToast({
-              title: '网络错误，请重试',
-              icon: 'none'
-            });
-          }
-        }
-      }
-    });
+      const result = await api.call('maintenanceTasks', { action: 'assignMaintenanceTask', params: { maintenanceTaskId: taskId, assigneeId: app.globalData.openid }, config: { retries: 0 } });
+      wx.showToast({ title: result.success ? '受理成功' : (result.code === 503 ? '结果待核实，正在刷新任务' : (result.message || '未能受理，请核对最新任务')), icon: result.success ? 'success' : 'none' });
+      await this.getTaskDetail();
+      if (result.success) app.publish('maintenanceChanged', { taskId });
+    } finally { this.setData({ claiming: false }); }
   },
-
   // 返回上一页
   goBack: function() {
     wx.navigateBack();
@@ -359,7 +269,13 @@ Page({
   },
 
   // 组长完成维修任务：仅进行中的任务可走此路径
-  completeTask: async function() {
+  async completeTask() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedCompleteTask(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedCompleteTask() {
     console.log('[完成任务] 点击，taskId=', this.data.taskId, 'status=', (this.data.taskDetail || {}).taskStatus, 'fromManage=', this.data.fromManage, 'role=', this.data.userRole);
 
     if (!this.canManageTask()) {
@@ -391,19 +307,15 @@ Page({
       // 离线处理：进入队列，等网络恢复后由服务端校验状态与权限
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('maintenanceTasks', 'completeMaintenanceTask', {
-          maintenanceTaskId: this.data.taskId,
-          completeTime: this.formatTime(new Date())
-        });
+
         wx.hideLoading();
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
 
       const completeTime = this.formatTime(new Date());
       const res = await api.call('maintenanceTasks', {
-        action: 'completeMaintenanceTask',
+        action: 'completeMaintenanceTask', config: { retries: 0 },
         params: {
           maintenanceTaskId: this.data.taskId,
           completeTime: completeTime
@@ -503,7 +415,13 @@ Page({
   },
 
   // 确认设置EW
-  confirmEWSetting: async function() {
+  async confirmEWSetting() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmEWSetting(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmEWSetting() {
     if (!this.canManageTask()) {
       wx.showToast({ title: '暂无操作权限', icon: 'none' });
       return;
@@ -518,26 +436,18 @@ Page({
     try {
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('maintenanceTasks', 'updateMaintenanceTasks', {
-          maintenanceTaskId: taskId,
-          updateData: { ew: ewValue }
-        });
-        outbox.add('equivalentWorkloadAssessment', 'updateTasksEW', {
-          maintenanceTaskId: taskId,
-          ew: ewValue
-        });
+
         this.updateLocalTaskEW(taskId, ewValue);
         this.refreshPreviousPage(true);
         wx.hideLoading();
         this.cancelEWSetting();
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
 
       // 第一步：更新任务本身的EW值
       const updateTaskRes = await api.call('maintenanceTasks', {
-        action: 'updateMaintenanceTasks',
+        action: 'updateMaintenanceTasks', config: { retries: 0 },
         params: {
           maintenanceTaskId: taskId,
           updateData: { ew: ewValue }
@@ -549,7 +459,7 @@ Page({
 
       // 第二步：更新等效工作量汇总
       const updateEwaRes = await api.call('equivalentWorkloadAssessment', {
-        action: 'updateTasksEW',
+        action: 'updateTasksEW', config: { retries: 0 },
         params: {
           maintenanceTaskId: taskId,
           ew: ewValue
@@ -633,7 +543,13 @@ Page({
   },
 
   // 确认删除任务
-  confirmDelete: async function() {
+  async confirmDelete() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmDelete(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmDelete() {
     if (!this.canManageTask()) {
       wx.showToast({ title: '暂无操作权限', icon: 'none' });
       return;
@@ -659,16 +575,15 @@ Page({
     try {
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('maintenanceTasks', 'deleteMaintenanceTask', { maintenanceTaskId: taskId });
+
         wx.hideLoading();
         this.cancelDeleteConfirm();
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
 
       const res = await api.call('maintenanceTasks', {
-        action: 'deleteMaintenanceTask',
+        action: 'deleteMaintenanceTask', config: { retries: 0 },
         params: { maintenanceTaskId: taskId }
       });
 
@@ -1219,7 +1134,7 @@ Page({
     
     try {
       const removeRes = await api.call('maintenanceTasks', {
-        action: 'removeTaskAssignees',
+        action: 'removeTaskAssignees', config: { retries: 0 },
         params: {
           taskId: this.data.taskId,
           assigneesToRemove: [openid]

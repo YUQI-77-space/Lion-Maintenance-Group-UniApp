@@ -1,5 +1,5 @@
 <!--pages/team/volunteer/manage/index.wxml-->
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
   <!-- 左侧分类导航 -->
   <view class="sidebar" style="width: 180rpx;">
     <view class="{{currentStatus === 'all' ? 'active' : ''}}" bindtap="switchStatus" data-status="all">全部</view>
@@ -26,6 +26,7 @@
 
     <!-- 列表滚动区域 -->
     <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryActivities">重试加载</button></view>
       <!-- 初始加载提示 -->
       <view class="initial-loading" wx:if="{{initialLoading}}">
         <view class="loading-container">
@@ -102,7 +103,7 @@
     </view>
 
     <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{!initialLoading && !loading && !pullDownRefreshing && activities.length === 0}}">
+    <view class="empty-state" wx:if="{{!initialLoading && !loading && !loadError && !pullDownRefreshing && activities.length === 0}}">
       <image class="empty-icon" src="{{iconEmpty}}"></image>
       <text class="empty-text">暂无志愿活动</text>
       <text class="empty-desc">点击右下角按钮创建新的志愿活动</text>

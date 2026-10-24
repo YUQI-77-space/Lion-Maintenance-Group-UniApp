@@ -1,7 +1,7 @@
 // pages/team/maintenance/create/index.js
 const app = getApp();
 const network = require('../../../../utils/network');
-const outbox = require('../../../../utils/outbox');
+
 const api = require('../../../../utils/apiAdapter');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const iconManager = require('../../../../utils/iconManager');
@@ -412,7 +412,8 @@ Page({
 	async submitTask() {
 		if (!this.validateForm()) return;
 		
-		if (this.data.isSubmitting) return;
+		if (this.data.isSubmitting || this.data.submitUnknown) return;
+		this.setData({ isSubmitting: true });
 		
 		// 请求订阅消息授权
 		try {
@@ -468,9 +469,9 @@ Page({
 
 			// 离线处理逻辑保持不变
 			if (!network.isOnline()) {
-				outbox.add('maintenanceTasks', 'createMaintenanceTask', taskData);
+
 				wx.showToast({
-					title: '网络不稳，已加入队列',
+					title: '当前离线，尚未提交，输入已保留',
 					icon: 'none',
 					duration: 2500
 				});
@@ -481,6 +482,7 @@ Page({
 
 			const res = await api.call('maintenanceTasks', {
 				action: 'createMaintenanceTask',
+				config: { retries: 0 },
 				params: taskData
 			});
 
@@ -494,7 +496,8 @@ Page({
 					wx.navigateBack();
 				}, 1500);
 			} else {
-				throw new Error(res.message || '创建失败');
+				if (res.code === 503) this.setData({ submitUnknown: true });
+				throw new Error(res.code === 503 ? '暂时无法确认提交结果，请返回任务列表核实' : (res.message || '创建失败'));
 			}
 			
 		} catch (error) {

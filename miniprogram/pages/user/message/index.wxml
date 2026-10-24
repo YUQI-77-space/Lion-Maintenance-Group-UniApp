@@ -1,5 +1,6 @@
 <!--pages/user/message/index.wxml-->
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="loadMessages">重新加载</button></view>
   <!-- 顶部工具条：消息概览 + 批量操作（无消息时不显示） -->
   <view class="msg-toolbar" wx:if="{{!isEmpty}}">
     <view class="toolbar-info">
@@ -34,16 +35,16 @@
     </view>
 
     <!-- 无消息 -->
-    <view class="empty-state" wx:if="{{isEmpty && !isLoading}}">
+    <view class="empty-state" wx:if="{{isEmpty && !isLoading && !loadError}}">
       <view class="empty-ico">
-        <text class="empty-emoji">💬</text>
+        <text class="empty-emoji">消息</text>
       </view>
       <text class="empty-title">暂无消息</text>
       <text class="empty-desc">报修进度、值班安排、志愿活动等通知都会显示在这里</text>
     </view>
 
     <!-- 消息列表 -->
-    <view class="msg-list" wx:if="{{!isEmpty && !isLoading}}">
+    <view class="msg-list" wx:if="{{!isEmpty && !isLoading && !loadError}}">
       <view
         class="msg-card {{item.isRead ? 'is-read' : 'is-unread'}}"
         wx:for="{{messages}}"

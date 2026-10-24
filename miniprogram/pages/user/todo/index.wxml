@@ -1,5 +1,5 @@
 <!--pages/user/todo/index.wxml-->
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
   <!-- 左侧分类导航 -->
   <view class="sidebar" style="width: 180rpx;">
     <view 
@@ -23,6 +23,7 @@
     refresher-triggered="{{refresherTriggered}}"
   >
     <view class="container">
+      <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadErrors[activeCategory]}}">{{loadErrors[activeCategory]}}<button class="mg-button mg-button--secondary" bindtap="retryActiveCategory">重新加载</button></view>
       <!-- 加载动画 -->
       <view class="loading-container" wx:if="{{loading}}">
         <loading-animation size="large" />
@@ -43,7 +44,7 @@
                   <view class="title-tags">
                     <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
                     <view class="task-status {{item.taskStatus}}">
-                      {{item.taskStatus === 'pending' ? '待受理' : (item.taskStatus === 'inProgress' ? '处理中' : (item.taskStatus === 'completed' ? '已完成' : '已撤销'))}}
+                      {{item.taskStatus === 'pending' ? '待受理' : (item.taskStatus === 'inProgress' ? '进行中' : (item.taskStatus === 'completed' ? '已完成' : '已取消'))}}
                     </view>
                   </view>
                 </view>
@@ -62,7 +63,7 @@
           </block>
         </block>
         <!-- 空状态提示 -->
-        <view class="empty-tip" wx:if="{{!loading && maintenanceTasks.length === 0}}">
+        <view class="empty-tip" wx:if="{{!loading && !loadErrors.maintenance && maintenanceTasks.length === 0}}">
           <image class="empty-icon" src="{{iconEmpty}}"></image>
           <text>暂无维修任务</text>
         </view>
@@ -94,7 +95,7 @@
           </block>
         </block>
         <!-- 空状态提示 -->
-        <view class="empty-tip" wx:if="{{!loading && volunteerTasks.length === 0}}">
+        <view class="empty-tip" wx:if="{{!loading && !loadErrors.volunteer && volunteerTasks.length === 0}}">
           <image class="empty-icon" src="{{iconEmpty}}"></image>
           <text>暂无志愿活动</text>
         </view>
@@ -127,7 +128,7 @@
           </block>
         </block>
         <!-- 空状态提示 -->
-        <view class="empty-tip" wx:if="{{!loading && dutyTasks.length === 0}}">
+        <view class="empty-tip" wx:if="{{!loading && !loadErrors.duty && dutyTasks.length === 0}}">
           <image class="empty-icon" src="{{iconEmpty}}"></image>
           <text>暂无值班任务</text>
         </view>

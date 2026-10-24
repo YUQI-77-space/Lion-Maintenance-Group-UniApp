@@ -26,6 +26,7 @@ Page({
     cancelTaskId: '',
 
     // 加载状态
+    loadErrors: {},
     loading: false,
 
     // 下拉刷新状态
@@ -53,6 +54,7 @@ Page({
       this.setData({ activeCategory: allowTab });
     }
 
+    this._firstShow = true;
     this.loadAllTasks();
   },
 
@@ -60,7 +62,7 @@ Page({
   initRoleFlag() {
     const role = (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
     const isInternal = (role === 'member' || role === 'leader' || role === 'admin');
-    const categories = this.data.isInternal
+    const categories = isInternal
       ? [
           { key: 'maintenance', label: '维修任务', count: 0 },
           { key: 'volunteer', label: '志愿活动', count: 0 },
@@ -69,13 +71,14 @@ Page({
       : [
           { key: 'maintenance', label: '维修任务', count: 0 }
         ];
-    this.setData({ isInternal, categories });
+    this.setData({ isInternal, categories, activeCategory: isInternal ? this.data.activeCategory : 'maintenance' });
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    if (this._firstShow) { this._firstShow = false; return; }
     // 刷新角色（防止在别处切换后未更新）
     this.initRoleFlag();
 
@@ -124,6 +127,7 @@ Page({
   /**
    * 根据分类加载数据
    */
+  retryActiveCategory() { return this.loadDataByCategory(this.data.activeCategory); },
   loadDataByCategory(category) {
     switch (category) {
       case 'maintenance':
@@ -201,6 +205,7 @@ Page({
 
   // 加载维修任务待办
   async loadMaintenanceTasks() {
+    this.setData({ 'loadErrors.maintenance': '' });
     this.setData({ loading: true });
     const openid = app.globalData.openid;
     try {
@@ -213,9 +218,10 @@ Page({
         this.calculatePendingMaintenanceCount();
         this.triggerCardAnimation('maintenance', 0);
       } else {
-        wx.showToast({ title: '获取维修任务失败', icon: 'none' });
+        this.setData({ 'loadErrors.maintenance': result.message || '维修待办加载失败' });
       }
     } catch (err) {
+      this.setData({ 'loadErrors.maintenance': '网络异常，原内容已保留' });
       console.error('[loadMaintenanceTasks] 调用失败', err);
       wx.showToast({ title: '网络错误', icon: 'none' });
     } finally {
@@ -225,6 +231,7 @@ Page({
 
   // 加载志愿活动待办
   async loadVolunteerTasks() {
+    this.setData({ 'loadErrors.volunteer': '' });
     const openid = app.globalData.openid;
     try {
       const result = await api.call('userToDoList', {
@@ -236,15 +243,17 @@ Page({
         this.calculatePendingVolunteerCount();
         this.triggerCardAnimation('volunteer', 0);
       } else {
-        console.error('获取志愿活动失败', result.message);
+        this.setData({ 'loadErrors.volunteer': result.message || '加载失败，请重试' });
       }
     } catch (err) {
+      this.setData({ 'loadErrors.volunteer': '网络异常，原内容已保留' });
       console.error('[loadVolunteerTasks] 调用失败', err);
     }
   },
 
   // 加载值班任务待办
   async loadDutyTasks() {
+    this.setData({ 'loadErrors.duty': '' });
     const openid = app.globalData.openid;
     try {
       const result = await api.call('userToDoList', {
@@ -257,9 +266,10 @@ Page({
         this.calculatePendingDutyCount();
         this.triggerCardAnimation('duty', 0);
       } else {
-        console.error('获取值班任务失败', result.message);
+        this.setData({ 'loadErrors.duty': result.message || '加载失败，请重试' });
       }
     } catch (err) {
+      this.setData({ 'loadErrors.duty': '网络异常，原内容已保留' });
       console.error('[loadDutyTasks] 调用失败', err);
     }
   },
@@ -295,7 +305,13 @@ Page({
   },
 
   // 确认完成维修任务
-  confirmCompleteTask: async function(e) {
+  async confirmCompleteTask(e) {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmCompleteTask(e); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmCompleteTask(e) {
     if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }
@@ -317,7 +333,7 @@ Page({
       wx.showLoading({ title: '处理中...' });
       try {
         const res = await api.call('maintenanceTasks', {
-          action: 'completeMaintenanceTask',
+          action: 'completeMaintenanceTask', config: { retries: 0 },
           params: {
             maintenanceTaskId: taskId,
             completeTime: new Date().toISOString()
@@ -361,6 +377,7 @@ Page({
 
   // 关闭撤销弹窗
   closeCancelModal: function() {
+    if (this.data.operationBusy) return;
     this.setData({ showCancelModal: false, cancelReason: '', cancelTaskId: '' });
   },
 
@@ -370,7 +387,13 @@ Page({
   },
 
   // 确认撤销
-  confirmCancelTaskFromList: async function() {
+  async confirmCancelTaskFromList() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmCancelTaskFromList(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmCancelTaskFromList() {
     const taskId = this.data.cancelTaskId;
     const cancelReason = (this.data.cancelReason || '').trim();
 
@@ -404,7 +427,7 @@ Page({
       }
       try {
         const res = await api.call('maintenanceTasks', {
-          action: 'cancelMaintenanceTask',
+          action: 'cancelMaintenanceTask', config: { retries: 0 },
           params: { maintenanceTaskId: taskId, cancelReason }
         });
 

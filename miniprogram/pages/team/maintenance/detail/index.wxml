@@ -45,7 +45,8 @@ module.exports = {
 };
 </wxs>
 
-<view class="container">
+<view class="mg-theme mg-data-page container">
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{detailError}}">{{detailError}}<button class="mg-button mg-button--secondary" bindtap="getTaskDetail">重新加载</button><button class="mg-button mg-button--text" bindtap="returnToList">返回列表</button></view>
   <!-- 加载中状态 -->
   <view class="loading-container" wx:if="{{loading}}">
     <loading-animation size="large" />
@@ -272,7 +273,7 @@ module.exports = {
       <view class="btn btn-complete {{completing ? 'btn-disabled' : ''}}"
             wx:if="{{taskDetail.taskStatus === 'inProgress'}}"
             bindtap="completeTask">
-        {{completing ? '处理中...' : '完成'}}
+        {{completing ? '进行中...' : '完成'}}
       </view>
       <view class="btn btn-ew"
             wx:if="{{taskDetail.taskStatus === 'completed'}}"

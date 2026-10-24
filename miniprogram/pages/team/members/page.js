@@ -29,10 +29,12 @@ module.exports = () => ({
     const result = await members.call('getManagedMemberDetail', { userId: this._userId });
     if (result.success && result.data) {
       const row = result.data;
-      const keepDraft = preserveDraft === true && this.data.member && row.version === this.data.member.version && row.permissions.canEdit;
+      const keepDraft = preserveDraft === true && this.data.member && (this.data.editing || row.version === this.data.member.version) && row.permissions.canEdit;
+      const changedWhileEditing = keepDraft && this.data.editing && row.version !== this.data.member.version;
+      const previousMember = this.data.member;
       const form = keepDraft ? this.data.form : { nickName: row.nickName, studentId: row.studentId, qqId: row.qqId,
         department: row.department, isEmergencyContact: row.isEmergencyContact };
-      this.setData({ member: row, roleName: members.roles[row.role], departmentIndex: members.departments.indexOf(form.department), form,
+      this.setData({ member: changedWhileEditing ? { ...row, version: previousMember.version } : row, error: changedWhileEditing ? '资料已被更新，当前输入已保留，请先核对最新资料。' : '', roleName: members.roles[row.role], departmentIndex: members.departments.indexOf(form.department), form,
         editing: this.data.editing && row.permissions.canEdit,
         removeVisible: this.data.removeVisible && row.permissions.canRemove });
       if (!keepDraft) this._pending = null;

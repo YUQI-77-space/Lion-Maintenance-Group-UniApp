@@ -1,50 +1,13 @@
-/* components/section-header/index.wxss */
-@import "../../styles/variables.wxss";
+@import "../../styles/design-tokens.wxss";
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-md);
-}
-
-.section-title-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.section-title {
-  font-size: var(--font-subtitle);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.section-title-plain {
-  /* 仅文字 */
-}
-
-.section-title-border {
-  padding-left: var(--space-sm);
-  border-left: 4rpx solid var(--primary);
-}
-
-.section-title-accent {
-  color: var(--primary);
-}
-
-.section-more {
-  display: flex;
-  align-items: center;
-  font-size: var(--font-caption);
-  color: var(--text-secondary);
-}
-
-.more-text {
-  /* 文字 */
-}
-
-.more-arrow {
-  margin-left: 4rpx;
-  font-size: var(--font-body);
-  color: var(--text-muted);
-}
+.section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--mg-space-2); margin-bottom: var(--mg-space-3); font-family: var(--mg-font-family); }
+.section-title-wrap { flex: 1; min-width: 0; padding: var(--mg-space-2) 0; }
+.section-title { display: block; font-size: var(--mg-font-section); line-height: var(--mg-line-section); font-weight: var(--mg-weight-semibold); color: var(--mg-color-text-primary); overflow-wrap: break-word; }
+/* 保留原有变体名称与自定义类入口。 */
+.section-title-border { padding-left: var(--mg-space-2); border-left: 4rpx solid var(--mg-color-brand); }
+.section-title-accent { color: var(--mg-color-brand); }
+.section-more { box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0; gap: var(--mg-space-1); min-width: var(--mg-size-touch-target-min); min-height: var(--mg-size-touch-target-min); max-width: 50%; margin: 0; padding: var(--mg-space-2); border: 0; border-radius: var(--mg-radius-control); background: transparent; color: var(--mg-color-brand); font-family: var(--mg-font-family); font-size: var(--mg-font-label); font-weight: var(--mg-weight-regular); line-height: var(--mg-line-label); text-align: left; }
+.section-more::after { border: 0; }
+.more-text { min-width: 0; overflow-wrap: break-word; }
+.more-arrow { flex-shrink: 0; width: 12rpx; height: 12rpx; border-top: 2px solid currentColor; border-right: 2px solid currentColor; transform: rotate(45deg); }
+.section-more-pressed { background: var(--mg-color-brand-selected); color: var(--mg-color-brand-strong); }

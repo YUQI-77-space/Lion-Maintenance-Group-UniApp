@@ -1,0 +1,87 @@
+/* 设计值：docs/知识库/Design/design-tokens.json v1.2.0。
+   页面全局接入；隔离组件显式导入并在根容器挂 mg-theme。 */
+page, .mg-theme {
+  --mg-color-brand: #0369D7;
+  --mg-color-brand-pressed: #035CBD;
+  --mg-color-brand-soft: #F2F8FD;
+  --mg-color-brand-selected: #E6F0FB;
+  --mg-color-brand-strong: #0250A3;
+  --mg-color-on-brand: #FFFFFF;
+  --mg-color-bg-page: #F5F7FA;
+  --mg-color-bg-surface: #FFFFFF;
+  --mg-color-bg-subtle: #EEF1F5;
+  --mg-color-text-primary: #182230;
+  --mg-color-text-secondary: #475467;
+  --mg-color-text-muted: #626D80;
+  --mg-color-border: #DCE2EA;
+  --mg-color-control-border: #7A8798;
+  --mg-color-success: #19734A;
+  --mg-color-success-soft: #EAF5EF;
+  --mg-color-warning: #8A5700;
+  --mg-color-warning-soft: #FFF4DE;
+  --mg-color-danger: #B83232;
+  --mg-color-danger-soft: #FDEEEE;
+  --mg-color-info: #0250A3;
+  --mg-color-info-soft: #F2F8FD;
+  --mg-color-neutral: #526174;
+  --mg-color-neutral-soft: #EEF1F5;
+  --mg-color-scrim: rgba(24,34,48,0.48);
+
+  --mg-font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mg-font-display: 48rpx;
+  --mg-line-display: 60rpx;
+  --mg-font-title: 40rpx;
+  --mg-line-title: 56rpx;
+  --mg-font-section: 34rpx;
+  --mg-line-section: 48rpx;
+  --mg-font-body: 30rpx;
+  --mg-line-body: 46rpx;
+  --mg-font-body-min: 15px;
+  --mg-font-label: 28rpx;
+  --mg-line-label: 40rpx;
+  --mg-font-caption: 24rpx;
+  --mg-line-caption: 36rpx;
+  --mg-weight-regular: 400;
+  --mg-weight-medium: 500;
+  --mg-weight-semibold: 600;
+
+  --mg-space-micro: 4rpx;
+  --mg-space-1: 8rpx;
+  --mg-space-2: 16rpx;
+  --mg-space-3: 24rpx;
+  --mg-space-4: 32rpx;
+  --mg-space-6: 48rpx;
+  --mg-space-8: 64rpx;
+  --mg-radius-tag: 8rpx;
+  --mg-radius-control: 16rpx;
+  --mg-radius-card: 24rpx;
+  --mg-radius-modal: 24rpx;
+  --mg-radius-pill: 999rpx;
+  --mg-radius-avatar: 50%;
+  --mg-border-width: 1px;
+  --mg-shadow-none: none;
+  --mg-shadow-overlay: 0 8rpx 24rpx rgba(24,34,48,0.08);
+
+  --mg-size-button: 96rpx;
+  --mg-size-button-compact: 80rpx;
+  --mg-size-input-min: 96rpx;
+  --mg-size-textarea-min: 192rpx;
+  --mg-size-touch-target-min: 48px;
+  --mg-size-touch-gap-min: 8px;
+  --mg-size-icon-sm: 32rpx;
+  --mg-size-icon-md: 40rpx;
+  --mg-size-icon-lg: 48rpx;
+  --mg-size-avatar-sm: 64rpx;
+  --mg-size-avatar-md: 88rpx;
+  --mg-size-avatar-lg: 120rpx;
+  --mg-layout-page-gutter: 32rpx;
+  --mg-layout-card-padding: 32rpx;
+  --mg-layout-section-gap: 32rpx;
+  --mg-layout-chapter-gap: 48rpx;
+  --mg-layout-field-label-gap: 12rpx;
+  --mg-layout-field-error-gap: 8rpx;
+  --mg-motion-press: 100ms;
+  --mg-motion-selection: 160ms;
+  --mg-motion-overlay: 220ms;
+  --mg-motion-easing: ease-out;
+}

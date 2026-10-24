@@ -677,3 +677,34 @@
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
 }
+
+/* 工作台：可读的白色内容面与稳定信息层级。 */
+.home-container { padding-left: 32rpx; padding-right: 32rpx; }
+.hero-section { height: auto; min-height: 160rpx; margin: 32rpx 0; background: var(--mg-color-bg-surface); border-radius: 24rpx; }
+.hero-swiper, .hero-veil, .hero-skeleton { display: none; }
+.hero-content { position: relative; bottom: auto; padding: 32rpx; }
+.hero-greeting { color: var(--mg-color-text-primary); font-size: 40rpx; white-space: normal; font-weight: 600; }
+.hero-meta { color: var(--mg-color-text-secondary); }
+.today-card, .todo-card, .quick-actions, .section { margin: 0 0 32rpx; border: 0; box-shadow: none; }
+.today-card, .todo-card { padding: 32rpx; border-radius: 24rpx; }
+.today-block { padding: 0; }
+.quick-actions { margin-top: 32rpx; flex-wrap: wrap; gap: 16rpx; }
+.quick-item { flex: 1; min-width: 48px; min-height: 48px; }
+.quick-title { font-size: 15px; white-space: normal; }
+.todo-title { flex-wrap: wrap; gap: 8px; }
+.progress-link { min-height: 48px; min-width: 48px; background: transparent; color: var(--mg-color-brand); font-size: 15px; line-height: 48px; margin-left: auto; }
+.todo-item-title { font-size: 15px; font-size: max(15px,30rpx); white-space: normal; overflow-wrap: break-word; }
+.todo-fields { grid-template-columns: 1fr; }
+.entrance, .conveyor-content, .skeleton-block { animation: none; }
+.honors-conveyor { overflow-x: auto; }
+.conveyor-content { transform: none; }
+
+.team-photo-section { margin-bottom: 32rpx; border-radius: 24rpx; overflow: hidden; }
+.team-photo-swiper { width: 100%; height: 320rpx; }
+.team-photo { width: 100%; height: 100%; }
+.photo-unavailable { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--mg-color-text-muted); background: var(--mg-color-bg-subtle); }
+.quick-item.primary { background: var(--mg-color-brand-soft); border-radius: 16rpx; padding: 16rpx 8rpx; }
+.progress-link::after { border: 0; }
+.todo-field-value { white-space: normal; overflow-wrap: break-word; }
+
+.progress-link { border: 0; }

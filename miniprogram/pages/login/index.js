@@ -13,6 +13,9 @@ Page({
       studentId: '',
       authCode: ''
     },
+    submitting: false,
+    formError: '',
+    errorField: '',
     privacyAgree: false,
     isCheckingLogin: true,
     themeClass: '',
@@ -41,19 +44,25 @@ Page({
       this.verifySession(openid, userInfo);
     } else {
       this.setData({ isCheckingLogin: false });
-      this.initDatabase();
+
     }
   },
 
   // 验证会话有效性
   verifySession: async function(openid, userInfo) {
     try {
-      await api.call('login', { action: 'verifySession' });
+      const result = await api.call('login', { action: 'verifySession' });
+      if (!result.success || !result.data || !result.data.openid) {
+        this.setData({ isCheckingLogin: false, formError: result.code === 503 ? '暂时无法确认身份，请重试' : '身份已失效，请重新登录' });
+        return;
+      }
+      userInfo = { ...userInfo, ...result.data };
+      openid = result.data.openid;
       
       const app = getApp();
       app.globalData.userInfo = userInfo;
       app.globalData.openid = openid;
-      const roleFromStorage = wx.getStorageSync('role') || 'user';
+      const roleFromStorage = result.data.role || 'user';
       app.updateUserRole && app.updateUserRole(roleFromStorage);
       app.globalData.isLogin = true;
       
@@ -65,21 +74,10 @@ Page({
     } catch (err) {
       console.error('验证会话请求失败，显示登录表单', err);
       this.setData({ isCheckingLogin: false });
-      this.initDatabase();
+
     }
   },
 
-  // 数据库初始化
-  initDatabase: async function() {
-    try {
-      await api.call('initDataBase', {
-        action: 'initAllCollection',
-        params: {}
-      });
-    } catch (err) {
-      console.error('数据库初始化失败', err);
-    }
-  },
 
   // 用户信息输入处理
   onChooseAvatar: function (e) {
@@ -113,17 +111,30 @@ Page({
     }
   },
 
+  showFieldError(field, message) {
+    this.setData({ errorField: field, formError: message });
+    wx.pageScrollTo({ selector: '#login-' + field, duration: 0 });
+  },
+
   // 用户信息保存
-  saveUserInfo: async function () {
+  async saveUserInfo() {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
+    try { return await this._performSaveUserInfo(); }
+    finally { this.setData({ submitting: false }); }
+  },
+  async _performSaveUserInfo() {
+    this.setData({ formError: '', errorField: '' });
+    if (!this.data.privacyAgree) { this.setData({ formError: '请先阅读并同意隐私协议' }); return; }
     const userInfo = this.data.userInfo;
     
     if (!userInfo.avatarUrl) {
-      wx.showToast({ title: '请选择头像', icon: 'none' });
+      this.showFieldError('avatarUrl', '请选择头像');
       return;
     }
     
     if (!userInfo.nickName) {
-      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      this.showFieldError('nickName', '请输入昵称');
       return;
     }
     
@@ -138,22 +149,22 @@ Page({
     }
     
     if (!userInfo.qqId) {
-      wx.showToast({ title: '请输入QQ号', icon: 'none' });
+      this.showFieldError('qqId', '请输入QQ号');
       return;
     }
     
     if (!/^[0-9]{5,11}$/.test(userInfo.qqId)) {
-      wx.showToast({ title: '请输入正确的QQ号（5-11位数字）', icon: 'none' });
+      this.showFieldError('qqId', '请输入正确的QQ号（5-11位数字）');
       return;
     }
     
     if (!userInfo.studentId) {
-      wx.showToast({ title: '请输入学号/工号', icon: 'none' });
+      this.showFieldError('studentId', '请输入学号/工号');
       return;
     }
 
     wx.showLoading({ title: '正在保存', mask: true });
-    this.loginAndSaveUserInfo(userInfo);
+    await this.loginAndSaveUserInfo(userInfo);
   },
 
   // 登录并保存用户信息
@@ -226,8 +237,9 @@ Page({
       // 定义默认头像（使用本地图片）
       const DEFAULT_AVATAR = iconManager.get('common_logo');
       
+      const { authCode, ...profile } = userInfo;
       const completeUserInfo = {
-        ...userInfo,
+        ...profile,
         openid: openid,
         avatarUrl: uploadResult.success ? userInfo.avatarUrl : DEFAULT_AVATAR,
         cloudAvatarUrl: uploadResult.success ? uploadResult.cloudAvatarUrl : null,
@@ -239,6 +251,7 @@ Page({
       
       const saveRes = await api.call('users', {
         action: 'saveUserInfo',
+        config: { retries: 0 },
         params: { userInfo: completeUserInfo }
       });
 

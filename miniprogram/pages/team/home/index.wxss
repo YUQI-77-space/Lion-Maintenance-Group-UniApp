@@ -3,18 +3,15 @@
 @import "/styles/custom-navbar.wxss";
 
 /* 禁用页面滚动，固定高度 */
-page {
-  height: 100vh;
-  overflow: hidden;
-}
+page { background: var(--mg-color-bg-page); }
 
 .container {
   position: relative;
   min-height: 100vh;
   padding: 30rpx;
-  padding-bottom: 200rpx; /* 为底部导航栏预留空间 */
+  padding-bottom: 72px; /* 为底部导航栏预留空间 */
   box-sizing: border-box;
-  overflow: hidden;
+
 }
 
 .header {
@@ -24,7 +21,7 @@ page {
 /* 移除原来的标题，因为已在导航栏显示 */
 /* .title {
   font-size: 40rpx;
-  font-weight: bold;
+  font-weight: 600;
   color: var(--text-main);
 } */
 
@@ -37,7 +34,7 @@ page {
 .team-slogan {
   font-size: 30rpx;
   color: var(--primary-color);
-  font-weight: bold;
+  font-weight: 600;
   margin-top: 20rpx;
   padding: 15rpx 20rpx;
   background: linear-gradient(to right, rgba(58, 117, 251, 0.05), rgba(255, 255, 255, 0.8));
@@ -64,7 +61,7 @@ page {
 
 .section-title {
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .more-btn {
@@ -131,4 +128,6 @@ page {
   transition: all 0.3s ease;
 }
 
- 
+
+.function-item { min-height: 48px; min-width: 0; padding: 24rpx 8rpx; }
+.function-name { text-align: center; overflow-wrap: break-word; font-size: 15px; }

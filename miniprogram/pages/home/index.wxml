@@ -1,7 +1,7 @@
 <!--pages/home/index.wxml-->
-<!-- 自定义导航栏：毛玻璃底，内容滑到栏下时透出虚化底色，与头图形成纵深 -->
+<!-- 白色自定义导航栏，按胶囊位置避让 -->
 <view class="custom-navbar {{navScrolled ? 'is-scrolled' : ''}}" style="padding-top: {{statusBarHeight}}px;">
-  <view class="navbar-content">
+  <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
     <text class="navbar-title">物科院维修组</text>
   </view>
@@ -9,40 +9,25 @@
 
 <!-- 顶部复位内边距：首屏从导航栏下方开始，轮播图完整可见，
      不会被顶部毛玻璃吞掉 -->
-<view class="home-container" style="padding-top: {{navBarHeight + 0}}px;" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd">
+<view class="home-container" style="padding-top: {{navBarHeight}}px; padding-bottom: {{tabbarHeight + 16}}px;">
+
+  <!-- ========== 快捷入口（动作条：描边图标） ========== -->
+  <view class="quick-actions entrance" style="animation-delay: 140ms;">
+    <block wx:for="{{functionEntries}}" wx:key="id">
+    <view class="quick-item {{item.primary ? 'primary' : ''}}"
+          wx:if="{{!item.requireAuth || userRole !== 'user'}}"
+          data-index="{{index}}"
+          bindtap="onFunctionEntryTap">
+      <view class="quick-icon-wrap">
+        <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      </view>
+      <text class="quick-title">{{item.title}}</text>
+    </view>
+    </block>
+  </view>
 
   <!-- ========== 首屏：问候头（原轮播降级为背景） ========== -->
   <view class="swiper-section hero-section">
-    <block wx:if="{{swiperImages.length}}">
-      <swiper
-        class="hero-swiper"
-        autoplay="{{true}}"
-        interval="{{swiperInterval}}"
-        duration="{{swiperDuration}}"
-        circular="{{true}}"
-        current="{{swiperCurrent}}"
-        indicator-dots="{{false}}"
-        bindchange="onSwiperChange"
-        bindtouchstart="onSwiperTouchStart"
-        bindtouchend="onSwiperTouchEnd"
-        bindtouchmove="onSwiperTouchMove">
-        <swiper-item wx:for="{{swiperImages}}" wx:key="id" class="swiper-item">
-          <image
-            class="hero-bg"
-            src="{{item.url}}"
-            mode="aspectFill"
-            lazy-load="{{true}}"
-            binderror="onImageError"
-            data-index="{{index}}">
-          </image>
-        </swiper-item>
-      </swiper>
-    </block>
-    <block wx:else>
-      <view class="hero-bg hero-skeleton"></view>
-    </block>
-
-    <view class="hero-veil"></view>
     <view class="hero-content entrance" style="animation-delay: 0ms;">
       <view class="hero-greeting">{{greeting}}</view>
       <view class="hero-meta">
@@ -53,7 +38,7 @@
   </view>
 
   <!-- ========== 今日状态卡：压在问候头下缘 ========== -->
-  <view class="today-card entrance" style="animation-delay: 60ms;">
+  <view class="today-card entrance" wx:if="{{userRole !== 'user'}}" style="animation-delay: 60ms;">
 
     <!-- 值班：只呈现当前状态，不提供跳转入口（值班表在维修组 Tab 内） -->
     <view class="today-block">
@@ -100,12 +85,13 @@
   <!-- ========== 我的待办：我提交的报修进度（仅呈现，卡片内不设任何跳转入口） ========== -->
   <view class="todo-card entrance" style="animation-delay: 100ms;">
     <view class="todo-title">
-      <text>我的待办</text>
+      <text>我的报修进度</text>
+      <button class="progress-link" bindtap="openTodoList">查看全部</button>
       <view class="todo-count" wx:if="{{myTodosTotal}}">{{myTodosTotal}}</view>
     </view>
 
     <block wx:if="{{myTodos.length}}">
-      <view class="todo-item"
+      <view class="todo-item" bindtap="openRepairProgress" data-id="{{item.taskId}}"
             wx:for="{{myTodos}}"
             wx:key="taskId">
         <!-- 标题与状态同排：一眼看清「哪件事、到哪一步了」 -->
@@ -157,18 +143,13 @@
     </view>
   </view>
 
-  <!-- ========== 快捷入口（动作条：描边图标） ========== -->
-  <view class="quick-actions entrance" style="animation-delay: 140ms;">
-    <view class="quick-item {{item.primary ? 'primary' : ''}}"
-          wx:for="{{functionEntries}}"
-          wx:key="id"
-          data-index="{{index}}"
-          bindtap="onFunctionEntryTap">
-      <view class="quick-icon-wrap">
-        <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
-      </view>
-      <text class="quick-title">{{item.title}}</text>
-    </view>
+  <view class="team-photo-section" wx:if="{{swiperImages.length}}">
+    <swiper class="team-photo-swiper" autoplay="{{false}}" circular="{{true}}" indicator-dots="{{true}}" current="{{swiperCurrent}}" bindchange="onSwiperChange">
+      <swiper-item wx:for="{{swiperImages}}" wx:key="id">
+        <image wx:if="{{!swiperImageErrors[index]}}" class="team-photo" src="{{item.url}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}" />
+        <view class="photo-unavailable" wx:else>团队图片暂时无法显示</view>
+      </swiper-item>
+    </swiper>
   </view>
 
   <!-- ========== 特色活动：1 大 + 2 小 ========== -->
@@ -234,7 +215,7 @@
     </section-header>
 
     <block wx:if="{{teamHonors.length}}">
-      <view class="honors-conveyor" bindtap="toggleHonorsPause">
+      <scroll-view class="honors-conveyor" scroll-x="{{true}}">
         <view class="conveyor-track">
           <view class="conveyor-content {{honorsPaused ? 'paused' : ''}}" style="animation-duration: {{conveyorDuration}}ms;">
             <!-- 第一组图片 -->
@@ -254,23 +235,10 @@
                 data-id="{{item.id}}">
               </image>
             </view>
-            <!-- 第二组图片（复制，用于无缝循环） -->
-            <view
-              class="honor-card"
-              wx:for="{{teamHonors}}"
-              wx:key="index"
-              style="width: {{item.displayWidth}}rpx;"
-              data-honor="{{item}}">
-              <image
-                class="honor-card-image"
-                src="{{item.url}}"
-                mode="aspectFit"
-                lazy-load="{{true}}">
-              </image>
-            </view>
+
           </view>
         </view>
-      </view>
+      </scroll-view>
     </block>
 
     <block wx:else>

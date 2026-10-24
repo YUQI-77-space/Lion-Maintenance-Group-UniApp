@@ -31,14 +31,14 @@ module.exports = {
 };
 </wxs>
 
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
   <!-- 左侧分类导航 -->
   <view class="sidebar" style="width: 180rpx;">
     <view class="{{activeTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
     <view class="{{activeTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">待认领</view>
     <view class="{{activeTab === 'inProgress' ? 'active' : ''}}" bindtap="switchTab" data-tab="inProgress">进行中</view>
     <view class="{{activeTab === 'completed' ? 'active' : ''}}" bindtap="switchTab" data-tab="completed">已完成</view>
-    <view class="{{activeTab === 'cancelled' ? 'active' : ''}}" bindtap="switchTab" data-tab="cancelled">已撤销</view>
+    <view class="{{activeTab === 'cancelled' ? 'active' : ''}}" bindtap="switchTab" data-tab="cancelled">已取消</view>
   </view>
 
   <!-- 右侧内容区域 -->
@@ -49,12 +49,13 @@ module.exports = {
       <view class="search-box">
         <input class="search-input" placeholder="搜索任务..." bindinput="onSearchInput" value="{{searchKeyword}}" confirm-type="search" bindconfirm="onSearch"/>
         <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearchInput">✕</view>
-        <view class="search-icon" bindtap="onSearch">🔍</view>
+        <view class="search-icon" bindtap="onSearch">搜索</view>
       </view>
     </view>
 
     <!-- 列表滚动区域 -->
     <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+      <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryList">重试加载</button></view>
       <!-- 加载动画 -->
       <view class="loading-container" wx:if="{{loading}}">
         <loading-animation size="large" />

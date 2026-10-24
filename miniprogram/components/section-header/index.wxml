@@ -1,13 +1,14 @@
 <!-- 区块标题组件 -->
-<view class="section-header {{customClass}}">
+<view class="section-header mg-theme {{customClass}}">
   <view class="section-title-wrap">
     <text class="section-title {{titleClass}}">{{ title }}</text>
   </view>
-  <view 
+  <button
     class="section-more" 
     wx:if="{{showMore}}" 
-    bindtap="onMoreTap">
+    bindtap="onMoreTap"
+    hover-class="section-more-pressed">
     <text class="more-text">{{ moreText }}</text>
-    <text class="more-arrow" wx:if="{{showArrow}}">></text>
-  </view>
+    <text class="more-arrow" wx:if="{{showArrow}}" aria-hidden="true"></text>
+  </button>
 </view>

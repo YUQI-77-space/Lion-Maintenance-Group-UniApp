@@ -1,5 +1,5 @@
 <!--pages/team/maintenance/create/index.wxml-->
-<view class="container">
+<view class="mg-theme mg-data-page container">
   <!-- 顶部介绍区域已移除 -->
 
   <!-- 表单内容 -->

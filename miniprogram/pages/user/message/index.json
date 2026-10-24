@@ -3,7 +3,7 @@
     "loading-animation": "/components/loading-animation/index"
   },
   "navigationBarTitleText": "我的消息",
-  "backgroundColor": "#f7f7f7",
+  "backgroundColor": "#F5F7FA",
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark"
 }

@@ -2,6 +2,7 @@ const iconManager = require('../../utils/iconManager');
 
 Page({
   data: {
+    startupError: '',
     showContent: false,
     fadeOut: false,
     // 启动页背景图（本地资源）
@@ -19,11 +20,11 @@ Page({
   _preloadDone: false,
   _verifyDone: false,
   _navigated: false,
-  _minDwellMs: 2000,
+  _minDwellMs: 0,
   _maxWaitMs: 6500,
 
   onLoad(options) {
-    console.log('[Startup] 启动页加载');
+    this.setData({ startupError: '' });
 
     // 并行启动远程验证，利用启动停留时间完成校验，避免淡出后再等待
     try {
@@ -44,23 +45,24 @@ Page({
         success: (res) => {
           const isSlow = res.networkType === '2g' || res.networkType === 'none';
           // 最小停留固定为2s（不含退出动画）
-          this._minDwellMs = 2000;
+          this._minDwellMs = 0;
           this._maxWaitMs = isSlow ? 8000 : 6500;
           this._startDwellTimers();
         },
         fail: () => {
-          this._minDwellMs = 2000;
+          this._minDwellMs = 0;
           this._maxWaitMs = 7000;
           this._startDwellTimers();
         }
       });
     } catch (e) {
-      this._minDwellMs = 2000;
+      this._minDwellMs = 0;
       this._maxWaitMs = 7000;
       this._startDwellTimers();
     }
   },
 
+  retryStartup() { this._navigated = false; this.guardAndNavigate(); },
   onReady() {
     wx.nextTick(() => {
       this.setData({ showContent: true });
@@ -130,7 +132,7 @@ Page({
           wx.reLaunch({
             url: '/pages/login/index',
             fail: (err) => {
-              console.error('[Startup] 跳转登录失败:', err);
+              this.setData({ fadeOut: false, startupError: '无法打开登录页，请重新加载' });
             }
           });
         }
@@ -139,7 +141,7 @@ Page({
       // 淡出并跳转
       const finish = (shouldGoHome) => {
         this.setData({ fadeOut: true });
-        setTimeout(() => doNavigate(!!shouldGoHome), 520);
+        doNavigate(!!shouldGoHome);
       };
 
       // ===== 策略1：优先检查本地缓存（秒判，避免闪现登录页） =====

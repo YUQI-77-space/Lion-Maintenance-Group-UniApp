@@ -1,4 +1,4 @@
-<view class="container">
+<view class="mg-theme mg-data-page container">
   <view class="map-tip">
     <text class="tip-text">点击具体问题，即可返回报修页并自动填好分类</text>
     <text class="tip-action" bindtap="toggleAll">{{allExpanded ? '收起全部' : '展开全部'}}</text>

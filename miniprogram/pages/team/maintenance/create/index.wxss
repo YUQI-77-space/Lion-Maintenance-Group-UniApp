@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/maintenance/create/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -432,3 +433,14 @@
 }
 
 /* 深色模式支持移除 */
+
+.primary-btn, .btn-primary, .submit-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); border-color: var(--mg-color-brand); border-radius: 16rpx; }
+.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: 15px; }
+.step-bar { z-index: 100; }
+.step-card { border: 0; border-radius: 24rpx; padding: 32rpx; }
+.button-group { gap: 8px; }
+.button-group .btn { min-height: 48px; height: auto; line-height: 1.5; padding: 24rpx; }
+.logo-pulse, .input-decoration { display: none; }
+.form-label { height: auto; flex-wrap: wrap; }
+.privacy-agreement, .privacy-link { min-height: 48px; }
+@media (prefers-reduced-motion: reduce) { .logo-wrapper, .auth-container, .step-node { animation: none; transition: none; } }

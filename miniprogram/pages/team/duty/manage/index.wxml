@@ -1,5 +1,5 @@
 <!--pages/team/duty/manage/index.wxml-->
-<view class="container">
+<view class="mg-theme mg-data-page container">
   <!-- 顶部分页导航 -->
   <view class="tab-header">
     <view 

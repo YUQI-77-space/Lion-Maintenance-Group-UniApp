@@ -118,3 +118,5 @@
   color: var(--primary);
   font-weight: 600;
 }
+
+.entry-item { min-height: 48px; }

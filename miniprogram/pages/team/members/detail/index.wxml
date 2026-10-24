@@ -1,4 +1,4 @@
-<view class="members-page">
+<view class="mg-theme mg-data-page members-page">
   <view wx:if="{{loading}}" class="member-state">正在加载组员资料…</view>
   <block wx:elif="{{member}}">
     <view class="member-card member-profile">

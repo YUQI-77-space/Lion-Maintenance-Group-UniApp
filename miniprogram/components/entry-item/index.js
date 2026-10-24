@@ -70,9 +70,6 @@ Component({
   methods: {
     onTap(e) {
       const { path, itemIndex } = this.data;
-      if (path) {
-        wx.navigateTo({ url: path });
-      }
       this.triggerEvent('tap', { path, index: itemIndex });
     }
   }

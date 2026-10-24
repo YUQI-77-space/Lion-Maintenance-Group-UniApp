@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* ============================================
    pages/user/message/index.wxss
    我的消息 - 单列卡片式消息列表
@@ -182,7 +183,7 @@
   margin-bottom: 20rpx;
   padding: 26rpx 48rpx 26rpx 24rpx;
   border-radius: 20rpx;
-  border: 1rpx solid #f0f1f5;
+  border: 1rpx solid var(--mg-color-border);
   background: #ffffff;
   /* transform 快速（按压反馈），背景/边框慢速（读态过渡） */
   transition:
@@ -204,7 +205,7 @@
 
 .msg-card.is-read {
   background: #ffffff;
-  border-color: #f0f1f5;
+  border-color: var(--mg-color-border);
 }
 
 /* ---- 左侧类型图标（彩色浅底块） ---- */
@@ -411,7 +412,7 @@
   display: flex;
   align-items: flex-start;
   padding: 32rpx 32rpx 24rpx;
-  border-bottom: 1rpx solid #f0f1f5;
+  border-bottom: 1rpx solid var(--mg-color-border);
 }
 
 .detail-ico {
@@ -479,17 +480,17 @@
 }
 
 .detail-tag.tag-maintenance {
-  color: #1890ff;
+  color: var(--mg-color-info);
   background: rgba(24, 144, 255, 0.12);
 }
 
 .detail-tag.tag-volunteer {
-  color: #52c41a;
+  color: var(--mg-color-success);
   background: rgba(82, 196, 26, 0.12);
 }
 
 .detail-tag.tag-duty {
-  color: #fa8c16;
+  color: var(--mg-color-warning);
   background: rgba(250, 140, 22, 0.14);
 }
 
@@ -541,7 +542,7 @@
 .detail-footer {
   flex-shrink: 0;
   padding: 24rpx 32rpx 28rpx;
-  border-top: 1rpx solid #f0f1f5;
+  border-top: 1rpx solid var(--mg-color-border);
   background: #ffffff;
 }
 

@@ -1,21 +1,9 @@
-<view class="tabbar-wrapper">
-  <view class="tabbar" catchtouchmove="true">
-    <view class="glass-background"></view>
-    <view class="glass-inner-shadow"></view>
-    <view class="glass-reflection"></view>
-    
-    <view class="tabs-container">
-      <block wx:for="{{tabs}}" wx:key="pagePath">
-        <view class="tab-item {{selected === index ? 'active' : ''}}" data-index="{{index}}" data-url="/{{item.pagePath}}" bindtap="onTap" hover-class="none">
-          <view class="tab-icon-wrapper" hover-class="none">
-            <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit" hover-class="none" />
-            <view wx:if="{{selected === index}}" class="icon-glow"></view>
-          </view>
-          <text class="tab-text">{{item.text}}</text>
-        </view>
-      </block>
-    </view>
+<view class="tabbar-wrapper mg-theme" style="padding-bottom: {{safeBottom}}px;">
+  <view class="tabs-container">
+    <button class="tab-item {{selected === index ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="pagePath" data-index="{{index}}" data-url="/{{item.pagePath}}" bindtap="onTap" disabled="{{interactionLocked}}" hover-class="tab-pressed" aria-label="{{item.text}}{{selected === index ? '，当前页面' : ''}}">
+      <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit" />
+      <text class="tab-text">{{item.text}}</text>
+    </button>
   </view>
-  
   <view wx:if="{{interactionLocked}}" class="tabbar-mask" catchtap="noop" catchtouchmove="noop" />
 </view>

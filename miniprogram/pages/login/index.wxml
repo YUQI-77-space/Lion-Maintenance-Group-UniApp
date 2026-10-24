@@ -1,5 +1,5 @@
 <!-- pages/login/index.wxml -->
-<view class="container">
+<view class="mg-theme mg-data-page container">
   <!-- 自动登录加载界面 -->
   <block wx:if="{{isCheckingLogin}}">
     <view class="auto-login-container">
@@ -20,20 +20,20 @@
         <view class="section-subtitle">请完善个人信息并登录</view>
       </view>
       
+      <view class="mg-page-notice mg-page-notice--error" wx:if="{{formError}}">{{formError}}</view>
       <view class="form-section">
-        <view class="avatar-container">
+        <view class="avatar-container" id="login-avatarUrl">
           <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
             <image class="avatar" src="{{userInfo.avatarUrl || iconDefaultAvatar}}"></image>
             <view class="avatar-overlay">
-              <view class="avatar-icon">📷</view>
+              <view class="avatar-icon">选择</view>
             </view>
           </button>
           <view class="avatar-tips">点击选择头像</view>
         </view>
         
-        <view class="form-item">
+        <view class="form-item" id="login-nickName">
           <view class="form-label required">
-            <view class="label-icon">😊</view>
             <view class="label-text">昵称</view>
           </view>
           <view class="input-wrapper">
@@ -42,9 +42,8 @@
           </view>
         </view>
 
-        <view class="form-item">
+        <view class="form-item" id="login-qqId">
           <view class="form-label required">
-            <view class="label-icon">💬</view>
             <view class="label-text">QQ号</view>
           </view>
           <view class="input-wrapper">
@@ -53,9 +52,8 @@
           </view>
         </view>
 
-        <view class="form-item">
+        <view class="form-item" id="login-studentId">
           <view class="form-label required">
-            <view class="label-icon">🎓</view>
             <view class="label-text">学号/工号</view>
           </view>
           <view class="input-wrapper">
@@ -66,14 +64,13 @@
         
         <view class="form-item">
           <view class="form-label">
-            <view class="label-icon">🔑</view>
-            <view class="label-text">身份权限码</view>
+            <view class="label-text">身份权限码（选填）</view>
             <view class="label-subtitle">（用于分配身份权限，支持粘贴）</view>
           </view>
           <view class="input-wrapper">
             <input class="form-input" type="text" placeholder="请输入身份权限码（非必填）" value="{{userInfo.authCode}}" bindinput="inputChange" data-field="authCode" confirm-type="done" maxlength="50" />
             <view class="input-decoration"></view>
-            <view class="paste-hint" wx:if="{{!userInfo.authCode}}">💡 长按可粘贴权限码</view>
+            <view class="paste-hint" wx:if="{{!userInfo.authCode}}">长按可粘贴权限码</view>
           </view>
         </view>
       </view>
@@ -89,12 +86,12 @@
       </view>
       
       <view class="action-section">
-        <button class="primary-btn" bindtap="saveUserInfo" disabled="{{!privacyAgree}}">保存并登录</button>
+        <button class="primary-btn" bindtap="saveUserInfo" disabled="{{!privacyAgree || submitting}}" loading="{{submitting}}">保存并登录</button>
       </view>
       
       <!-- 网络提示信息 -->
       <view class="network-warning">
-        <text class="warning-text">请切换至 手机流量 而非 校园网，否则无法上传头像(校园网问题)，进入小程序系统正常使用校园网即可)</text>
+        <text class="warning-text">若头像上传失败，可切换网络重试，或按提示使用默认头像。</text>
       </view>
     </view>
   </block>

@@ -1,6 +1,8 @@
+const { getLayout } = require('../utils/layout');
 Component({
 	data: {
 		tabs: [],
+		safeBottom: getLayout().safeBottom,
 		selected: 0,
 		isInitialized: false,
 		interactionLocked: false
@@ -62,9 +64,9 @@ Component({
 		},
 
 		onTap(e) {
-			if (this.data.interactionLocked) return;
+			if (this.data.interactionLocked || this._switching) return;
 			const url = e.currentTarget.dataset.url;
-			if (!url) return;
+			if (!url || !this.data.tabs.some(tab => '/' + tab.pagePath === url)) return;
 			// 若点击的就是当前已选 Tab，则不做跳转，避免重复重建页面
 			try {
 				const pages = getCurrentPages();
@@ -72,15 +74,13 @@ Component({
 				const tappedIndex = e.currentTarget.dataset.index;
 				const idx = typeof tappedIndex === 'number' ? tappedIndex : parseInt(tappedIndex, 10);
 				const sameByIndex = !isNaN(idx) && idx === this.data.selected;
-				if (sameByIndex || currentRoute === url) {
+				if (currentRoute === url) {
 					return;
 				}
 			} catch (err) {}
-			if (typeof wx.switchTab === 'function') {
-				wx.switchTab({ url });
-			} else {
-				wx.reLaunch({ url });
-			}
+			this._switching = true;
+			const complete = () => { this._switching = false; this.setSelectedByRoute(); };
+			wx.switchTab({ url, complete });
 		},
 
 		forceRefresh() {

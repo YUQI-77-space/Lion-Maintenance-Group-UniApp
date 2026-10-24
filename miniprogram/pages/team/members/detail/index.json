@@ -1,1 +1,7 @@
-{"navigationBarTitleText":"组员详情","usingComponents":{"avatar-display":"/components/avatar-display/index","action-modal":"/components/action-modal/index"}}
+{
+  "navigationBarTitleText": "组员详情",
+  "usingComponents": {
+    "avatar-display": "/components/avatar-display/index",
+    "action-modal": "/components/action-modal/index"
+  }
+}

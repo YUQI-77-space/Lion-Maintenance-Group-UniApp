@@ -8,7 +8,16 @@ Page({
   /**
    * 页面的初始数据
    */
+  returnToList() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/user/profile/index' }) }); },
+  measureActionBar() {
+    if (!wx.createSelectorQuery) return;
+    wx.nextTick(() => wx.createSelectorQuery().select('.action-dock').boundingClientRect(rect => {
+      if (rect) this.setData({ bottomActionInset: Math.ceil(rect.height) + 16 });
+    }).exec());
+  },
   data: {
+    bottomActionInset: 112,
+    detailError: '',
     taskId: '',
     taskDetail: {},
     activityStatus: 'inPreparation',
@@ -74,7 +83,7 @@ Page({
    */
   async loadTaskDetail() {
     wx.showLoading({ title: '加载中...' });
-    this.setData({ loading: true });
+    this.setData({ loading: true, detailError: '' });
     
     try {
       // Step 1: Get To-Do detail
@@ -146,10 +155,12 @@ Page({
       });
 
     } catch (err) {
+      this.setData({ detailError: err.message || '读取失败，请重试或返回列表' });
       console.error('获取待办/活动详情失败', err);
       wx.showToast({ title: err.message || '网络错误，请重试', icon: 'none', duration: 2000 });
       this.setData({ loading: false, refreshing: false });
     } finally {
+      this.measureActionBar();
       wx.hideLoading();
     }
   },
@@ -158,6 +169,12 @@ Page({
    * 取消报名
    */
   async cancelRegistration() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedCancelRegistration(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedCancelRegistration() {
     if (!this.data.canCancel) {
       wx.showToast({ title: this.data.cancelReasonText || '无法取消报名', icon: 'none', duration: 2000 });
       return;
@@ -174,18 +191,14 @@ Page({
       try {
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
-          const outbox = require('../../../../utils/outbox');
-          outbox.add('volunteerActivities', 'cancelRegistration', {
-            activityId: this.data.taskId,
-            fromTodo: true
-          });
+
           wx.hideLoading();
-          wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+          wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
         
         const res = await api.call('volunteerActivities', {
-          action: 'cancelRegistration',
+          action: 'cancelRegistration', config: { retries: 0 },
           params: { activityId: this.data.taskId, fromTodo: true }
         });
         
@@ -246,6 +259,7 @@ Page({
    * 关闭反馈弹窗
    */
   closeFeedbackModal: function() {
+    if (this.data.operationBusy) return;
     this.setData({
       showFeedbackModal: false
     });
@@ -264,6 +278,12 @@ Page({
    * 提交反馈
    */
   async submitFeedback() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedSubmitFeedback(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedSubmitFeedback() {
     const content = this.data.feedbackContent.trim();
     if (!content) {
       wx.showToast({ title: '请输入分工信息', icon: 'none' });

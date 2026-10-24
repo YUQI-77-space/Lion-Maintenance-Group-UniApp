@@ -8,9 +8,9 @@ const iconManager = require('../../../../utils/iconManager');
 // 状态文案
 const STATUS_TEXT = {
   pending: '待受理',
-  inProgress: '处理中',
+  inProgress: '进行中',
   completed: '已完成',
-  cancelled: '已撤销'
+  cancelled: '已取消'
 };
 
 // 特殊字段的展示顺序与中文标签
@@ -30,7 +30,16 @@ Page({
   /**
    * 页面的初始数据
    */
+  returnToList() { wx.navigateBack({ fail: () => require('../../../../utils/router').userRouter.toTodo() }); },
+  measureActionBar() {
+    if (!wx.createSelectorQuery) return;
+    wx.nextTick(() => wx.createSelectorQuery().select('.action-bar').boundingClientRect(rect => {
+      if (rect) this.setData({ bottomActionInset: Math.ceil(rect.height) + 16 });
+    }).exec());
+  },
   data: {
+    bottomActionInset: 112,
+    detailError: '',
     taskId: '',
     taskDetail: {},
     loading: true,
@@ -89,7 +98,7 @@ Page({
   async loadTaskDetail() {
     const { taskId } = this.data;
     wx.showLoading({ title: '加载中...' });
-    this.setData({ loading: true });
+    this.setData({ loading: true, detailError: '' });
 
     try {
       const result = await api.call('userToDoList', {
@@ -144,13 +153,14 @@ Page({
         });
       } else {
         this.setData({ loading: false });
-        wx.showToast({ title: result.message || '获取任务详情失败', icon: 'none' });
+        this.setData({ detailError: result.message || '记录已删除或无权查看，请返回列表或重试' });
       }
     } catch (err) {
       console.error('获取任务详情失败:', err);
       this.setData({ loading: false });
-      wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+      this.setData({ detailError: '网络异常，请重新加载' });
     } finally {
+      this.measureActionBar();
       wx.hideLoading();
     }
   },
@@ -159,6 +169,12 @@ Page({
    * 确认完成任务
    */
   async confirmCompleteTask() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmCompleteTask(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmCompleteTask() {
     const { taskId, taskDetail } = this.data;
 
     if (!(taskDetail.applicantId === app.globalData.openid && taskDetail.taskStatus === 'inProgress')) {
@@ -182,18 +198,14 @@ Page({
         // 离线处理
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
-          const outbox = require('../../../../utils/outbox');
-          outbox.add('maintenanceTasks', 'completeMaintenanceTask', {
-            maintenanceTaskId: taskId,
-            completeTime: this.formatTime(new Date())
-          });
+
           wx.hideLoading();
-          wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+          wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
 
         const res = await api.call('maintenanceTasks', {
-          action: 'completeMaintenanceTask',
+          action: 'completeMaintenanceTask', config: { retries: 0 },
           params: {
             maintenanceTaskId: taskId,
             completeTime: this.formatTime(new Date())
@@ -243,6 +255,7 @@ Page({
 
   // 关闭撤销弹窗
   closeCancelModal() {
+    if (this.data.operationBusy) return;
     this.setData({
       showCancelModal: false,
       cancelReason: ''
@@ -258,6 +271,12 @@ Page({
 
   // 确认撤销任务
   async confirmCancelTask() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmCancelTask(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmCancelTask() {
     const { taskId, cancelReason } = this.data;
 
     if (!cancelReason || cancelReason.trim() === '') {
@@ -301,18 +320,14 @@ Page({
       try {
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
-          const outbox = require('../../../../utils/outbox');
-          outbox.add('maintenanceTasks', 'cancelMaintenanceTask', { 
-            maintenanceTaskId: taskId,
-            cancelReason: cancelReason.trim()
-          });
+
           wx.hideLoading();
-          wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+          wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
 
         const res = await api.call('maintenanceTasks', {
-          action: 'cancelMaintenanceTask',
+          action: 'cancelMaintenanceTask', config: { retries: 0 },
           params: { 
             maintenanceTaskId: taskId,
             cancelReason: cancelReason.trim()

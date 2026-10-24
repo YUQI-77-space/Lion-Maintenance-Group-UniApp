@@ -1,4 +1,4 @@
-<view class="directory-page">
+<view class="mg-theme mg-data-page directory-page">
   <view class="directory-header">
     <view class="directory-heading"><view class="directory-title">组员管理</view><text class="directory-count">{{loading ? '加载中' : total + ' 位成员'}}</text></view>
     <view class="directory-subtitle">查看组内成员，管理资料与权限</view>

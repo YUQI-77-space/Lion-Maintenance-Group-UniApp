@@ -53,7 +53,7 @@ Page({
    */
   formatEW(value) {
     if (value === null || value === undefined || isNaN(value)) {
-      return '0'
+      return '—'
     }
     const num = Number(value)
     // 如果是整数，直接返回整数
@@ -68,6 +68,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.setData({ _cacheKey: `ewa_manage_cache_v2:${getApp().globalData.openid || ''}:${getApp().globalData.role || 'user'}` });
     this.checkUserPermission()
     // 先尝试读取缓存，提升首屏速度
     try {
@@ -286,13 +287,14 @@ Page({
     
     if (user) {
       this.setData({
+        editOriginal: { ...user },
         editUser: {
           ewaUserId: user.ewaUserId,
           ewaUserName: user.ewaUserName,
-          maintenanceEW: user.maintenanceEW || 0,
-          dutyEW: user.dutyEW || 0,
-          volunteerEW: user.volunteerEW || 0,
-          totalEW: user.totalEW || 0
+          maintenanceEW: user.maintenanceEW === null || user.maintenanceEW === undefined ? '' : user.maintenanceEW,
+          dutyEW: user.dutyEW === null || user.dutyEW === undefined ? '' : user.dutyEW,
+          volunteerEW: user.volunteerEW === null || user.volunteerEW === undefined ? '' : user.volunteerEW,
+          totalEW: user.totalEW === null || user.totalEW === undefined ? '' : user.totalEW
         },
         showEditModal: true
       })
@@ -303,6 +305,7 @@ Page({
    * 隐藏编辑弹窗
    */
   hideEditModal() {
+    if (this.data.savingEW) return;
     this.setData({ showEditModal: false })
   },
 
@@ -315,7 +318,7 @@ Page({
       this.setData({ 'editUser.maintenanceEW': '' })
       return
     }
-    let value = parseInt(input)
+    let value = Number(input)
     if (isNaN(value) || value < 0) value = 0
     if (value > 300) {
       value = 300
@@ -333,7 +336,7 @@ Page({
       this.setData({ 'editUser.dutyEW': '' })
       return
     }
-    let value = parseInt(input)
+    let value = Number(input)
     if (isNaN(value) || value < 0) value = 0
     if (value > 300) {
       value = 300
@@ -351,7 +354,7 @@ Page({
       this.setData({ 'editUser.volunteerEW': '' })
       return
     }
-    let value = parseInt(input)
+    let value = Number(input)
     if (isNaN(value) || value < 0) value = 0
     if (value > 300) {
       value = 300
@@ -363,26 +366,35 @@ Page({
   /**
    * 保存用户工作量
    */
-  saveUserEW: async function() {
+  async saveUserEW() {
+    if (this.data.savingEW) return;
+    this.setData({ savingEW: true });
+    try { return await this._performSaveUserEW(); }
+    finally { this.setData({ savingEW: false }); }
+  },
+  async _performSaveUserEW() {
     const { ewaUserId } = this.data.editUser;
-    let maintenanceEW = parseInt(this.data.editUser.maintenanceEW);
-    let dutyEW = parseInt(this.data.editUser.dutyEW);
-    let volunteerEW = parseInt(this.data.editUser.volunteerEW);
-    maintenanceEW = isNaN(maintenanceEW) ? 0 : maintenanceEW;
-    dutyEW = isNaN(dutyEW) ? 0 : dutyEW;
-    volunteerEW = isNaN(volunteerEW) ? 0 : volunteerEW;
+    let maintenanceEW = require('../../../../utils/ewaDisplay').number(this.data.editUser.maintenanceEW);
+    let dutyEW = require('../../../../utils/ewaDisplay').number(this.data.editUser.dutyEW);
+    let volunteerEW = require('../../../../utils/ewaDisplay').number(this.data.editUser.volunteerEW);
     
     // 只做基本的单项上限验证，具体的总EW计算和验证交给后端
-    if (maintenanceEW > 300 || dutyEW > 300 || volunteerEW > 300) {
-      wx.showToast({ title: '单项上限为300', icon: 'none' });
+    if ([maintenanceEW, dutyEW, volunteerEW].some(value => !Number.isFinite(value) || value < 0 || value > 300)) {
+      wx.showToast({ title: '请完整填写三科数值，范围0至300', icon: 'none' });
       return;
     }
     
+    const old = this.data.editOriginal || {};
+    const format = require('../../../../utils/ewaDisplay').format;
+    const confirmation = await wx.showModal({ title: '核对工作量调整',
+      content: `${this.data.editUser.ewaUserName}\n维修 ${format(old.maintenanceEW)} → ${maintenanceEW}\n志愿 ${format(old.volunteerEW)} → ${volunteerEW}\n值班 ${format(old.dutyEW)} → ${dutyEW}\n总分保存后由服务端重新计算。`, confirmText: '保存调整', cancelText: '返回修改' });
+    if (!confirmation.confirm) return;
     wx.showLoading({ title: '保存中...' });
     
     try {
       const res = await api.call('equivalentWorkloadAssessment', {
         action: 'updateUserEW',
+        config: { retries: 0 },
         params: {
           userId: ewaUserId,
           maintenanceEW,
@@ -396,7 +408,7 @@ Page({
           icon: 'success'
         });
         // 保存成功后，重新从后端获取最新的计算结果
-        this.hideEditModal();
+        this.setData({ showEditModal: false });
         await this.fetchUsers();
       } else {
         wx.showToast({ title: res.message || '保存失败', icon: 'none' });
@@ -418,12 +430,14 @@ Page({
       content: '确定要更新所有用户的工作量数据吗？',
       success: async (res) => {
         if (res.confirm) {
+          if (this.data.updatingEW) return;
+          this.setData({ updatingEW: true });
           wx.showLoading({ title: '更新中...' });
           
           try {
             // 更新工作量数据
             const ewResult = await api.call('equivalentWorkloadAssessment', {
-              action: 'updateSummary',
+              action: 'updateSummary', config: { retries: 0 },
               params: {}
             });
             
@@ -444,6 +458,7 @@ Page({
               icon: 'none'
             });
           } finally {
+            this.setData({ updatingEW: false });
             wx.hideLoading();
           }
         }
@@ -455,6 +470,8 @@ Page({
    * 导出工作量数据
    */
   exportEWData: async function() {
+    if (this.data.exporting) return;
+    this.setData({ exporting: true });
     wx.showLoading({ title: '准备导出...' });
     
     try {
@@ -464,12 +481,14 @@ Page({
       });
 
       if (res.success) {
-        const { fileUrl, fileName } = res.data;
+        const { fileUrl, fileName } = res.data || {};
+        if (!fileUrl) throw new Error('导出结果缺少文件链接');
         
         wx.showLoading({ title: '正在下载...' });
         
         wx.downloadFile({
           url: fileUrl,
+          complete: () => this.setData({ exporting: false }),
           success: (downloadRes) => {
             wx.hideLoading();
             
@@ -513,6 +532,7 @@ Page({
           }
         });
       } else {
+        this.setData({ exporting: false });
         wx.hideLoading();
         wx.showToast({
           title: res.message || '导出失败',
@@ -520,6 +540,7 @@ Page({
         });
       }
     } catch (err) {
+      this.setData({ exporting: false });
       console.error('导出失败', err);
       wx.hideLoading();
       wx.showToast({
@@ -558,29 +579,8 @@ Page({
    * 页面相关事件处理函数--监听用户下拉动作
    */
   onPullDownRefresh() {
-    if (!this.data.hasPermission) {
-      wx.stopPullDownRefresh()
-      return
-    }
-
-    // 下拉刷新时：先让云端重新计算所有成员EW，再拉取最新排行榜
-    api.call('equivalentWorkloadAssessment', {
-      action: 'updateSummary',
-      params: {}
-    })
-      .catch((err) => {
-        console.error('[ewa-manage] 下拉刷新触发 updateSummary 失败:', err)
-        wx.showToast({ title: '重算EW失败，请稍后重试', icon: 'none' })
-      })
-      .finally(() => {
-        this.setData({ page: 1, hasMore: true })
-        this.fetchUsers({
-          page: 1,
-          pageSize: this.data.pageSize,
-          search: this.data.searchText,
-          append: false
-        })
-      })
+    if (!this.data.hasPermission) { wx.stopPullDownRefresh(); return; }
+    return this.fetchUsers({ page: 1, pageSize: this.data.pageSize, search: this.data.searchText, append: false });
   },
 
   /**

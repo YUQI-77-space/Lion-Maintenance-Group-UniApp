@@ -1,5 +1,5 @@
 <!--pages/team/maintenance/list/index.wxml-->
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
   <!-- 左侧分类导航 -->
   <view class="sidebar" style="width: 180rpx;">
     <view 
@@ -16,6 +16,7 @@
   <!-- 右侧内容区域 -->
   <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
     <view class="container">
+      <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryList">重试加载</button></view>
       <!-- 加载动画 -->
       <view class="loading-container" wx:if="{{loading}}">
         <loading-animation size="large" />
@@ -55,7 +56,7 @@
       </view>
 
       <!-- 无任务提示 -->
-      <view class="no-task" wx:if="{{!loading && allTasks.length === 0}}">
+      <view class="no-task" wx:if="{{!loading && !loadError && allTasks.length === 0}}">
         <text>暂无维修任务</text>
       </view>
     </view>

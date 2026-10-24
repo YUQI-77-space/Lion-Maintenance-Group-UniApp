@@ -1,12 +1,14 @@
+const { getLayout } = require('../../../utils/layout');
 const router = require('../../../utils/router');
 const avatarManager = require('../../../utils/avatarManager');
 const api = require('../../../utils/apiAdapter');
 const iconManager = require('../../../utils/iconManager');
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
-const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
-const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
-const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+const LAYOUT = getLayout();
+const WINDOW_INFO = { windowWidth: LAYOUT.windowWidth };
+const STATUS_BAR_HEIGHT = LAYOUT.statusBarHeight;
+const NAV_BAR_HEIGHT = LAYOUT.navBarHeight;
 
 // 首帧直出：从全局/本地缓存同步取用户信息，避免切到本页时先闪一帧"未登录"
 const INITIAL_USER_INFO = (() => {
@@ -29,6 +31,7 @@ const INITIAL_ROLE = (() => {
 function getRoleName(role) {
   if (role === 'member') return '维修组成员';
   if (role === 'leader') return '维修组组长';
+  if (role === 'admin') return '管理员';
   return '普通用户';
 }
 
@@ -57,6 +60,9 @@ Page({
     // 导航栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
+    navbarContentHeight: LAYOUT.navbarContentHeight,
+    navbarRight: LAYOUT.navbarRight,
+    tabbarHeight: LAYOUT.tabbarHeight,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
@@ -85,9 +91,6 @@ Page({
         path: '/pages/user/about/index'
       }
     ],
-    _touchStartX: 0,
-    _touchStartY: 0,
-    isAnimating: false,
     // 消息与待办计数
     unreadMessageCount: INITIAL_UNREAD_COUNT,
     todoCount: INITIAL_TODO_COUNT,
@@ -156,7 +159,6 @@ Page({
     }
 
     this.getUserInfo();
-    this.initAnimation();
 
     // 刷新计数（使用全局方法避免重复调用）
     app.getUnreadMessageCount && app.getUnreadMessageCount();
@@ -184,35 +186,6 @@ Page({
     } catch (e) {}
   },
 
-  onTouchStart(e) {
-    if (!e.touches || e.touches.length === 0) return;
-    this.setData({ _touchStartX: e.touches[0].clientX, _touchStartY: e.touches[0].clientY });
-  },
-  onTouchEnd(e) {
-    if (!e.changedTouches || e.changedTouches.length === 0) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - this.data._touchStartX;
-    const dy = endY - this.data._touchStartY;
-
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    if (absDx < 60 || absDy > 40) return;
-
-    const { getTabOrder } = require('../../../utils/router');
-    const tabOrder = getTabOrder();
-    const pages = getCurrentPages();
-    const route = '/' + pages[pages.length - 1].route;
-    const idx = tabOrder.indexOf(route);
-    if (idx === -1) return;
-
-    const nextIdx = dx < 0
-      ? (idx + 1) % tabOrder.length
-      : (idx - 1 + tabOrder.length) % tabOrder.length;
-
-    const direction = dx < 0 ? 'left' : 'right';
-    this.animateAndSwitch(direction, tabOrder[nextIdx]);
-  },
 
   // 用户信息获取
   getUserInfo: async function () {
@@ -333,23 +306,7 @@ Page({
   },
 
   // 初始化动画（仅复位滑动切换的防抖标记，页面根节点不再挂 animation，避免整页合成层与空白帧）
-  initAnimation: function () {
-    if (this.data.isAnimating) {
-      this.setData({ isAnimating: false });
-    }
-  },
-  // 滑动切换 Tab：直接切换，不再先把整页淡出
-  animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating || !url) return;
-    this.setData({ isAnimating: true });
-    wx.switchTab({ url });
-    // 兜底复位，避免切换失败后标记卡死
-    setTimeout(() => {
-      if (this.data.isAnimating) {
-        this.setData({ isAnimating: false });
-      }
-    }, 400);
-  },
+
 
   // 退出登录
   logout: function () {
@@ -553,7 +510,13 @@ Page({
   },
 
   // 部门选择变化
-  onDepartmentChange: async function(e) {
+  async onDepartmentChange(e) {
+    if (this.data.changingDepartment) return;
+    this.setData({ changingDepartment: true });
+    try { return await this._performOnDepartmentChange(e); }
+    finally { this.setData({ changingDepartment: false }); }
+  },
+  async _performOnDepartmentChange(e) {
     const selectedIndex = e.detail.value;
     const selectedDepartment = this.data.departmentList[selectedIndex];
     
@@ -565,7 +528,7 @@ Page({
     
     try {
       const result = await api.call('users', { 
-        action: 'updateDepartment', 
+        action: 'updateDepartment', config: { retries: 0 },
         params: { department: selectedDepartment } 
       });
       
@@ -578,6 +541,7 @@ Page({
         });
         
         this.setData({
+          departmentFeedback: '部门切换成功；再次切换仍需遵守冷却时间。',
           currentDepartment: selectedDepartment,
           departmentIndex: selectedIndex
         });
@@ -598,9 +562,8 @@ Page({
           app.prefetchUserDepartment(app.globalData.openid, { force: true }).catch(() => {});
         }
       } else {
-        const message = result.remainingTime
-          ? '切换过于频繁，请稍后再试'
-          : (result.message || '切换失败');
+        const message = result.message || '切换失败，请稍后重试';
+        this.setData({ departmentFeedback: message });
         wx.showToast({
           title: message,
           icon: 'none',
@@ -637,4 +600,4 @@ Page({
     // 兜底：离开页面时解除底部导航交互锁
     this.setTabbarInteractionLocked(false);
   }
-}) 
+})

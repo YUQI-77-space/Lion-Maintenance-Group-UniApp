@@ -1,9 +1,9 @@
 {
   "navigationStyle": "custom",
-  "backgroundColor": "#EEF2F8",
+  "backgroundColor": "#F5F7FA",
   "usingComponents": {
     "avatar-display": "../../../components/avatar-display/index",
     "feedback-modal": "../../../components/feedback-modal/index"
   },
   "navigationBarTitleText": "我的"
-} 
+}

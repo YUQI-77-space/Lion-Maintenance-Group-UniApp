@@ -1,7 +1,8 @@
 <!--pages/team/volunteer/create/index.wxml-->
-<view class="container">
+<view class="mg-theme mg-data-page container">
   <view class="page-title">{{isEdit ? '编辑志愿活动' : '创建志愿活动'}}</view>
   
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{formError}}">{{formError}}</view>
   <form bindsubmit="submitForm">
     <!-- 活动标题 -->
     <view class="form-group">
@@ -90,7 +91,7 @@
       <view class="scheduled-publish-section">
         <view class="switch-row">
           <text class="switch-label">开启定时发布</text>
-          <switch checked="{{formData.scheduledPublish}}" bindchange="bindScheduledPublishChange" color="#191970"/>
+          <switch checked="{{formData.scheduledPublish}}" bindchange="bindScheduledPublishChange" color="#0369D7"/>
         </view>
         <view class="publish-time-picker" wx:if="{{formData.scheduledPublish}}">
       <picker mode="multiSelector" bindchange="bindPublishTimeChange" bindcolumnchange="bindTimeColumnChange" value="{{publishTimeIndex}}" range="{{timeArray}}" data-type="publish">
@@ -109,7 +110,7 @@
       <view class="btn-cancel btn-hover" bindtap="cancelForm" hover-class="btn-cancel-active" hover-stay-time="150">
         <text>取消</text>
       </view>
-      <button class="btn-submit btn-hover" form-type="submit" hover-class="btn-submit-active" hover-stay-time="150" disabled="{{loading}}">
+      <button class="btn-submit btn-hover" form-type="submit" hover-class="btn-submit-active" hover-stay-time="150" disabled="{{loading || submitting || submitUnknown}}">
         <text>{{loading ? '处理中...' : (isEdit ? '保存修改' : '创建活动')}}</text>
       </button>
     </view>

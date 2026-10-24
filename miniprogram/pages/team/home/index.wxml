@@ -1,16 +1,16 @@
 <!-- pages/team/home/index.wxml -->
 <!-- 自定义导航栏 -->
 <view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
-  <view class="navbar-content">
+  <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
     <!-- <image class="navbar-logo" src="/images/icons/logo.png" mode="aspectFit"></image> -->
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
     <text class="navbar-title">物科院维修组</text>
   </view>
 </view>
 
-<view class="container" wx:if="{{isMember}}" bindtouchstart="onTouchStart" bindtouchend="onTouchEnd" style="padding-top: {{navBarHeight + 20}}px;">
+<view class="container" wx:if="{{isMember}}" style="padding-top: {{navBarHeight + 16}}px; padding-bottom: {{tabbarHeight + 16}}px;">
   <view class="header">
-    <view class="subtitle">欢迎回来，{{role === 'leader' ? '组长' : '组员'}}</view>
+    <view class="subtitle">欢迎回来，{{role === 'admin' ? '管理员' : (role === 'leader' ? '组长' : '组员')}}</view>
   </view>
 
   <!-- 日常功能 -->

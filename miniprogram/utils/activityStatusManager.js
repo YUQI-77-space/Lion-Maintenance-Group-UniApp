@@ -9,30 +9,10 @@ const time = require('./time');
  * 状态映射配置
  */
 const STATUS_CONFIG = {
-  pending: {
-    text: '待发布',
-    color: '#fa8c16',
-    bgColor: '#fff7e6',
-    borderColor: '#ffd591'
-  },
-  inPreparation: {
-    text: '筹备中',
-    color: '#1890ff',
-    bgColor: '#e6f7ff',
-    borderColor: '#91d5ff'
-  },
-  inProgress: {
-    text: '进行中', 
-    color: '#52c41a',
-    bgColor: '#f6ffed',
-    borderColor: '#b7eb8f'
-  },
-  ended: {
-    text: '已结束',
-    color: '#8c8c8c',
-    bgColor: '#f5f5f5', 
-    borderColor: '#d9d9d9'
-  }
+  pending: { text: '待发布', color: '#526174', bgColor: '#EEF1F5', borderColor: '#DCE2EA' },
+  inPreparation: { text: '筹备中', color: '#0250A3', bgColor: '#F2F8FD', borderColor: '#DCE2EA' },
+  inProgress: { text: '进行中', color: '#0250A3', bgColor: '#F2F8FD', borderColor: '#DCE2EA' },
+  ended: { text: '已结束', color: '#526174', bgColor: '#EEF1F5', borderColor: '#DCE2EA' }
 };
 
 /**

@@ -194,16 +194,16 @@ Page({
     try {
       // 逐项更新配置，后端会返回最新 config
       await api.call('dutySchedule', {
-        action: 'updateDutyConfig',
+        action: 'updateDutyConfig', config: { retries: 0 },
         params: { configType: 'autoSwitchEnabled', value: enabled }
       })
       // 切周日程固定为周一(1) 10:30，这里把库里可能残留的旧值校准回来，避免与实际触发时间不一致
       await api.call('dutySchedule', {
-        action: 'updateDutyConfig',
+        action: 'updateDutyConfig', config: { retries: 0 },
         params: { configType: 'autoSwitchDayOfWeek', value: 1 }
       })
       await api.call('dutySchedule', {
-        action: 'updateDutyConfig',
+        action: 'updateDutyConfig', config: { retries: 0 },
         params: { configType: 'autoSwitchTime', value: '10:30' }
       })
 
@@ -256,7 +256,7 @@ Page({
       })
       try {
         await api.call('dutySchedule', {
-          action: 'updateDutyConfig',
+          action: 'updateDutyConfig', config: { retries: 0 },
           params: { configType: 'autoSwitchEnabled', value: false }
         })
         wx.showToast({ title: '已关闭自动切周', icon: 'success' })
@@ -361,7 +361,7 @@ Page({
       title: '确认设置',
       content: `确定将 ${selectedDate}（${weekdayName}）设置为学期开始日期吗？\n\n此操作将清除所有现有值班数据。`,
       confirmText: '确定',
-      confirmColor: '#007aff',
+      confirmColor: '#0369D7',
       success: (res) => {
         if (res.confirm) {
           this.performSemesterSetup(selectedDate)
@@ -371,7 +371,13 @@ Page({
   },
 
   // 执行学期设置
-  performSemesterSetup: async function (selectedDate) {
+  async performSemesterSetup(selectedDate) {
+    if (this._dutyWriting) return;
+    this._dutyWriting = true;
+    try { return await this._performPerformSemesterSetup(selectedDate); }
+    finally { this._dutyWriting = false; }
+  },
+  async _performPerformSemesterSetup(selectedDate) {
     this.setData({ 
       isLoading: true,
       setupProgress: '正在设置学期初始日期...'
@@ -382,21 +388,21 @@ Page({
       await api.call('dutySchedule', {
         action: 'clearAllDutySlots',
         params: { forceDelete: true, batchSize: 50, maxRetries: 3 },
-        config: { timeout: 30000 }
+        timeout: 30000, config: { retries: 0 }
       });
 
       this.setData({ setupProgress: '正在设置学期开始日期...' });
       await api.call('dutySchedule', {
         action: 'updateDutyConfig',
         params: { configType: 'startDate', value: selectedDate },
-        config: { timeout: 10000 }
+        timeout: 10000, config: { retries: 0 }
       });
 
       this.setData({ setupProgress: '正在生成第一周值班表...' });
       await api.call('dutySchedule', {
         action: 'regenerateDutySlots',
         params: { weekNumber: 1, year: new Date().getFullYear() },
-        config: { timeout: 15000 }
+        timeout: 15000, config: { retries: 0 }
       });
 
       this.setData({ 
@@ -432,7 +438,7 @@ Page({
     return api.call('dutySchedule', {
       action: 'clearAllDutySlots',
       params: { forceDelete: true, batchSize: 50, maxRetries: 3 },
-      config: { timeout: 30000 }
+      timeout: 30000, config: { retries: 0 }
     });
   },
 
@@ -442,7 +448,7 @@ Page({
     return api.call('dutySchedule', {
       action: 'updateDutyConfig',
       params: { configType: 'startDate', value: selectedDate },
-      config: { timeout: 10000 }
+      timeout: 10000, config: { retries: 0 }
     });
   },
 
@@ -452,7 +458,7 @@ Page({
     return api.call('dutySchedule', {
       action: 'regenerateDutySlots',
       params: { weekNumber: 1, year: new Date().getFullYear() },
-      config: { timeout: 15000 }
+      timeout: 15000, config: { retries: 0 }
     });
   },
 
@@ -500,9 +506,9 @@ Page({
 
     wx.showModal({
       title: '确认切换',
-      content: `确定切换到第${weekNumber}周吗？`,
+      content: `当前第${this.data.configData.currentWeek}周，切换至第${weekNumber}周。切换后请重新核对日期与已有排班，是否继续？`,
       confirmText: '确定',
-      confirmColor: '#007aff',
+      confirmColor: '#0369D7',
       success: (res) => {
         if (res.confirm) {
           this.setData({ showWeekSwitcherModal: false })
@@ -513,7 +519,13 @@ Page({
   },
 
   // 执行周次切换
-  performWeekSwitch: async function (weekNumber) {
+  async performWeekSwitch(weekNumber) {
+    if (this._dutyWriting) return;
+    this._dutyWriting = true;
+    try { return await this._performPerformWeekSwitch(weekNumber); }
+    finally { this._dutyWriting = false; }
+  },
+  async _performPerformWeekSwitch(weekNumber) {
     this.setData({ 
       isLoading: true,
       setupProgress: `正在切换到第${weekNumber}周...`
@@ -521,7 +533,7 @@ Page({
     
     try {
       const res = await api.call('dutySchedule', {
-        action: 'switchToWeek',
+        action: 'switchToWeek', config: { retries: 0 },
         params: { weekNumber: weekNumber },
         timeout: 30000
       });
@@ -635,7 +647,13 @@ Page({
   },
 
   // 执行重置操作
-  performReset: async function () {
+  async performReset() {
+    if (this._dutyWriting) return;
+    this._dutyWriting = true;
+    try { return await this._performPerformReset(); }
+    finally { this._dutyWriting = false; }
+  },
+  async _performPerformReset() {
     const currentWeek = this.data.configData?.currentWeek;
     
     this.setData({ 
@@ -647,7 +665,7 @@ Page({
       const res = await api.call('dutySchedule', {
         action: 'resetCurrentWeekData',
         params: {},
-        config: { timeout: 10000 }
+        timeout: 10000, config: { retries: 0 }
       });
 
       this.setData({ 
@@ -730,7 +748,13 @@ Page({
   },
 
   // 执行编辑权限切换操作
-  performEditPermissionToggle: async function () {
+  async performEditPermissionToggle() {
+    if (this._dutyWriting) return;
+    this._dutyWriting = true;
+    try { return await this._performPerformEditPermissionToggle(); }
+    finally { this._dutyWriting = false; }
+  },
+  async _performPerformEditPermissionToggle() {
     const currentEnabled = this.data.configData.isEditingEnabled;
     const newEnabled = !currentEnabled;
     const actionText = newEnabled ? '开启' : '关闭';
@@ -748,7 +772,7 @@ Page({
             configType: 'isEditingEnabled',
             value: newEnabled
         },
-        config: { timeout: 8000 }
+        timeout: 8000, config: { retries: 0 }
       });
 
       this.setData({ 
@@ -1130,12 +1154,19 @@ Page({
 
   // 取消删除确认
   cancelDeleteConfirm: function () {
+    if (this._dutyWriting) return;
     
     this.setData({ showDeleteConfirmModal: false, deletePreviewList: [] });
   },
 
   // 确认删除值班分配
-  confirmDeleteAssignment: async function () {
+  async confirmDeleteAssignment() {
+    if (this._dutyWriting) return;
+    this._dutyWriting = true;
+    try { return await this._performConfirmDeleteAssignment(); }
+    finally { this._dutyWriting = false; }
+  },
+  async _performConfirmDeleteAssignment() {
     if (this.data.selectedSlots.length === 0) {
       wx.showToast({
         title: '没有选择要删除的值班',
@@ -1148,11 +1179,7 @@ Page({
     if (this.data.confirmDeleteDisabled) {
       return;
     }
-    this.setData({ confirmDeleteDisabled: true });
-    setTimeout(() => {
-      // 安全恢复按钮（即使弹窗已关闭也无副作用）
-      this.setData({ confirmDeleteDisabled: false });
-    }, 1000);
+
 
     this.setData({ 
       showDeleteConfirmModal: false,
@@ -1166,7 +1193,7 @@ Page({
       const res = await api.call('dutySchedule', {
         action: 'removeDutyAssignment',
         params: { selectedSlots: this.data.selectedSlots, requestId },
-        config: { timeout: 15000 }
+        timeout: 15000, config: { retries: 0 }
       });
 
       this.setData({

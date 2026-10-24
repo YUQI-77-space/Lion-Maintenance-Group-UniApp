@@ -1,5 +1,6 @@
 <!-- pages/team/volunteer/detail/index.wxml -->
-<view class="container">
+<view class="mg-theme mg-data-page container">
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{detailError}}">{{detailError}}<button class="mg-button mg-button--secondary" bindtap="getActivityDetail">重新加载</button><button class="mg-button mg-button--text" bindtap="returnToList">返回列表</button></view>
   <!-- 加载中 -->
   <view class="loading-container" wx:if="{{loading}}">
     <loading-animation size="large"></loading-animation>

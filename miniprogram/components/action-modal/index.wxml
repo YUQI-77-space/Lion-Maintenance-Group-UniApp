@@ -1,4 +1,4 @@
-<view wx:if="{{visible}}" class="modal-mask {{bottom ? 'modal-bottom' : ''}}" catchtouchmove="stopPropagation" bindtap="onMaskTap">
+<view wx:if="{{visible}}" class="mg-theme modal-mask {{bottom ? 'modal-bottom' : ''}}" style="bottom: {{keyboardHeight}}px;" catchtouchmove="stopPropagation" bindtap="onMaskTap">
   <view class="modal-panel" role="dialog" aria-label="{{title}}" catchtap="stopPropagation">
     <view wx:if="{{bottom}}" class="modal-handle" />
     <view class="modal-heading"><view class="modal-title">{{title}}</view><view wx:if="{{subtitle}}" class="modal-subtitle">{{subtitle}}</view></view>

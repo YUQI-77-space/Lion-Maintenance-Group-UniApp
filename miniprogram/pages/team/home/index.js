@@ -1,10 +1,12 @@
+const { getLayout } = require('../../../utils/layout');
 const iconManager = require('../../../utils/iconManager');
 const linkConfig = require('../../../config/linkConfig');
 
 // 首帧就同步取到导航栏高度与角色，避免 onLoad 里再 setData 造成的内容空档/布局跳动
-const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
-const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
-const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+const LAYOUT = getLayout();
+const WINDOW_INFO = { windowWidth: LAYOUT.windowWidth };
+const STATUS_BAR_HEIGHT = LAYOUT.statusBarHeight;
+const NAV_BAR_HEIGHT = LAYOUT.navBarHeight;
 const INITIAL_ROLE = (() => {
   try {
     const app = getApp();
@@ -21,6 +23,9 @@ Page({
     // 导航栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
+    navbarContentHeight: LAYOUT.navbarContentHeight,
+    navbarRight: LAYOUT.navbarRight,
+    tabbarHeight: LAYOUT.tabbarHeight,
 
     themeClass: '',
     role: INITIAL_ROLE,
@@ -87,9 +92,6 @@ Page({
     ],
     // Logo图标
     iconLogo: iconManager.get('common_logo'),
-    _touchStartX: 0,
-    _touchStartY: 0,
-    isAnimating: false
   },
 
   onLoad: function (options) {
@@ -98,7 +100,6 @@ Page({
 
   onShow: function () {
     this.checkUserRole();
-    this.initAnimation();
     const tab = this.getTabBar && this.getTabBar();
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
   },
@@ -132,53 +133,8 @@ Page({
     }
   },
 
-  onTouchStart(e) {
-    if (!e.touches || e.touches.length === 0) return;
-    this.setData({ _touchStartX: e.touches[0].clientX, _touchStartY: e.touches[0].clientY });
-  },
-  onTouchEnd(e) {
-    if (!e.changedTouches || e.changedTouches.length === 0) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - this.data._touchStartX;
-    const dy = endY - this.data._touchStartY;
 
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    if (absDx < 60 || absDy > 40) return;
 
-    const { getTabOrder } = require('../../../utils/router');
-    const tabOrder = getTabOrder();
-    const pages = getCurrentPages();
-    const route = '/' + pages[pages.length - 1].route;
-    const idx = tabOrder.indexOf(route);
-    if (idx === -1) return;
-
-    const nextIdx = dx < 0 ? (idx + 1) % tabOrder.length : (idx - 1 + tabOrder.length) % tabOrder.length;
-    const direction = dx < 0 ? 'left' : 'right';
-    this.animateAndSwitch(direction, tabOrder[nextIdx]);
-  },
-
-  // 页面动画
-  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
-  initAnimation: function () {
-    if (this.data.isAnimating) {
-      this.setData({ isAnimating: false });
-    }
-  },
-
-  // 滑动切换 Tab：直接切换，不再先把整页淡出
-  animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating || !url) return;
-    this.setData({ isAnimating: true });
-    wx.switchTab({ url });
-    // 兜底复位，避免切换失败后标记卡死
-    setTimeout(() => {
-      if (this.data.isAnimating) {
-        this.setData({ isAnimating: false });
-      }
-    }, 400);
-  },
 
   // 页面导航
   navigateTo: function (e) {
@@ -217,12 +173,6 @@ Page({
       wx.showToast({ title: '页面路径错误', icon: 'none' });
       return;
     }
-    wx.navigateTo({
-      url: path,
-      fail: (err) => {
-        console.error('页面跳转失败:', err, 'path:', path);
-        wx.showToast({ title: '页面跳转失败', icon: 'none' });
-      }
-    });
+    require('../../../utils/router').navigateTo(path);
   }
 })

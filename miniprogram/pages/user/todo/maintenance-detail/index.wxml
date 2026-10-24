@@ -1,5 +1,6 @@
 <!--pages/user/todo/maintenance-detail/index.wxml-->
-<view class="page {{showActionBar ? 'has-action-bar' : ''}}">
+<view class="mg-theme mg-data-page page {{showActionBar ? 'has-action-bar' : ''}}" style="padding-bottom: {{showActionBar ? bottomActionInset : 16}}px;">
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{detailError}}">{{detailError}}<button class="mg-button mg-button--secondary" bindtap="loadTaskDetail">重新加载</button><button class="mg-button mg-button--text" bindtap="returnToList">返回列表</button></view>
   <!-- 加载中 -->
   <view class="loading-wrap" wx:if="{{loading}}">
     <loading-animation size="large"></loading-animation>

@@ -6,10 +6,10 @@ const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
 
 const STATUS_MAP = {
-  pending: '未受理',
-  inProgress: '处理中',
+  pending: '待受理',
+  inProgress: '进行中',
   completed: '已完成',
-  cancelled: '已撤销'
+  cancelled: '已取消'
 };
 
 // const theme = require('../../../../utils/theme');
@@ -28,6 +28,7 @@ Page({
     userRole: '', // 用户角色
     searchKeyword: '', // 搜索关键词
     originalFilteredTasks: [], // 搜索前的筛选任务，用于重置搜索
+    loadError: '',
     loading: false, // 加载状态
     refresherTriggered: false,
     // 卡片入场动画延迟（毫秒）
@@ -66,13 +67,14 @@ Page({
 
     // 加载任务列表：首次进入强制走「加载中 → 数据就绪」流程
     this._isFirstLoad = true;
-    this.setData({ page: 1, hasMore: true, allTasks: [] });
+    this.setData({ page: 1, hasMore: true });
     this.loadMaintenanceTasks(true);
   },
 
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
+  retryList() { return this.data.appendFailed ? this.loadMoreTasks() : this.loadMaintenanceTasks(true); },
   onReady() {
 
   },
@@ -83,7 +85,7 @@ Page({
   onShow() {
     // 只在非首次进入时刷新，避免 onLoad + onShow 双重加载
     if (!this._isFirstLoad) {
-      this.setData({ page: 1, hasMore: true, allTasks: [] });
+      this.setData({ page: 1, hasMore: true });
       this.loadMaintenanceTasks(false);
     }
     this._isFirstLoad = false;
@@ -110,7 +112,7 @@ Page({
 
 // scroll-view 下拉刷新
 onRefresherRefresh: function() {
-    this.setData({ refresherTriggered: true, page: 1, hasMore: true, allTasks: [] });
+    this.setData({ refresherTriggered: true, page: 1, hasMore: true });
     this.loadMaintenanceTasks(true).finally(() => {
       this.setData({ refresherTriggered: false });
     });
@@ -188,6 +190,7 @@ onRefresherRefresh: function() {
 
   // 加载维修任务列表（SWR缓存 + 显式加载提示 + 防抖）
   loadMaintenanceTasks: async function(force = false) {
+    this.setData({ loadError: '' });
     const role = app.globalData.role || wx.getStorageSync('role') || 'user';
     const userInfo = wx.getStorageSync('userInfo') || {};
     const openid = app.globalData.openid || userInfo.openid || 'anon';
@@ -198,7 +201,7 @@ onRefresherRefresh: function() {
 
     // 首次进入或用户主动刷新时，一律展示加载中状态，避免误以为数据未更新
     if (force || !cached || !cached.exists) {
-      this.setData({ loading: true });
+      this.setData({ loading: this.data.allTasks.length === 0 });
     }
 
     const nowTs = Date.now();
@@ -210,6 +213,7 @@ onRefresherRefresh: function() {
       }
     }
 
+    const generation = this._listGeneration = (this._listGeneration || 0) + 1;
     this._fetchingMaintManage = true;
     this._lastMaintManageFetch = nowTs;
 
@@ -218,6 +222,7 @@ onRefresherRefresh: function() {
         action: 'getMaintenanceTasksList',
         params: { page: 1, pageSize: this.data.pageSize }
       });
+      if (generation !== this._listGeneration) return;
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
@@ -235,9 +240,11 @@ onRefresherRefresh: function() {
         this.filterTasksByStatus(this.data.activeTab);
         swr.set(cacheKey, tasks, TTL_SEC);
       } else {
-        wx.showToast({ title: result.message || '获取任务失败', icon: 'none' });
+        this.setData({ loadError: result.message || '获取任务失败，请重试' });
       }
     } catch (err) {
+      if (generation !== this._listGeneration) return;
+      this.setData({ loadError: '加载失败，已保留上次内容，请重试' });
       console.error('获取维修任务列表失败', err);
       if (cached && cached.exists) {
         // 使用缓存结果兜底展示，同时给出提示
@@ -248,7 +255,7 @@ onRefresherRefresh: function() {
         wx.showToast({ title: '网络错误，请重试', icon: 'none' });
       }
     } finally {
-      this._fetchingMaintManage = false;
+      if (generation === this._listGeneration) { this._fetchingMaintManage = false; this.setData({ loading: false }); }
     }
   },
 
@@ -258,13 +265,17 @@ onRefresherRefresh: function() {
     if (this._fetchingMaintManageMore) return;
 
     this._fetchingMaintManageMore = true;
-    this.setData({ loadingMore: true });
+    const generation = this._listGeneration;
+    const requestedPage = this.data.page;
+    this.setData({ loadingMore: true, loadError: '', appendFailed: false });
 
     try {
       const result = await api.call('maintenanceTasks', {
         action: 'getMaintenanceTasksList',
         params: { page: this.data.page, pageSize: this.data.pageSize }
       });
+      if (generation !== this._listGeneration || requestedPage !== this.data.page) return;
+      if (!result.success) { this.setData({ loadError: result.message || '追加失败，请重试', appendFailed: true }); return; }
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
@@ -273,7 +284,7 @@ onRefresherRefresh: function() {
           taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
         }));
         if (newTasks.length > 0) {
-          const merged = [...this.data.allTasks, ...newTasks];
+          const merged = [...this.data.allTasks, ...newTasks.filter(task => !this.data.allTasks.some(old => old.maintenanceTaskId === task.maintenanceTaskId))];
           const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : newTasks.length >= this.data.pageSize;
           const prevFilteredCount = this.data.filteredTasks.length;
           this.setData({
@@ -291,6 +302,7 @@ onRefresherRefresh: function() {
         }
       }
     } catch (err) {
+      this.setData({ loadError: '追加失败，请重试', appendFailed: true });
       console.error('加载更多失败', err);
       wx.showToast({ title: '加载失败，请稍后重试', icon: 'none', duration: 2000 });
     } finally {
@@ -462,7 +474,13 @@ onRefresherRefresh: function() {
   },
 
   // 确认设置EW
-  confirmEWSetting: async function() {
+  async confirmEWSetting() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmEWSetting(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmEWSetting() {
     if (!this.data.currentTask) return;
 
     const taskId = this.data.currentTask.maintenanceTaskId;
@@ -476,20 +494,16 @@ onRefresherRefresh: function() {
       // 离线处理逻辑保持不变
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('maintenanceTasks', 'updateMaintenanceTasks', {
-          maintenanceTaskId: taskId,
-          updateData: { ew: ewValue }
-        });
+
         wx.hideLoading();
         this.cancelEWSetting();
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
 
       // 步骤1: 更新任务本身的EW值
       const updateTaskRes = await api.call('maintenanceTasks', {
-        action: 'updateMaintenanceTasks',
+        action: 'updateMaintenanceTasks', config: { retries: 0 },
         params: {
           maintenanceTaskId: taskId,
           updateData: { ew: ewValue }
@@ -504,7 +518,7 @@ onRefresherRefresh: function() {
 
       // 步骤2: 更新等效工作量汇总
       await api.call('equivalentWorkloadAssessment', {
-        action: 'updateTasksEW',
+        action: 'updateTasksEW', config: { retries: 0 },
         params: {
           maintenanceTaskId: taskId,
           ew: ewValue
@@ -599,7 +613,13 @@ onRefresherRefresh: function() {
   },
 
   // 确认删除
-  confirmDelete: async function() {
+  async confirmDelete() {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedConfirmDelete(); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedConfirmDelete() {
     // 防御性检查：立即读取并清空，避免竞态
     const task = this.data.taskToDelete;
     const taskId = task ? task.maintenanceTaskId : undefined;
@@ -631,16 +651,15 @@ onRefresherRefresh: function() {
       // 离线处理逻辑保持不变
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('maintenanceTasks', 'deleteMaintenanceTask', { maintenanceTaskId: taskId });
+
         wx.hideLoading();
         this.cancelDeleteConfirm();
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
 
       const res = await api.call('maintenanceTasks', {
-        action: 'deleteMaintenanceTask',
+        action: 'deleteMaintenanceTask', config: { retries: 0 },
         params: { maintenanceTaskId: taskId }
       });
 

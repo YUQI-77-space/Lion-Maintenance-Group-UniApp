@@ -1,5 +1,5 @@
 <!-- 加载动画组件 -->
-<view class="loading-animation {{size}} {{customClass}}">
+<view class="mg-theme loading-animation {{size}} {{customClass}}">
   <view class="typing-indicator">
     <view class="typing-circle"></view>
     <view class="typing-circle"></view>

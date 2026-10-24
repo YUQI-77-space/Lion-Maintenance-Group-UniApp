@@ -1,24 +1,9 @@
-<!-- 头像显示组件 -->
-<view class="avatar-container {{customClass}} avatar-{{size}} {{showBorder ? 'with-border' : ''}} {{clickable ? 'clickable' : ''}}" 
-      bindtap="onAvatarClick">
-  
-  <!-- 加载状态 -->
-  <view class="avatar-loading" wx:if="{{loading}}">
-    <loading-animation size="small"></loading-animation>
+<!-- 头像显示组件：保留原属性、头像管理链路与 avatarclick 事件。 -->
+<view class="avatar-host mg-theme {{clickable ? 'avatar-host-clickable' : ''}}" bindtap="onAvatarClick" hover-class="{{clickable ? 'avatar-pressed' : 'none'}}" aria-role="{{clickable ? 'button' : 'img'}}" aria-label="{{(userInfo.nickName || userInfo.ewaUserName || '用户') + '的头像' + (loading ? '，正在加载' : '')}}">
+  <view class="avatar-container {{customClass}} avatar-{{size}} {{showBorder ? 'with-border' : ''}} {{clickable ? 'clickable' : ''}}">
+    <view class="avatar-fallback" aria-hidden="true"><view class="avatar-placeholder-head"></view><view class="avatar-placeholder-body"></view></view>
+    <view class="avatar-loading" wx:if="{{loading}}" aria-hidden="true"><view class="avatar-loading-ring"></view></view>
+    <image class="avatar-image" src="{{displayAvatarUrl}}" mode="aspectFill" lazy-load="true" binderror="onImageError" wx:if="{{!loading}}" aria-hidden="true" />
+    <view class="click-overlay" wx:if="{{clickable}}" aria-hidden="true"><text class="click-hint">查看</text></view>
   </view>
-  
-  <!-- 头像图片 -->
-  <image 
-    class="avatar-image" 
-    src="{{displayAvatarUrl}}" 
-    mode="aspectFill"
-    lazy-load="true"
-    binderror="onImageError"
-    wx:if="{{!loading}}"
-  />
-  
-  <!-- 点击提示 -->
-  <view class="click-overlay" wx:if="{{clickable}}">
-    <view class="click-icon">👤</view>
-  </view>
-</view> 
+</view>

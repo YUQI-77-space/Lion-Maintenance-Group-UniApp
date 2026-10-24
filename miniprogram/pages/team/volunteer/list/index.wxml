@@ -1,5 +1,5 @@
 <!--pages/team/volunteer/list/index.wxml-->
-<view class="page-container">
+<view class="mg-theme mg-data-page page-container">
   <!-- 左侧分类导航 -->
   <view class="sidebar" style="width: 180rpx;">
     <view class="{{currentStatus === 'all' ? 'active' : ''}}" bindtap="switchStatus" data-status="all">全部</view>
@@ -9,7 +9,8 @@
   </view>
 
   <!-- 右侧内容区域 -->
-  <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+  <scroll-view class="content" bindscrolltolower="onReachBottom" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryActivities">重试加载</button></view>
     <!-- 加载动画 -->
     <view class="loading-container" wx:if="{{initialLoading}}">
       <loading-animation size="large" />
@@ -67,7 +68,7 @@
       </view>
 
       <!-- 加载更多 -->
-      <view class="loading-more" wx:if="{{loading && activities.length > 0}}">
+      <view class="loading-more" wx:if="{{loadingMore && activities.length > 0}}">
         <loading-animation size="small"></loading-animation>
       </view>
 
@@ -77,7 +78,7 @@
     </view>
 
     <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{!initialLoading && !loading && activities.length === 0}}">
+    <view class="empty-state" wx:if="{{!initialLoading && !loading && !loadError && activities.length === 0}}">
       <image class="empty-icon" src="{{iconEmpty}}"></image>
       <text class="empty-text">暂无志愿活动</text>
     </view>

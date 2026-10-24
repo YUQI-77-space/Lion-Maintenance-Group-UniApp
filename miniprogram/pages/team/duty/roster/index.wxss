@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/duty/roster/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -545,4 +546,23 @@
   }
 }
 
-/* 深色模式适配移除 */ 
+/* 深色模式适配移除 */
+.mg-data-page .header { background: var(--mg-color-bg-surface); color: var(--mg-color-text-primary); box-shadow: none; }
+.mg-data-page .main-title, .mg-data-page .header-text { color: var(--mg-color-text-primary); }
+.mg-data-page .date-range, .mg-data-page .selection-hint { color: var(--mg-color-text-secondary); }
+.mg-data-page .can-duty { background: var(--mg-color-bg-surface); color: var(--mg-color-brand); border-color: var(--mg-color-control-border); }
+.mg-data-page .selected { background: var(--mg-color-brand-selected); color: var(--mg-color-brand-strong); border-color: var(--mg-color-brand); }
+.mg-data-page .confirmed { background: var(--mg-color-success-soft); color: var(--mg-color-success); }
+.mg-data-page .assigned, .mg-data-page .no-duty { background: var(--mg-color-neutral-soft); color: var(--mg-color-neutral); }
+.mg-data-page .locked { background: var(--mg-color-warning-soft); color: var(--mg-color-warning); }
+.mg-data-page .duty-table-container { width: 100%; overflow: hidden; background: var(--mg-color-bg-surface); border-radius: 24rpx; }
+.mg-data-page .scrollable-area { flex: 1; min-width: 0; }
+.mg-data-page .clear-btn, .mg-data-page .remove-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; min-width: 48px; }
+.mg-data-page .slot-info { flex: 1; min-width: 0; white-space: normal; overflow-wrap: break-word; }
+.mg-data-page .selection-item { height: auto; min-height: 48px; }
+.mg-data-page .action-buttons { gap: 8px; }
+
+.mg-data-page .fixed-column, .mg-data-page .fixed-time-cell { background: var(--mg-color-bg-surface); box-shadow: none; }
+.mg-data-page .fixed-header-cell, .mg-data-page .header-cell { background: var(--mg-color-bg-subtle); box-shadow: none; }
+.mg-data-page .header-text, .mg-data-page .day-name, .mg-data-page .day-date, .mg-data-page .time-slot-name, .mg-data-page .time-range { color: var(--mg-color-text-primary); text-shadow: none; }
+.mg-data-page .duty-cell, .mg-data-page .fixed-time-cell { height: 100rpx; height: max(48px,100rpx); min-height: 48px; }

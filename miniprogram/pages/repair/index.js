@@ -1,3 +1,4 @@
+const { getLayout } = require('../../utils/layout');
 const api = require('../../utils/apiAdapter');
 const SubscriptionAuth = require('../../utils/subscriptionAuth');
 const repairCategories = require('../../utils/repairCategories');
@@ -6,9 +7,10 @@ const time = require('../../utils/time');
 const swr = require('../../utils/swrCache');
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
-const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
-const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
-const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+const LAYOUT = getLayout();
+const WINDOW_INFO = { windowWidth: LAYOUT.windowWidth };
+const STATUS_BAR_HEIGHT = LAYOUT.statusBarHeight;
+const NAV_BAR_HEIGHT = LAYOUT.navBarHeight;
 
 // 步骤条高度（100rpx）与内容顶部留白：按屏幕宽度换算，避免 rpx/px 混算
 const STEP_BAR_HEIGHT = Math.round(100 * (WINDOW_INFO.windowWidth || 375) / 750);
@@ -74,6 +76,9 @@ Page({
     // 导航栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
+    navbarContentHeight: LAYOUT.navbarContentHeight,
+    navbarRight: LAYOUT.navbarRight,
+    tabbarHeight: LAYOUT.tabbarHeight,
     stepBarHeight: STEP_BAR_HEIGHT,
     contentTop: CONTENT_TOP,
     contentTopNoBar: CONTENT_TOP_NO_BAR,
@@ -84,10 +89,11 @@ Page({
     iconArrowRight: iconManager.get('common_arrow_right'),
     iconCheck: iconManager.get('common_check'),
 
+    submitting: false, submitUnknown: false, submitMessage: '', submittedTaskId: '',
     currentStep: 0,
     // 步骤条：0 选择类别 / 1 填写信息 / 2 确认提交
     progressStage: 0,
-    progressLabels: ['选择类别', '填写信息', '确认提交'],
+    progressLabels: ['选择问题', '填写信息', '核对提交'],
     
     // 问题分类数据
     categories: repairCategories,
@@ -143,49 +149,25 @@ Page({
     // 临时状态，用于在步骤间传递数据
     tempState: {},
 
-    _touchStartX: 0,
-    _touchStartY: 0,
     // 动画相关
-    isAnimating: false,
     themeClass: ''
   },
 
   onLoad: function (options) {
-    this.initAnimation();
     this.initAppointmentDate();
     this.loadUserInfo();
     this.loadEmergencyContacts();
   },
 
-  onTouchStart(e) {
-    if (!e.touches || e.touches.length === 0) return;
-    this.setData({ _touchStartX: e.touches[0].clientX, _touchStartY: e.touches[0].clientY });
-  },
-  onTouchEnd(e) {
-    if (!e.changedTouches || e.changedTouches.length === 0) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - this.data._touchStartX;
-    const dy = endY - this.data._touchStartY;
-
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    if (absDx < 60 || absDy > 40) return;
-
-    const { getTabOrder } = require('../../utils/router');
-    const tabOrder = getTabOrder();
-    const pages = getCurrentPages();
-    const route = '/' + pages[pages.length - 1].route;
-    const idx = tabOrder.indexOf(route);
-    if (idx === -1) return;
-
-    const nextIdx = dx < 0 ? (idx + 1) % tabOrder.length : (idx - 1 + tabOrder.length) % tabOrder.length;
-    const direction = dx < 0 ? 'left' : 'right';
-    this.animateAndSwitch(direction, tabOrder[nextIdx]);
-  },
 
   onShow() {
-    this.initAnimation();
+    const currentUser = getApp().globalData.userInfo || {};
+    const owner = getApp().globalData.openid || '';
+    if (this._draftOwner && this._draftOwner !== owner) {
+      this.setData({ currentStep: 0, progressStage: 0, selectedCategory: null, selectedSubcategory: null, selectedType: null, selectedTypeId: null, tempState: {}, requiredFields: [], detailLines: [], otherDescription: '', submitUnknown: false, submitMessage: '', submittedTaskId: '', ...this.specialFieldResetPatch() });
+    }
+    this._draftOwner = owner;
+    this.setData({ userInfo: currentUser });
     const tab = this.getTabBar && this.getTabBar();
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
 
@@ -260,6 +242,15 @@ Page({
   /**
    * 清空特殊字段（切换问题类型 / 重新报修时调用）
    */
+  applicableFieldPatch(fields) {
+    const previous = this._fieldContext || this.data.requiredFields || [];
+    const patch = this.specialFieldResetPatch();
+    fields.forEach(field => {
+      const old = previous.find(item => item.key === field.key);
+      patch[field.key] = !old || old.label === field.label ? (this.data[field.key] || '') : '';
+    });
+    return patch;
+  },
   specialFieldResetPatch() {
     return {
       laptopModel: '',
@@ -275,26 +266,8 @@ Page({
     };
   },
 
-  // 页面动画
-  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
-  initAnimation: function () {
-    if (this.data.isAnimating) {
-      this.setData({ isAnimating: false });
-    }
-  },
 
-  // 滑动切换 Tab：直接切换，不再先把整页淡出
-  animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating || !url) return;
-    this.setData({ isAnimating: true });
-    wx.switchTab({ url });
-    // 兜底复位，避免切换失败后标记卡死
-    setTimeout(() => {
-      if (this.data.isAnimating) {
-        this.setData({ isAnimating: false });
-      }
-    }, 400);
-  },
+
 
   initAppointmentDate() {
     const earliestTime = computeEarliestAppointmentTime();
@@ -511,7 +484,7 @@ Page({
       showSearchResult: false,
       showQuickKeywords: false,
       searchEmpty: false
-    }, this.specialFieldResetPatch()));
+    }, this.applicableFieldPatch(requiredFields)));
 
     const toastText = opts.toastText || '已为您定位到该问题';
 
@@ -522,7 +495,7 @@ Page({
         content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
-        confirmColor: '#0000CD',
+        confirmColor: '#0369D7',
         success: () => {
           wx.showToast({ title: toastText, icon: 'none', duration: 1000 });
         }
@@ -560,11 +533,12 @@ Page({
         return;
       }
       tempState = { selectedType, selectedTypeId };
-      Object.assign(extra, this.specialFieldResetPatch());
+      Object.assign(extra, this.applicableFieldPatch(this.getRequiredFieldsById(selectedTypeId)));
     }
 
     // 步骤 3 → 4：校验必填项，未通过时在对应字段下方内联提示
     if (currentStep === 3) {
+      if (!this.validateSelectedDateTime(this.data.appointmentDate, this.data.appointmentTime)) return;
       const requiredFields = this.getRequiredFields();
       const missing = requiredFields.find(field => {
         if (!field.required) return false;
@@ -597,6 +571,7 @@ Page({
   
   prevStep() {
     const { currentStep } = this.data;
+    if (currentStep === 3) this._fieldContext = this.data.requiredFields;
     const updateData = {};
 
     // 清理状态
@@ -609,7 +584,7 @@ Page({
       updateData.selectedType = null;
       updateData.selectedTypeId = null;
       updateData.requiredFields = [];
-      Object.assign(updateData, this.specialFieldResetPatch());
+
     }
 
     this.goToStep(currentStep - 1, updateData);
@@ -661,7 +636,7 @@ Page({
         content: '笔记本清灰需收费30元人工费\n提醒：务必带上充电器哦！',
         showCancel: false,
         confirmText: '我知道了',
-        confirmColor: '#0000CD'
+        confirmColor: '#0369D7'
       });
     }
   },
@@ -684,27 +659,14 @@ Page({
   /**
    * 验证选择的日期时间是否合法
    */
-  validateSelectedDateTime(date, time) {
-    if (!date || !time) return;
-    
-    // 使用 time.js 的 toDate 确保 iOS 兼容
-    const selectedDateTime = time.toDate(`${date} ${time}`);
-    const now = new Date();
-    
-    // 如果选择的时间早于当前时间，自动调整到最早可预约时间
-    if (selectedDateTime <= now) {
-      const earliestTime = this.getEarliestAppointmentTime();
-      this.setData({
-        appointmentDate: earliestTime.date,
-        appointmentTime: earliestTime.time
-      });
-      
-      wx.showToast({
-        title: '预约时间不能早于当前时间，已自动调整',
-        icon: 'none',
-        duration: 2000
-      });
+  validateSelectedDateTime(date, timeStr) {
+    const selected = time.toDate(`${date} ${timeStr}`);
+    if (!selected || selected <= new Date()) {
+      this.setData({ errorField: 'appointmentTime', submitMessage: '预约时间已过或无效，请重新选择，其他输入已保留。' });
+      return false;
     }
+    this.setData({ errorField: '', submitMessage: '' });
+    return true;
   },
   onDescriptionInput(e) {
     this.setData({ otherDescription: e.detail.value });
@@ -833,12 +795,24 @@ Page({
     }
     
     // value 供输入框展示；每次重新构建字段时都从空开始，避免残留上一次的选择
-    return fields.map(field => ({ ...field, value: '' }));
+    return fields.map(field => ({ ...field, value: this.data[field.key] || '' }));
   },
 
 
   
   async submitRepair() {
+    if (this.data.submitting || this.data.submitUnknown || this.data.currentStep !== 4) return;
+    this.setData({ submitting: true, submitMessage: '' });
+    try { await this._submitRepair(); }
+    finally { this.setData({ submitting: false }); }
+  },
+
+  async _submitRepair() {
+    const appointment = time.toDate(`${this.data.appointmentDate} ${this.data.appointmentTime}`);
+    if (!appointment || appointment <= new Date()) {
+      this.setData({ submitMessage: '预约时间已过，请返回修改预约时间。' });
+      return;
+    }
     // 验证必填的特殊字段
     const requiredFields = this.getRequiredFields();
     // 当前问题类型是否需要“笔记本型号”：该栏目选填，但最终信息单必须呈现，未填时提交“未知”
@@ -872,14 +846,14 @@ Page({
       
       console.log('报修页面订阅授权结果:', authResult);
       
-      // 即使授权失败也继续提交，不阻断核心业务流程
+      /* 通知结果不覆盖业务提交结果。
       if (authResult.success && authResult.analysis.acceptedCount > 0) {
         wx.showToast({
           title: `已授权${authResult.analysis.acceptedCount}个消息通知`,
           icon: 'success',
           duration: 1500
         });
-      }
+      } */
     } catch (error) {
       console.error('订阅授权异常:', error);
       // 授权异常不影响提交流程
@@ -930,6 +904,7 @@ Page({
       
       const res = await api.call('maintenanceTasks', {
         action: 'createMaintenanceTask',
+        config: { retries: 0 },
         params: {
           level1: selectedCategory.name,
           level2: selectedSubcategory.name,
@@ -961,8 +936,17 @@ Page({
       if (res.success) {
         // 首页「我的待办」是缓存直出，新建成功后必须作废，否则切回首页看到的还是旧列表
         swr.clear(`home:todos:${(userInfo && userInfo.openid) || ''}`);
+        const taskId = res.data && res.data.maintenanceTaskId;
+        this.setData({ submittedTaskId: taskId || '' });
+        getApp().publish('maintenanceChanged', { taskId: taskId || '' });
+        getApp().getTodoTotalCount && getApp().getTodoTotalCount(true);
         this.goToStep(5);
       } else {
+        if (res.code === 503) {
+          this.setData({ submitUnknown: true, submitMessage: '暂时无法确认提交结果。请先到待办核实，当前输入已保留，请勿重复报修。' });
+          return;
+        }
+        this.setData({ submitMessage: res.message || '提交未成功，输入已保留' });
         if (res.code === 401 || /未注册|未找到用户|not registered/i.test(res.message || '')) {
           wx.showToast({ title: '请先注册后再提交', icon: 'none' });
           setTimeout(() => { wx.reLaunch({ url: '/pages/login/index' }); }, 700);
@@ -975,21 +959,19 @@ Page({
       }
     } catch (err) {
       wx.hideLoading();
-      wx.showToast({
-        title: '提交异常，请稍后重试',
-        icon: 'none'
-      });
+      this.setData({ submitUnknown: true, submitMessage: '暂时无法确认提交结果，请先到待办核实，输入已保留。' });
       console.error('submitRepair error:', err);
     }
   },
   
   goToTodo() {
-    wx.navigateTo({
-      url: '/pages/user/todo/index'
-    });
+    const router = require('../../utils/router');
+    if (this.data.submittedTaskId) router.navigateTo('/pages/user/todo/maintenance-detail/index', { taskId: this.data.submittedTaskId });
+    else router.userRouter.toTodo();
   },
   
   goToRepair() {
+    if (this.data.submitting || this.data.submitUnknown) return;
     this.goToStep(0, Object.assign({
       selectedCategory: null,
       selectedSubcategory: null,
@@ -1000,7 +982,7 @@ Page({
       otherDescription: '',
       requiredFields: [],
       detailLines: [],
-      tempState: {}
+      tempState: {}, submittedTaskId: '', submitMessage: ''
     }, this.specialFieldResetPatch()));
     this.initAppointmentDate();
   },

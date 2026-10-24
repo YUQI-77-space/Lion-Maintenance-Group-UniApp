@@ -1,15 +1,16 @@
 /* 导入通用样式 */
-@import "./styles/variables.wxss";
 @import "./styles/common.wxss";
 
 /* 全局样式设置 */
 page {
-  font-size: var(--font-size-normal);
+  font-size: 15px;
+  font-size: max(15px, var(--mg-font-body));
+  line-height: 1.55;
   color: var(--text-main);
   background-color: var(--background-color);
   box-sizing: border-box;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--mg-font-family);
   /* 为悬浮TabBar预留空间，移除iOS安全区域适配以保持和Android一致 */
   padding-bottom: 0px;
 }
@@ -38,23 +39,12 @@ button::after {
   box-sizing: border-box;
 }
 
-/* 安全区适配 - 为保持和Android一致，禁用iOS安全区域适配 */
-.safe-bottom {
-  /* padding-bottom: constant(safe-area-inset-bottom); */
-  /* padding-bottom: env(safe-area-inset-bottom); */
-  padding-bottom: 0;
-}
-
-/* 底部固定区域 */
+/* 二级页固定栏按系统安全区留白；Tab 页由 layout.js 统一测量。 */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .footer-fixed {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: var(--spacing-medium);
-  /* 移除安全区域适配，保持和Android一致的底部位置 */
-  padding-bottom: var(--spacing-medium);
-  background-color: var(--card-background);
-  z-index: 100;
-  box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.05);
-} 
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: var(--mg-space-3);
+  padding-bottom: calc(var(--mg-space-3) + env(safe-area-inset-bottom));
+  background: var(--mg-color-bg-surface); z-index: 200;
+  border-top: 1px solid var(--mg-color-border);
+}

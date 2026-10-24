@@ -1,7 +1,7 @@
 {
   "navigationBarTitleText": "志愿活动管理",
   "enablePullDownRefresh": false,
-  "backgroundColor": "#f6f6f6",
+  "backgroundColor": "#F5F7FA",
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "loading-animation": "/components/loading-animation/index"

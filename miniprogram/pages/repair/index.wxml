@@ -1,7 +1,7 @@
 <!-- miniprogram/pages/repair/index.wxml -->
 <!-- 自定义导航栏 -->
 <view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
-  <view class="navbar-content">
+  <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
     <text class="navbar-title">物科院维修组</text>
   </view>
@@ -24,10 +24,8 @@
 </view>
 
 <view
-  class="repair-container"
-  bindtouchstart="onTouchStart"
-  bindtouchend="onTouchEnd"
-  style="padding-top: {{currentStep < 5 ? contentTop : contentTopNoBar}}px;"
+  class="mg-theme mg-data-page repair-container"
+  style="padding-top: {{currentStep < 5 ? contentTop : contentTopNoBar}}px; padding-bottom: {{tabbarHeight + 16}}px;"
 >
   <!-- ==================== 步骤 0：选择大类 ==================== -->
   <view wx:if="{{currentStep === 0}}">
@@ -166,6 +164,7 @@
         wx:for="{{requiredFields}}"
         wx:key="key"
         wx:for-item="field"
+        id="repair-{{field.key}}"
         class="special-field {{errorField === field.key ? 'has-error' : ''}}"
       >
         <view class="field-label">
@@ -221,6 +220,7 @@
           </view>
         </picker>
       </view>
+      <view class="field-error" wx:if="{{errorField === 'appointmentTime'}}">{{submitMessage}}</view>
       <view class="field-hint">可预约时段为 08:00–22:00，请至少提前 1 小时</view>
 
       <!-- 问题描述 -->
@@ -282,9 +282,11 @@
         </view>
       </view>
 
+      <view class="mg-page-notice">联系方式：{{userInfo.nickName}} · QQ {{userInfo.qqId || '请核对个人资料'}}<view wx:if="{{selectedTypeId === 111}}">笔记本清灰需收费30元人工费，请携带充电器。</view><view>订阅通知用于接收受理和进度提醒，拒绝通知仍可报修。</view></view>
+      <view class="mg-page-notice mg-page-notice--error" wx:if="{{submitMessage}}">{{submitMessage}}<button wx:if="{{submitUnknown}}" class="mg-button mg-button--secondary" bindtap="goToTodo">到待办核实结果</button></view>
       <view class="button-group">
-        <button class="btn btn-outline" bindtap="prevStep">返回修改</button>
-        <button class="btn btn-primary" bindtap="submitRepair">确认提交</button>
+        <button class="btn btn-outline" bindtap="prevStep" disabled="{{submitting || submitUnknown}}">返回修改</button>
+        <button class="btn btn-primary" bindtap="submitRepair" loading="{{submitting}}" disabled="{{submitting || submitUnknown}}">{{submitting ? '正在提交' : '提交报修'}}</button>
       </view>
     </view>
   </view>
@@ -324,7 +326,7 @@
       </view>
 
       <view class="button-group">
-        <button class="btn btn-outline" bindtap="goToTodo">查看进度</button>
+        <button class="btn btn-outline" bindtap="goToTodo">查看报修进度</button>
         <button class="btn btn-primary" bindtap="goToRepair">再次报修</button>
       </view>
     </view>

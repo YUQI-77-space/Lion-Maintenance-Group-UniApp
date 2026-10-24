@@ -1,3 +1,4 @@
+@import "../../styles/design-tokens.wxss";
 /* components/feedback-modal/index.wxss */
 
 .feedback-modal-overlay {
@@ -127,3 +128,9 @@
     font-size: 30rpx;
   }
 }
+
+.feedback-modal-overlay { background: var(--mg-color-scrim); z-index: 1000; }
+.feedback-modal-container { max-height: 85vh; border-radius: 24rpx; background: var(--mg-color-bg-surface); box-shadow: none; overflow-y: auto; animation: none; }
+.confirm-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); }
+.modal-title { color: var(--mg-color-text-primary); }
+.modal-content, .detail-label, .detail-value { color: var(--mg-color-text-secondary); }

@@ -1,5 +1,5 @@
 <!--pages/user/about/index.wxml-->
-<view class="about-page">
+<view class="about-page mg-theme mg-page">
   <!-- 品牌头部 -->
   <view class="hero">
     <view class="brand-row">
@@ -14,7 +14,7 @@
   </view>
 
   <!-- 关于维修组 -->
-  <view class="card">
+  <view class="card mg-surface">
     <view class="section-caption">我们的故事</view>
     <view class="card-title">热爱动手，也热心助人</view>
     <view class="para">
@@ -29,7 +29,7 @@
   </view>
 
   <!-- 相关维修业务 -->
-  <view class="card">
+  <view class="card mg-surface">
     <view class="card-title">我们能帮你做什么</view>
     <view class="para">同学们可以在这里获得免费义务维修服务，包括：</view>
     <view class="service-list">
@@ -49,7 +49,7 @@
   </view>
 
   <!-- 联系我们 -->
-  <view class="card">
+  <view class="card mg-surface">
     <view class="card-title">联系我们</view>
     <button class="info-row" hover-class="row-pressed" bindtap="copyText" data-text="南师大仙林校区格物楼北楼5楼玻璃房">
       <view class="info-main">

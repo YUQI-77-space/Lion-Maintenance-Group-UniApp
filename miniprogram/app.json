@@ -7,7 +7,6 @@
     "pages/home/team-spirit/index",
     "pages/user/profile/index",
     "pages/login/index",
-    
     "pages/user/todo/index",
     "pages/user/todo/maintenance-detail/index",
     "pages/user/todo/volunteer-detail/index",
@@ -35,13 +34,13 @@
     "pages/repair/map/index"
   ],
   "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#3a75fb",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTitleText": "维修组管理系统",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0A2540",
-    "backgroundColorTop": "#0A2540",
-    "backgroundColorBottom": "#0A2540"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F7FA",
+    "backgroundColorTop": "#F5F7FA",
+    "backgroundColorBottom": "#F5F7FA"
   },
   "permission": {
     "scope.userLocation": {
@@ -55,8 +54,8 @@
   "lazyCodeLoading": "requiredComponents",
   "tabBar": {
     "custom": true,
-    "color": "#909399",
-    "selectedColor": "#3a75fb",
+    "color": "#626D80",
+    "selectedColor": "#0369D7",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [

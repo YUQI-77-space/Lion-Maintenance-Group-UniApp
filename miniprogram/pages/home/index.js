@@ -1,3 +1,4 @@
+const { getLayout } = require('../../utils/layout');
 const cloudImageManager = require('../../utils/cloudImageManager');
 const iconManager = require('../../utils/iconManager');
 const api = require('../../utils/apiAdapter');
@@ -6,10 +7,10 @@ const dutyNow = require('../../utils/dutyNow');
 
 // 维修任务状态文案（与列表页 / 管理页 / 详情页保持一致）
 const TASK_STATUS_MAP = {
-  pending: '未受理',
-  inProgress: '处理中',
+  pending: '待受理',
+  inProgress: '进行中',
   completed: '已完成',
-  cancelled: '已撤销'
+  cancelled: '已取消'
 };
 
 // 报修进度轨的三个节点
@@ -27,9 +28,10 @@ const WIDGET_TTL = { duty: 120, todos: 60 };
 const WIDGET_MIN_INTERVAL_MS = 10 * 1000;
 
 // 首帧就同步取到导航栏高度，避免 onLoad 里再 setData 造成的内容空档/布局跳动
-const WINDOW_INFO = (() => { try { return wx.getWindowInfo() || {}; } catch (e) { return {}; } })();
-const STATUS_BAR_HEIGHT = WINDOW_INFO.statusBarHeight || 20;
-const NAV_BAR_HEIGHT = STATUS_BAR_HEIGHT + 44;
+const LAYOUT = getLayout();
+const WINDOW_INFO = { windowWidth: LAYOUT.windowWidth };
+const STATUS_BAR_HEIGHT = LAYOUT.statusBarHeight;
+const NAV_BAR_HEIGHT = LAYOUT.navBarHeight;
 
 // 首帧直出：启动页已预热临时URL缓存，这里同步取用，避免首屏先渲染一片骨架屏
 const INITIAL_SWIPER_IMAGES = cloudImageManager.resolveCachedTempUrls(cloudImageManager.getHomeSwiperImages());
@@ -41,21 +43,21 @@ Page({
     // 状态栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
+    navbarContentHeight: LAYOUT.navbarContentHeight,
+    navbarRight: LAYOUT.navbarRight,
+    tabbarHeight: LAYOUT.tabbarHeight,
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
 
     // 页面滑动与动画
-    _touchStartX: 0,
-    _touchStartY: 0,
-    isAnimating: false,
     
     // 轮播图
     swiperImages: INITIAL_SWIPER_IMAGES,
     swiperCurrent: 0,
+    swiperImageErrors: {},
     swiperInterval: 3500,
     swiperDuration: 300,
-    swiperTouching: false,
     
     // 功能入口配置
     functionEntries: [
@@ -111,7 +113,6 @@ Page({
   },
 
   onLoad: function (options) {
-    this.initAnimation();
     
     // 记录网络类型，用于自适应加载策略
     try {
@@ -144,6 +145,7 @@ Page({
 
     // 今日工作台：与图片加载相互独立，不阻塞首帧
     this.initHomeWidgets();
+    this._unsubMaintenance = app.subscribe('maintenanceChanged', () => { this._lastTodosFetch = 0; this.loadMyTodos && this.loadMyTodos(true); });
   },
   
   // 内容加载调度 - 并行加载策略
@@ -180,7 +182,6 @@ Page({
   },
 
   onShow: function () {
-    this.initAnimation();
     const tab = this.getTabBar && this.getTabBar();
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
 
@@ -258,70 +259,9 @@ Page({
 
 
   // 触摸滑动切换页面
-  onTouchStart(e) {
-    if (!e.touches || e.touches.length === 0) return;
-    const touch = e.touches[0];
-    this.setData({ 
-      _touchStartX: touch.clientX, 
-      _touchStartY: touch.clientY 
-    });
-    this.checkIfTouchInSwiper(touch.clientX, touch.clientY);
-  },
 
-  onTouchEnd(e) {
-    // 检查是否在轮播图区域内滑动，如果是则不处理页面切换
-    if (this.data.swiperTouching) return;
-    
-    // 额外检查：如果最近200ms内有轮播图触摸，也不处理
-    if (this._swiperTouchTime && (Date.now() - this._swiperTouchTime < 200)) {
-      return;
-    }
 
-    if (!e.changedTouches || e.changedTouches.length === 0) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - this.data._touchStartX;
-    const dy = endY - this.data._touchStartY;
 
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    if (absDx < 60 || absDy > 40) return;
-
-    const { getTabOrder } = require('../../utils/router');
-    const tabOrder = getTabOrder();
-    const pages = getCurrentPages();
-    const route = '/' + pages[pages.length - 1].route;
-    const idx = tabOrder.indexOf(route);
-    if (idx === -1) return;
-
-    const nextIdx = dx < 0
-      ? (idx + 1) % tabOrder.length
-      : (idx - 1 + tabOrder.length) % tabOrder.length;
-
-    const direction = dx < 0 ? 'left' : 'right';
-    this.animateAndSwitch(direction, tabOrder[nextIdx]);
-  },
-
-  // 页面动画
-  // 仅复位滑动切换的防抖标记：页面根节点不再挂 animation，避免整页合成层与切换瞬间的空白帧
-  initAnimation: function () {
-    if (this.data.isAnimating) {
-      this.setData({ isAnimating: false });
-    }
-  },
-
-  // 滑动切换 Tab：直接切换，不再先把整页淡出
-  animateAndSwitch: function (direction, url) {
-    if (this.data.isAnimating || !url) return;
-    this.setData({ isAnimating: true });
-    wx.switchTab({ url });
-    // 兜底复位，避免切换失败后标记卡死
-    setTimeout(() => {
-      if (this.data.isAnimating) {
-        this.setData({ isAnimating: false });
-      }
-    }, 400);
-  },
 
   // 轮播图数据初始化
   initSwiperImages: function() {
@@ -355,46 +295,17 @@ Page({
     }, 100);
   },
 
-  onSwiperTouchStart: function(e) {
-    this.setData({ swiperTouching: true });
-    this._swiperTouchTime = Date.now();
-  },
 
-  onSwiperTouchMove: function(e) {
-    // 持续更新触摸时间，确保滑动过程中不会被中断
-    this._swiperTouchTime = Date.now();
-  },
 
-  onSwiperTouchEnd: function(e) {
-    // 延迟重置状态，确保滑动完全结束
-    setTimeout(() => {
-      this.setData({ swiperTouching: false });
-    }, 50);
-  },
 
   // 轮播图图片加载失败处理
   onImageError: function(e) {
-    // 轮播图加载失败，不影响功能
+    const index = Number(e.currentTarget.dataset.index);
+    if (Number.isInteger(index) && index >= 0) this.setData({ [`swiperImageErrors[${index}]`]: true });
   },
 
   // 检查触摸点是否在横向滑动区域内（轮播图 / 团队风采横滑条）
   // 命中则不触发「滑动切 Tab」，避免横滑时误切页面
-  checkIfTouchInSwiper: function(clientX, clientY) {
-    const query = wx.createSelectorQuery();
-    query.select('.swiper-section').boundingClientRect();
-    query.select('.feature-strip').boundingClientRect();
-    query.exec((res) => {
-      const rects = (res || []).filter(rect => rect);
-      const hit = rects.some(rect =>
-        clientX >= rect.left && clientX <= rect.right &&
-        clientY >= rect.top && clientY <= rect.bottom
-      );
-      if (hit) {
-        this.setData({ swiperTouching: true });
-        this._swiperTouchTime = Date.now();
-      }
-    });
-  },
 
   // 初始化特色活动数据
   initSpecialEvents: function() {
@@ -444,6 +355,12 @@ Page({
         });
       }
     });
+  },
+
+  openTodoList() { require('../../utils/router').userRouter.toTodo(); },
+  openRepairProgress(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) require('../../utils/router').navigateTo('/pages/user/todo/maintenance-detail/index', { taskId: id });
   },
 
   // 功能入口点击事件（兼容 entry-item 组件）
@@ -705,7 +622,7 @@ Page({
     wx.showLoading({ title: '处理中...' });
     try {
       const res = await api.call('maintenanceTasks', {
-        action: 'completeMaintenanceTask',
+        action: 'completeMaintenanceTask', config: { retries: 0 },
         params: {
           maintenanceTaskId: taskId,
           completeTime: new Date().toISOString()
@@ -977,6 +894,7 @@ Page({
 
   // 页面卸载时清理资源
   onUnload: function() {
+    if (this._unsubMaintenance) this._unsubMaintenance();
     this.data.isPageUnloaded = true;
 
     // 清理定时器

@@ -1,3 +1,4 @@
+@import "../../../styles/design-tokens.wxss";
 /* components/charts/bar-chart/index.wxss */
 .chart-container {
   width: 100%;
@@ -10,3 +11,5 @@
   display: block;
 }
 
+
+.legend-name { white-space: normal; overflow-wrap: break-word; }

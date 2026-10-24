@@ -1,5 +1,5 @@
 <!-- 反馈模态窗组件 -->
-<view class="feedback-modal-overlay" wx:if="{{show}}" catchtouchmove="preventTouchMove" catchtap="preventTap">
+<view class="mg-theme feedback-modal-overlay" wx:if="{{show}}" catchtouchmove="preventTouchMove" catchtap="preventTap">
   <view class="feedback-modal-container" catchtap="onModalContentTap">
     <!-- 消息标题 -->
     <view class="modal-header">

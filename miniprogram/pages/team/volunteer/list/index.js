@@ -3,7 +3,7 @@ const app = getApp()
 const api = require('../../../../utils/apiAdapter')
 const time = require('../../../../utils/time')
 const network = require('../../../../utils/network')
-const outbox = require('../../../../utils/outbox')
+
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth')
 const swr = require('../../../../utils/swrCache')
 const iconManager = require('../../../../utils/iconManager')
@@ -114,114 +114,39 @@ Page({
   /**
    * 获取活动列表
    */
-  getActivitiesList: async function(force = false) {
-    if (!this.data.hasMore || this.data.loading) return Promise.resolve();
-
+  async getActivitiesList(force = false) {
     const status = this.data.currentStatus || 'all';
-    const role = app.globalData.role || wx.getStorageSync('role') || 'user';
-    const userInfo = wx.getStorageSync('userInfo') || {};
-    const openid = this.data.openid || userInfo.openid || 'anon';
-    const cacheKey = `vol:list:${openid}:${status}:${this.data.page}`;
-    const TTL_SEC = 60;
-
-    // 🔥 关键修改：首次加载时，即使有缓存也要显示加载动画，避免用户误认为没有加载
-    const cached = swr.get(cacheKey);
-    const isFirstPageLoad = this.data.page === 1 && this.data.activities.length === 0;
-    
-    // 🔥 关键修改：首次加载时，始终显示加载动画（即使有缓存也不立即显示）
-    // 这样可以确保用户看到加载过程，避免误认为没有加载就是最新数据
-    if (isFirstPageLoad && this.data.initialLoading) {
-      // 首次加载时，始终显示加载动画，不立即使用缓存
-      this.setData({ loading: true });
-    } else if (!cached || !cached.exists) {
-      // 非首次加载或没有缓存时，显示加载状态
-      this.setData({ loading: true });
-    } else if (cached && cached.exists && isFirstPageLoad && !this.data.initialLoading) {
-      // 非首次加载的首次页（这种情况很少），可以使用缓存快速展示
-      const cachedList = Array.isArray(cached.data) ? cached.data : [];
-      const hasMoreFromCache = cachedList.length >= this.data.pageSize;
-      this.setData({ activities: cachedList, hasMore: hasMoreFromCache });
-      this.playEnterAnimationOnce();
-    }
-
-    // 去重
-    const nowTs = Date.now();
-    if (!force) {
-      if (this._fetchingVolList) return Promise.resolve();
-      // 🔥 关键修改：首次加载时，即使缓存新鲜也要继续请求，确保用户看到加载过程
-      if (this._lastVolListFetch && nowTs - this._lastVolListFetch < 800 && cached && cached.fresh && !this.data.initialLoading) {
-        this.setData({ loading: false });
-        return Promise.resolve();
-      }
-    }
-    this._fetchingVolList = true;
-    this._lastVolListFetch = nowTs;
-
-    const params = {
-      page: this.data.page,
-      pageSize: this.data.pageSize
-    };
-    if (status !== 'all') params.status = status;
-
+    const keyword = this.data.searchKeyword || '';
+    const page = this.data.page;
+    const signature = `${status}:${keyword}:${page}`;
+    if (this._readingSignature === signature || (!this.data.hasMore && !force)) return;
+    const generation = this._readGeneration = (this._readGeneration || 0) + 1;
+    this._readingSignature = signature;
+    const owner = app.globalData.openid || '';
+    const cacheKey = `vol:list:${owner}:${app.globalData.role}:${signature}`;
+    this.setData({ loading: page === 1 && !this.data.activities.length, loadingMore: page > 1, loadError: '' });
     try {
+      const params = { page, pageSize: this.data.pageSize,  };
+      if (status !== 'all') params.status = status;
+      if (keyword) params.keyword = keyword;
       const result = await api.call('volunteerActivities', { action: 'getVolunteerActivitiesList', params });
-      if (result.success) {
-        const activities = this.processActivities((result.data && result.data.activities) || []);
-        const currentPage = this.data.page;  // 保存当前页码，用于判断是否触发动画
-        const nextPage = this.data.page + 1;
-        const mergedActivities = this.data.page === 1 ? activities : [...this.data.activities, ...activities];
-        const backendHasMore = result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : undefined;
-        const hasMore = typeof backendHasMore === 'boolean' ? backendHasMore : (activities.length >= this.data.pageSize);
-        
-        // 🔥 关键修改：首次加载完成后，同时设置数据和关闭加载状态，避免出现空状态中间帧
-        if (currentPage === 1 && this.data.initialLoading) {
-          // 在同一个setData中同时设置数据和关闭加载状态，避免出现空状态
-          this.setData({ 
-            activities: mergedActivities, 
-            hasMore, 
-            page: nextPage,
-            initialLoading: false,  // 同时关闭初始加载状态
-            loading: false
-          });
-          swr.set(cacheKey, mergedActivities, TTL_SEC);
-          
-          // 短暂延迟后播放动画，确保DOM已更新且数据已渲染
-          setTimeout(() => {
-            this.playEnterAnimationOnce();
-          }, 50);
-        } else {
-          // 非首次加载或非初始加载状态，直接更新数据
-          this.setData({ activities: mergedActivities, hasMore, page: nextPage });
-          swr.set(cacheKey, mergedActivities, TTL_SEC);
-          // 首次加载页渲染时尝试播放一次性动画
-          if (currentPage === 1) {
-            // 非初始加载的首次页，也需要播放动画
-            setTimeout(() => {
-              this.playEnterAnimationOnce();
-            }, 100);
-          }
-        }
-        if (currentPage === 1) {
-          this.prefetchOtherStatuses();
-        }
-      } else {
-        wx.showToast({ title: result.message || '获取活动列表失败', icon: 'none' });
-      }
-    } catch (err) {
-      console.error('获取活动列表失败', err);
-      if (!cached || !cached.exists) {
-        wx.showToast({ title: '获取活动列表失败', icon: 'none' });
-      }
+      if (generation !== this._readGeneration || status !== (this.data.currentStatus || 'all') || keyword !== (this.data.searchKeyword || '') || page !== this.data.page || owner !== app.globalData.openid) return;
+      if (!result.success) throw new Error(result.message || '活动读取失败');
+      const raw = result.data && result.data.activities || [];
+      const rows = this.processActivities(raw);
+      const merged = page === 1 ? rows : [...this.data.activities, ...rows.filter(row => !this.data.activities.some(old => old.activityId === row.activityId))];
+      this.setData({ activities: merged, page: page + 1, hasMore: result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : rows.length >= this.data.pageSize });
+      swr.set(cacheKey, rows, 60);
+    } catch (error) {
+      if (generation === this._readGeneration) this.setData({ loadError: error.message || '加载失败，原内容已保留' });
     } finally {
-      this._fetchingVolList = false;
-      // 如果不是首次加载的延迟设置场景，直接关闭loading
-      // 首次加载的loading会在数据设置时关闭，这里不需要重复关闭
-      if (!(this.data.page === 1 && this.data.initialLoading)) {
-        this.setData({ loading: false });
+      if (generation === this._readGeneration) {
+        this._readingSignature = '';
+        this.setData({ loading: false, loadingMore: false, initialLoading: false });
       }
-      wx.stopPullDownRefresh();
     }
   },
+  retryActivities() { return this.getActivitiesList(true); },
 
   /**
    * 切换状态筛选
@@ -293,34 +218,13 @@ Page({
   },
 
   // 切换后在后台预取其它状态第一页，优化后续切换体验（不改变现有逻辑）
-  prefetchOtherStatuses() {
-    const statuses = ['all', 'inPreparation', 'inProgress', 'ended'];
-    const current = this.data.currentStatus || 'all';
-    const others = statuses.filter(s => s !== current);
-    const pageSize = this.data.pageSize;
-    const openid = this.data.openid || (wx.getStorageSync('userInfo') || {}).openid || 'anon';
-    others.forEach((status) => {
-      const cacheKey = `vol:list:${openid}:${status}:1`;
-      const cached = swr.get(cacheKey);
-      if (cached && cached.fresh) return; // 已有新鲜缓存则跳过
-      const params = { page: 1, pageSize };
-      if (status !== 'all') params.status = status;
-      api.call('volunteerActivities', { action: 'getVolunteerActivitiesList', params })
-        .then((result) => {
-          if (result && result.success) {
-            const activities = this.processActivities((result.data && result.data.activities) || []);
-            swr.set(cacheKey, activities, 60);
-          }
-        })
-        .catch(() => {});
-    });
-  },
+
 
   /**
    * 统一处理活动衍生字段，确保缓存与实时加载表现一致
    */
   processActivities(rawActivities = []) {
-    const statusMap = { inPreparation: '筹备中', inProgress: '进行中', ended: '已结束' };
+    const statusMap = { pending: '待发布', inPreparation: '筹备中', inProgress: '进行中', ended: '已结束' };
     const quotes = this.data.inspirationalQuotes || [];
     return rawActivities.map((item) => {
       const cloned = { ...item };
@@ -345,7 +249,13 @@ Page({
   /**
    * 处理报名/取消报名
    */
-  handleRegister: async function(e) {
+  async handleRegister(e) {
+    if (this.data.operationBusy) return;
+    this.setData({ operationBusy: true });
+    try { return await this._guardedHandleRegister(e); }
+    finally { this.setData({ operationBusy: false }); }
+  },
+  async _guardedHandleRegister(e) {
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
@@ -397,8 +307,7 @@ Page({
     try {
       // 离线处理逻辑保持不变
       if (!network.isOnline()) {
-        outbox.add('volunteerActivities', action, { activityId });
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         wx.hideLoading();
         return;
       }

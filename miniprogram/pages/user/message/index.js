@@ -11,6 +11,7 @@ Page({
    */
   data: {
     messages: [],
+    loadError: '',
     messageNumber: 0,
     unreadCount: 0,
     isLoading: true,
@@ -30,7 +31,6 @@ Page({
       userOpenid: app.globalData.openid || wx.getStorageSync('openid')
     });
     // 主题移除：不再绑定
-    this.loadMessages();
   },
 
   /**
@@ -148,7 +148,9 @@ Page({
    * 加载消息列表（改为适配器）
    */
   loadMessages: async function() {
-    this.setData({ isLoading: true });
+    if (this._loadingMessages) return;
+    this._loadingMessages = true;
+    this.setData({ isLoading: this.data.messages.length === 0, loadError: '' });
     
     try {
       const result = await api.call('messages', {
@@ -162,26 +164,26 @@ Page({
           let typeIcon = '', typeText = '';
           switch (msg.messagetype) {
             case 'maintenance': 
-              typeIcon = '🔧'; 
+              typeIcon = '修';
               typeText = '维修'; 
               break;
             case 'volunteer': 
-              typeIcon = '💝'; 
+              typeIcon = '志';
               typeText = '志愿'; 
               break;
             case 'duty':
-              typeIcon = '📅';
+              typeIcon = '班';
               typeText = '值班';
               break;
             case 'system': 
             default: 
-              typeIcon = '📢'; 
+              typeIcon = '信';
               typeText = '系统'; 
               break;
           }
           
           // 处理时间显示 - 每次加载时重新计算，确保时间是最新的
-          const timeDisplay = this.formatMessageTime(msg.sendTime);
+          const timeDisplay = time.formatToMinute(msg.sendTime);
           
           return { 
             ...msg, 
@@ -203,21 +205,17 @@ Page({
         });
         app.getUnreadMessageCount && app.getUnreadMessageCount();
       } else {
-        this.setData({ 
-          messages: [], 
-          messageNumber: 0, 
-          unreadCount: 0,
-          isEmpty: true, 
-          isLoading: false 
-        });
-        if (result.message !== '未找到消息') {
-          wx.showToast({ title: result.message || '获取消息失败', icon: 'none' });
-        }
+        if (result.message === '未找到消息') {
+          this.setData({ messages: [], messageNumber: 0, unreadCount: 0, isEmpty: true });
+        } else this.setData({ loadError: result.message || '消息加载失败，保留上次内容' });
       }
     } catch (err) {
       console.error('获取消息失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
-      this.setData({ isLoading: false, isEmpty: true });
+      this.setData({ loadError: '网络异常，保留上次内容，可重新加载' });
+    } finally {
+      this._loadingMessages = false;
+      this.setData({ isLoading: false });
     }
   },
 
@@ -234,7 +232,7 @@ Page({
     
     try {
       const res = await api.call('messages', {
-        action: 'markTheMessageAsRead',
+        action: 'markTheMessageAsRead', config: { retries: 0 },
         params: { messageUserId: this.data.userOpenid, messageIndex: originalIndex }
       });
       if (res.success) {
@@ -316,7 +314,7 @@ Page({
     
     try {
       const res = await api.call('messages', {
-        action: 'markTheMessageAsRead',
+        action: 'markTheMessageAsRead', config: { retries: 0 },
         params: { messageUserId: this.data.userOpenid, markAllAsRead: true }
       });
       wx.hideLoading();

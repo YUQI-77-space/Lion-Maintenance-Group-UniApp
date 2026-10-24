@@ -1,5 +1,5 @@
 <!-- components/charts/bar-chart/index.wxml -->
-<view class="chart-container">
+<view class="mg-theme chart-container">
   <canvas 
     type="2d" 
     id="barCanvas" 

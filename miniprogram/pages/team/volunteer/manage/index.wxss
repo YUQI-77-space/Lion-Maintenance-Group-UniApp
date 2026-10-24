@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/volunteer/manage/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -309,14 +310,14 @@
 }
 
 .edit-btn {
-  border-color: #191970;
-  background-color: #191970;
+  border-color: var(--mg-color-brand);
+  background-color: var(--mg-color-brand);
   color: #ffffff;
 }
 
 .delete-btn {
-  border-color: #B22222;
-  background-color: #B22222;
+  border-color: var(--mg-color-danger);
+  background-color: var(--mg-color-danger);
   color: #ffffff;
 }
 
@@ -334,7 +335,7 @@
 }
 
 .toggle-label.open {
-  color: #52c41a;
+  color: var(--mg-color-success);
 }
 
 .toggle-label.closed {
@@ -348,14 +349,14 @@
 .pending-notice {
   flex: 1;
   font-size: 26rpx;
-  color: #fa8c16;
+  color: var(--mg-color-warning);
   padding: 10rpx 20rpx;
   text-align: left;
 }
 
 .countdown-banner {
   background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
-  border-left: 4rpx solid #fa8c16;
+  border-left: 4rpx solid var(--mg-color-warning);
   padding: 16rpx 24rpx;
   margin: 0 0 16rpx 0;
   display: flex;
@@ -366,13 +367,13 @@
 
 .countdown-label {
   font-size: 26rpx;
-  color: #fa8c16;
+  color: var(--mg-color-warning);
   font-weight: 500;
 }
 
 .countdown-time {
   font-size: 28rpx;
-  color: #fa8c16;
+  color: var(--mg-color-warning);
   font-weight: bold;
 }
 

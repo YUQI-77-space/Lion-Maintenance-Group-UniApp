@@ -31,6 +31,12 @@ const BACKOFF_FACTOR = 2;       // 指数退避
 const MAX_BACKOFF_MS = 30 * 1000; // 30s
 const MAX_QUEUE_LENGTH = 200;   // 防止无限增长
 
+function currentOwner() {
+  const app = getApp();
+  const data = app && app.globalData || {};
+  return data.isLogin && data.openid ? { openid: data.openid, role: data.role || 'user' } : null;
+}
+
 let processing = false; // 并发保护
 let autoStarted = false; // 自动重放是否启动
 let unsubscribeNetwork = null; // 取消网络监听
@@ -86,6 +92,7 @@ function createItem(name, action, params, options = {}) {
     name,
     action,
     params: params || {},
+    owner: currentOwner(),
     createdAt: now(),
     attempts: 0,
     maxAttempts: typeof options.maxAttempts === 'number' ? options.maxAttempts : DEFAULT_MAX_ATTEMPTS,
@@ -130,6 +137,13 @@ async function processItem(item) {
   // 等待网络在线
   if (!network.isOnline()) {
     await network.awaitOnline();
+  }
+
+  const owner = currentOwner();
+  if (!owner || !item.owner || owner.openid !== item.owner.openid || owner.role !== item.owner.role) {
+    item.status = 'failed';
+    item.lastError = '身份已变化，已取消未执行操作，请在对应页面重新核对';
+    return { success: false, identityChanged: true };
   }
 
   item.attempts += 1;
@@ -189,7 +203,10 @@ async function processQueue(options = {}) {
       const updated = loadQueue();
       const pos = updated.findIndex(x => x.id === item.id);
       if (pos >= 0) {
-        if (item.status === 'done' || item.status === 'failed') {
+        if (result.identityChanged) {
+          // 保留未执行记录和原因供核对，身份变化不能静默丢弃原操作内容。
+          updated[pos] = item;
+        } else if (item.status === 'done' || item.status === 'failed') {
           updated.splice(pos, 1);
         } else {
           updated[pos] = item;
@@ -253,4 +270,4 @@ module.exports = {
   processQueue,
   startAuto,
   snapshot
-}; 
+};

@@ -5,6 +5,16 @@ Component({
     cancelText: { type: String, value: '取消' },
     loading: Boolean, disabled: Boolean, danger: Boolean, bottom: Boolean
   },
+  data: { keyboardHeight: 0 },
+  lifetimes: {
+    attached() {
+      this._onKeyboard = event => this.setData({ keyboardHeight: Math.max(0, event.height || 0) });
+      if (wx.onKeyboardHeightChange) wx.onKeyboardHeightChange(this._onKeyboard);
+    },
+    detached() {
+      if (wx.offKeyboardHeightChange) wx.offKeyboardHeightChange(this._onKeyboard);
+    }
+  },
   methods: {
     stopPropagation() {},
     onMaskTap() { if (this.data.bottom) this.cancel(); },

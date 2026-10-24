@@ -306,7 +306,7 @@ Page({
           content: `当前已有 ${this.data.currentNumberOfVolunteers} 人报名，志愿者人数不能设置为少于已报名人数。`,
           showCancel: false,
           confirmText: '我知道了',
-          confirmColor: '#191970'
+          confirmColor: '#0369D7'
         })
         // 回退到之前的值
         const previousCount = parseInt(this.data.formData.volunteerCount) || 5
@@ -744,11 +744,20 @@ Page({
   /**
    * 表单提交
    */
-  submitForm: async function(e) {
+  async submitForm(e) {
+    if (this.data.submitting || this.data.submitUnknown) return;
+    this.setData({ submitting: true });
+    try { return await this._performSubmitForm(e); }
+    finally { this.setData({ submitting: false }); }
+  },
+  async _performSubmitForm(e) {
     const formData = e.detail.value;
+    this.setData({ formData: { ...this.data.formData, ...formData }, formError: '' });
     formData.volunteerCount = this.data.formData.volunteerCount;
 
     if (!this.validateForm(formData)) {
+      this.setData({ formError: '请核对必填项、活动起止时间与人数，输入已保留。' });
+      wx.pageScrollTo({ scrollTop: 0, duration: 0 });
       return;
     }
 
@@ -777,7 +786,7 @@ Page({
           content: `当前已有 ${this.data.currentNumberOfVolunteers} 人报名，志愿者人数不能设置为少于已报名人数。`,
           showCancel: false,
           confirmText: '我知道了',
-          confirmColor: '#191970'
+          confirmColor: '#0369D7'
         })
         this.setData({ loading: false })
         return
@@ -819,17 +828,23 @@ Page({
     try {
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
-        const outbox = require('../../../../utils/outbox');
-        outbox.add('volunteerActivities', action, params);
+
         this.setData({ loading: false });
-        wx.showToast({ title: '网络不稳，已加入队列', icon: 'none', duration: 2500 });
+        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
     } catch (e) {}
 
     try {
+      const confirmation = await wx.showModal({
+        title: this.data.isEdit ? '核对活动变更' : '核对新活动',
+        content: `${params.title}\n${params.startTime} 至 ${params.endTime}\n地点：${params.location}\n人数：${params.volunteerCount}\n每人志愿时长：${params.volunteerHours}小时。请核对参与安排与工作量影响。`,
+        confirmText: this.data.isEdit ? '保存变更' : '创建活动', cancelText: '返回修改'
+      });
+      if (!confirmation.confirm) return;
       const res = await api.call('volunteerActivities', {
         action: action,
+        config: { retries: 0 },
         params: params
       });
 
@@ -861,14 +876,16 @@ Page({
         }, 1500);
       } else {
         // 🔥 如果是志愿者人数验证失败，使用模态框显示详细错误
-        const errorMessage = res.message || '操作失败';
+        if (res.code === 503) this.setData({ submitUnknown: true });
+        const errorMessage = res.code === 503 ? '暂时无法确认结果，请返回活动管理核实，输入已保留' : (res.message || '操作失败');
+        this.setData({ formError: errorMessage });
         if (errorMessage.includes('志愿者人数不能设置为少于已报名人数')) {
           wx.showModal({
             title: '无法保存',
             content: errorMessage,
             showCancel: false,
             confirmText: '我知道了',
-            confirmColor: '#191970'
+            confirmColor: '#0369D7'
           })
         } else {
           wx.showToast({
@@ -995,6 +1012,7 @@ Page({
    * 取消表单
    */
   cancelForm() {
+    if (this.data.submitting) return;
     wx.navigateBack()
   },
 

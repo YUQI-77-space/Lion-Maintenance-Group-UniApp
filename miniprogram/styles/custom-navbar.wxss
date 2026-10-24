@@ -7,39 +7,12 @@
    毛玻璃底：半透明 + 背景模糊，内容滑到栏下时透出虚化的底色，
    从而弱化「抬头」与「正文」之间的硬边界。
    --navbar-* 由各页面按需覆盖（首页首屏更透、滚动后更实）。 */
-.custom-navbar {
-  --navbar-tint: 255, 255, 255;   /* 玻璃底色 RGB */
-  --navbar-alpha: 0.86;           /* 玻璃不透明度 */
-  --navbar-blur: 20px;            /* 背景模糊半径 */
-
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(var(--navbar-tint), var(--navbar-alpha));
-  backdrop-filter: saturate(180%) blur(var(--navbar-blur));
-  -webkit-backdrop-filter: saturate(180%) blur(var(--navbar-blur));
-  /* 不再用 border-bottom：深蓝描边会把抬头和正文切成硬邦邦的两截 */
-  border-bottom: none;
-  transition: background-color 0.28s ease, box-shadow 0.28s ease,
-    backdrop-filter 0.28s ease, -webkit-backdrop-filter 0.28s ease;
-  z-index: 1000;
+.custom-navbar, .custom-navbar.is-scrolled {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--mg-color-bg-surface);
+  border-bottom: 1px solid var(--mg-color-border);
+  z-index: 100;
 }
-
-/* 滚动后的「更实」状态：提高不透明度与模糊，用柔和投影表达纵深 */
-.custom-navbar.is-scrolled {
-  --navbar-alpha: 0.94;
-  --navbar-blur: 30px;
-  box-shadow: 0 8rpx 24rpx rgba(10, 37, 64, 0.05);
-}
-
-/* 高对比度偏好：退回实底，保证可读性 */
-@media (prefers-contrast: high) {
-  .custom-navbar {
-    --navbar-alpha: 1;
-  }
-}
-
 .navbar-content {
   display: flex;
   align-items: center;
@@ -51,7 +24,7 @@
 .navbar-logo {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 50%;
+  border-radius: 0;
   margin-right: var(--space-sm);
   flex-shrink: 0;
 }
@@ -69,8 +42,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56rpx;
-  height: 56rpx;
+  min-width: 48px;
+  min-height: 48px;
   margin-right: var(--space-xs);
   background: transparent;
 }

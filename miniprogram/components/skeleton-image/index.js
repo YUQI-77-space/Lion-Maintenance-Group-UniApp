@@ -15,7 +15,7 @@ Component({
     },
     placeholderColor: {
       type: String,
-      value: '#e8ecef'
+      value: '#EEF1F5'
     }
   },
 

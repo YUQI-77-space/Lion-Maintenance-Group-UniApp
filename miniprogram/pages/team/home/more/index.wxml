@@ -1,4 +1,4 @@
-<view class="tools-page">
+<view class="tools-page mg-theme mg-page">
   <view class="tools-header">
     <view class="eyebrow">维修组工作台</view>
     <view class="page-title">{{pageTitle}}</view>
@@ -6,26 +6,26 @@
     <view class="page-description" wx:if="{{type === 'manage'}}">按职责进入管理，妥善安排每一项工作。</view>
   </view>
   <view class="search-container">
-    <label class="search-label" for="function-search">查找功能</label>
-    <view class="search-box">
+    <label class="search-label mg-label" for="function-search">查找功能</label>
+    <view class="search-box mg-input">
       <image class="search-icon" src="{{iconSearch}}" mode="aspectFit" aria-hidden="true"></image>
       <input id="function-search" class="search-input" placeholder="输入功能名称" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" placeholder-class="search-placeholder" />
       <button class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch" hover-class="control-pressed" aria-label="清除搜索">清除</button>
     </view>
   </view>
   <view class="function-grid">
-    <button class="function-item" wx:for="{{functions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}" hover-class="item-pressed">
+    <button class="function-item mg-surface" wx:for="{{functions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}" hover-class="item-pressed">
       <view class="function-icon-wrap"><image class="function-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true"></image></view>
       <text class="function-name">{{item.name}}</text>
       <text class="entry-arrow" aria-hidden="true"></text>
     </button>
   </view>
-  <view class="empty-state" wx:if="{{functions.length === 0 && searchKeyword}}">
+  <view class="empty-state mg-surface" wx:if="{{functions.length === 0 && searchKeyword}}">
     <view class="empty-title">没有找到相关功能</view>
     <view class="empty-description">试试“值班”“维修”等功能名称。</view>
-    <button class="reset-search-btn" bindtap="clearSearch" hover-class="primary-pressed">清除搜索</button>
+    <button class="reset-search-btn mg-button mg-button--primary" bindtap="clearSearch" hover-class="mg-button--pressed">清除搜索</button>
   </view>
-  <view class="empty-state" wx:if="{{functions.length === 0 && !searchKeyword}}">
+  <view class="empty-state mg-surface" wx:if="{{functions.length === 0 && !searchKeyword}}">
     <view class="empty-title">暂无可用功能</view>
     <view class="empty-description">可通过左上角返回维修组工作台。</view>
   </view>

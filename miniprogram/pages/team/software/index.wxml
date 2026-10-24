@@ -1,12 +1,12 @@
-<view class="resource-page">
+<view class="resource-page mg-theme mg-page">
   <view class="resource-header">
     <view class="eyebrow">维修组 · 常用工具</view>
     <view class="page-title">软件库</view>
   </view>
-  <view class="resource-card">
+  <view class="resource-card mg-surface">
     <view class="resource-identity">
       <view class="resource-icon-wrap"><image class="resource-icon" src="{{iconSoftware}}" mode="aspectFit" aria-hidden="true"></image></view>
-      <text class="status-badge">开发中</text>
+      <text class="status-badge mg-tag">开发中</text>
     </view>
     <view class="resource-title">软件资源，正在整理</view>
     <view class="resource-description">软件库功能尚在开发中，目前暂未提供软件下载或访问链接。</view>

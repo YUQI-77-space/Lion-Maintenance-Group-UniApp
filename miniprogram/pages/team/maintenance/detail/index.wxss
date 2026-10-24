@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/maintenance/detail/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -207,10 +208,10 @@
 }
 .btn-outline-green:active { background-color: rgba(40, 167, 69, 0.1); }
 
-/* 认领：#191970 边框 + 实心底色，白字 */
+/* 认领：var(--mg-color-brand) 边框 + 实心底色，白字 */
 .btn-claim {
-  border-color: #191970;
-  background-color: #191970;
+  border-color: var(--mg-color-brand);
+  background-color: var(--mg-color-brand);
   color: #ffffff;
 }
 .btn-claim:active { opacity: 0.9; }
@@ -238,16 +239,16 @@
 
 /* 设置EW：实心深蓝 */
 .btn-ew {
-  border-color: #191970;
-  background-color: #191970;
+  border-color: var(--mg-color-brand);
+  background-color: var(--mg-color-brand);
   color: #ffffff;
 }
 .btn-ew:active { opacity: 0.9; }
 
 /* 删除：实心红色 */
 .btn-delete {
-  border-color: #B22222;
-  background-color: #B22222;
+  border-color: var(--mg-color-danger);
+  background-color: var(--mg-color-danger);
   color: #ffffff;
 }
 .btn-delete:active { opacity: 0.9; }
@@ -526,7 +527,7 @@
 }
 
 .member-department-tag.department-tech {
-  color: #3a75fb;
+  color: var(--mg-color-brand);
   background: rgba(58, 117, 251, 0.12);
   border: 1rpx solid rgba(58, 117, 251, 0.25);
 }
@@ -759,7 +760,7 @@
 .selected-confirm-area {
   width: 30%;
   min-width: 180rpx;
-  background: linear-gradient(140deg, #2f58ff 0%, #3a75fb 100%);
+  background: linear-gradient(140deg, #2f58ff 0%, var(--mg-color-brand) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

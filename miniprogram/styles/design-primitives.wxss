@@ -1,0 +1,112 @@
+/* 仅显式导入的页面使用；不覆盖旧 btn、form-*、card 等类。 */
+@import "./design-tokens.wxss";
+
+.mg-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--mg-layout-page-gutter);
+  padding-bottom: calc(var(--mg-space-6) + env(safe-area-inset-bottom));
+  background: var(--mg-color-bg-page);
+  color: var(--mg-color-text-primary);
+  font-family: var(--mg-font-family);
+  font-size: 15px;
+  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  line-height: 1.6;
+}
+
+.mg-surface {
+  box-sizing: border-box;
+  padding: var(--mg-layout-card-padding);
+  border-radius: var(--mg-radius-card);
+  background: var(--mg-color-bg-surface);
+}
+
+.mg-surface--flush { padding: 0; }
+
+.mg-button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: var(--mg-size-touch-target-min);
+  min-height: 48px;
+  min-height: max(var(--mg-size-touch-target-min), var(--mg-size-button));
+  margin: 0;
+  padding: var(--mg-space-2) var(--mg-space-3);
+  border: var(--mg-border-width) solid transparent;
+  border-radius: var(--mg-radius-control);
+  font-family: var(--mg-font-family);
+  font-size: 15px;
+  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  font-weight: var(--mg-weight-medium);
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: break-word;
+  color: var(--mg-color-text-primary);
+  background: var(--mg-color-bg-surface);
+  transition: background-color var(--mg-motion-press) var(--mg-motion-easing);
+}
+
+.mg-button::after { border: 0; }
+.mg-button--primary { color: var(--mg-color-on-brand); background: var(--mg-color-brand); }
+.mg-button--secondary { border-color: var(--mg-color-control-border); }
+.mg-button--text { color: var(--mg-color-brand); background: transparent; }
+.mg-button--danger { color: var(--mg-color-on-brand); background: var(--mg-color-danger); }
+.mg-button--compact { min-height: 48px; min-height: max(var(--mg-size-touch-target-min), var(--mg-size-button-compact)); }
+.mg-button--pressed { color: var(--mg-color-on-brand); background: var(--mg-color-brand-pressed); }
+.mg-button--secondary.mg-button--pressed { color: var(--mg-color-text-primary); background: var(--mg-color-bg-subtle); }
+.mg-button--text.mg-button--pressed { color: var(--mg-color-brand-strong); background: var(--mg-color-brand-selected); }
+.mg-button--danger.mg-button--pressed { color: var(--mg-color-danger); background: var(--mg-color-danger-soft); border-color: var(--mg-color-danger); }
+/* 禁用与处理中同时使用原生 disabled；类名仅负责外观。 */
+.mg-button[disabled], .mg-button.mg-button--disabled {
+  color: var(--mg-color-text-muted);
+  background: var(--mg-color-bg-subtle);
+  border-color: var(--mg-color-border);
+}
+.mg-button.mg-button--loading { color: var(--mg-color-on-brand); background: var(--mg-color-brand); border-color: transparent; }
+
+.mg-tag {
+  display: inline-block;
+  max-width: 100%;
+  padding: var(--mg-space-1) var(--mg-space-2);
+  border-radius: var(--mg-radius-tag);
+  font-size: var(--mg-font-caption);
+  line-height: var(--mg-line-caption);
+  color: var(--mg-color-neutral);
+  background: var(--mg-color-neutral-soft);
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.mg-tag--brand, .mg-tag--info { color: var(--mg-color-info); background: var(--mg-color-info-soft); }
+.mg-tag--success { color: var(--mg-color-success); background: var(--mg-color-success-soft); }
+.mg-tag--warning { color: var(--mg-color-warning); background: var(--mg-color-warning-soft); }
+.mg-tag--danger { color: var(--mg-color-danger); background: var(--mg-color-danger-soft); }
+
+.mg-field { display: flex; flex-direction: column; min-width: 0; }
+.mg-label { display: block; margin-bottom: var(--mg-layout-field-label-gap); color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
+.mg-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  min-height: max(var(--mg-size-touch-target-min), var(--mg-size-input-min));
+  padding: var(--mg-space-2) var(--mg-space-3);
+  border: var(--mg-border-width) solid var(--mg-color-control-border);
+  border-radius: var(--mg-radius-control);
+  font-family: var(--mg-font-family);
+  font-size: 15px;
+  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  color: var(--mg-color-text-primary);
+  background: var(--mg-color-bg-surface);
+}
+.mg-input--focus { border-color: var(--mg-color-brand); }
+.mg-input--multiline { min-height: var(--mg-size-textarea-min); line-height: 1.6; }
+.mg-field-help, .mg-field-error { margin-top: var(--mg-layout-field-error-gap); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
+.mg-field-help { color: var(--mg-color-text-muted); }
+.mg-field-error { color: var(--mg-color-danger); }
+.mg-field--error .mg-input { border-color: var(--mg-color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-button { transition: none; }
+}

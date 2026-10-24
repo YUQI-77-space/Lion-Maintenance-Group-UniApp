@@ -1,120 +1,17 @@
-<!--pages/team/ewa/summary/index.wxml
-  工作量统计 - 概览 / 构成 / 图表
-  风格与「我的消息」「待办详情」「报修向导」保持一致：白卡 + 细边框 + 品牌色点缀 -->
-<wxs module="format">
-function formatEW(value) {
-  if (!value && value !== 0) {
-    return '0';
-  }
-  var num = parseFloat(value);
-  if (isNaN(num)) {
-    return '0';
-  }
-  if (Math.floor(num) === num) {
-    return num + '';
-  }
-  var str = num.toFixed(2);
-  if (str.charAt(str.length - 1) === '0') {
-    str = str.slice(0, -1);
-  }
-  if (str.charAt(str.length - 1) === '0') {
-    str = str.slice(0, -1);
-  }
-  if (str.charAt(str.length - 1) === '.') {
-    str = str.slice(0, -1);
-  }
-  return str;
-}
-
-module.exports = {
-  formatEW: formatEW
-};
-</wxs>
-
-<view class="page">
-  <!-- 加载中 -->
-  <view class="loading-wrap" wx:if="{{loading}}">
-    <loading-animation size="large" />
-  </view>
-
-  <block wx:else>
-    <!-- 空数据 -->
-    <view class="empty-wrap" wx:if="{{!summaryData.totalUsers}}">
-      <text class="empty-text">暂无统计数据</text>
+<view class="mg-theme mg-data-page page">
+  <view class="mg-page-notice">团队当前累计工作量；维修×0.5＋志愿×0.4＋值班×0.1。单科原始值上限300，加权总分由服务端结算。</view>
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="fetchSummary">重新加载</button></view>
+  <view class="loading-wrap" wx:if="{{loading}}"><loading-animation size="large" /></view>
+  <block wx:if="{{loaded}}">
+    <view class="mg-surface overview"><view><text class="overview-label">加权总分（分）</text><view class="overview-value">{{totalText}}</view></view><view><text class="overview-label">参与成员</text><view>{{totalUsers}} 人</view></view></view>
+    <view class="mg-page-notice" wx:if="{{!totalUsers}}">暂无成员数据</view>
+    <view class="mg-page-notice" wx:if="{{hasMissing}}">部分工作量字段缺失，显示“—”；缺失科目不绘图，请核对数据。</view>
+    <view class="mg-surface" wx:if="{{totalUsers}}">
+      <view class="card-title">三科明细</view>
+      <view class="ewa-text-row" wx:for="{{rows}}" wx:key="key"><view class="ewa-subject" style="color: {{item.color}};">{{item.name}} ×{{item.weight}}</view><view>原始工作量 {{item.valueText}} EW</view><view>加权贡献 {{item.contributionText}} 分</view></view>
+      <view class="card-hint">更新于 {{updatedAt}}</view>
     </view>
-
-    <block wx:else>
-      <!-- 概览 -->
-      <view class="overview card-animate">
-        <view class="overview-block">
-          <text class="overview-label">总工作量</text>
-          <text class="overview-value">{{format.formatEW(summaryData.totalEW)}}</text>
-        </view>
-        <view class="overview-split"></view>
-        <view class="overview-block overview-block-side">
-          <text class="overview-label">参与成员</text>
-          <text class="overview-value overview-value-side">{{summaryData.totalUsers}}<text class="overview-unit">人</text></text>
-        </view>
-      </view>
-
-      <block wx:if="{{summaryData.totalEW > 0}}">
-        <!-- 工作量构成 -->
-        <view class="card card-animate" style="animation-delay: 0.08s">
-          <view class="card-title">工作量构成</view>
-
-          <view class="dist-item" wx:for="{{ringChartData}}" wx:key="name">
-            <view class="dist-head">
-              <view class="dist-name">
-                <view class="dist-dot" style="background-color: {{item.color}};"></view>
-                <text>{{item.name}}</text>
-              </view>
-              <view class="dist-numbers">
-                <text class="dist-value">{{format.formatEW(item.value)}}</text>
-                <text class="dist-percent">{{item.percentage.toFixed(1)}}%</text>
-              </view>
-            </view>
-            <view class="dist-track">
-              <view
-                class="dist-fill"
-                style="width: {{item.percentage}}%; background-color: {{item.color}};"
-              ></view>
-            </view>
-          </view>
-
-          <view class="card-hint">占比按加权口径计算：维修 ×0.5、志愿 ×0.4、值班 ×0.1</view>
-        </view>
-
-        <!-- 加权占比 -->
-        <view class="card card-animate" wx:if="{{showCharts && pieChartData.length}}" style="animation-delay: 0.16s">
-          <view class="card-title">加权占比</view>
-          <view class="chart-wrap">
-            <pie-chart
-              chartData="{{pieChartData}}"
-              width="{{pieWidth}}"
-              height="{{pieHeight}}"
-              legend="{{true}}"
-            ></pie-chart>
-          </view>
-        </view>
-
-        <!-- 数量对比 -->
-        <view class="card card-animate" wx:if="{{showCharts}}" style="animation-delay: 0.24s">
-          <view class="card-title">数量对比</view>
-          <view class="chart-wrap">
-            <bar-chart
-              chartData="{{barChartData}}"
-              colors="{{chartColors}}"
-              width="{{canvasWidth}}"
-              height="{{220}}"
-            ></bar-chart>
-          </view>
-        </view>
-      </block>
-
-      <!-- 有成员但暂无工作量记录 -->
-      <view class="card card-animate empty-card" wx:else style="animation-delay: 0.08s">
-        <text class="empty-text">本期暂无工作量记录</text>
-      </view>
-    </block>
+    <view class="mg-surface" wx:if="{{pieChartData.length}}"><view class="card-title">加权贡献占比</view><pie-chart chartData="{{pieChartData}}" width="{{pieWidth}}" height="{{pieHeight}}" legend="{{true}}" /></view>
+    <view class="mg-surface" wx:if="{{totalUsers && !hasMissing}}"><view class="card-title">原始工作量（EW）</view><bar-chart chartData="{{barChartData}}" colors="{{chartColors}}" width="{{canvasWidth}}" height="{{220}}" /></view>
   </block>
 </view>

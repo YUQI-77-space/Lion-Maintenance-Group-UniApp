@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/volunteer/detail/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -1112,7 +1113,7 @@
 .selected-confirm-area {
   width: 30%;
   min-width: 200rpx;
-  background: linear-gradient(140deg, #2f58ff 0%, #3a75fb 100%);
+  background: linear-gradient(140deg, #2f58ff 0%, var(--mg-color-brand) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1250,16 +1251,16 @@
 
 /* 编辑：实心深蓝 */
 .btn-edit {
-  border-color: #191970;
-  background-color: #191970;
+  border-color: var(--mg-color-brand);
+  background-color: var(--mg-color-brand);
   color: #ffffff;
 }
 .btn-edit:active { opacity: 0.9; }
 
 /* 删除：实心红色 */
 .btn-delete {
-  border-color: #B22222;
-  background-color: #B22222;
+  border-color: var(--mg-color-danger);
+  background-color: var(--mg-color-danger);
   color: #ffffff;
 }
 .btn-delete:active { opacity: 0.9; }

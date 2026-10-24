@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/maintenance/manage/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -173,7 +174,7 @@
   right: 14rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #191970; /* 规定颜色 */
+  color: var(--mg-color-brand); /* 规定颜色 */
   z-index: 1;
 }
 
@@ -219,13 +220,13 @@
 
 .management-tag {
   background-color: transparent;
-  color: #191970; /* 组长创建统一颜色 */
+  color: var(--mg-color-brand); /* 组长创建统一颜色 */
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 12rpx;
   font-weight: 500;
   flex-shrink: 0;
-  border: 1rpx solid #191970;
+  border: 1rpx solid var(--mg-color-brand);
 }
 
 .appointment-time {
@@ -352,11 +353,11 @@
   transform: scale(0.95);
 }
 
-.ew-btn { border-color: #191970; background-color: #191970; }
+.ew-btn { border-color: var(--mg-color-brand); background-color: var(--mg-color-brand); }
 
 .ew-btn:active { opacity: 0.9; transform: scale(0.95); }
 
-.delete-btn { border-color: #B22222; background-color: #B22222; }
+.delete-btn { border-color: var(--mg-color-danger); background-color: var(--mg-color-danger); }
 
 .delete-btn:active { opacity: 0.9; transform: scale(0.95); }
 

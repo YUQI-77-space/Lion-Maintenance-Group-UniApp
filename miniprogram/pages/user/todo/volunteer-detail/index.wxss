@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/user/todo/volunteer-detail/index.wxss
    志愿活动详情 - 与维修任务详情共用同一套版式语言 */
 @import "/styles/variables.wxss";
@@ -31,7 +32,7 @@
   padding: 28rpx;
   margin-bottom: 20rpx;
   background: var(--bg-card);
-  border: 1rpx solid #f0f1f5;
+  border: 1rpx solid var(--mg-color-border);
   border-radius: 20rpx;
   box-sizing: border-box;
 }
@@ -147,7 +148,7 @@
   gap: 26rpx 20rpx;
   margin-top: 28rpx;
   padding-top: 26rpx;
-  border-top: 1rpx solid #f0f1f5;
+  border-top: 1rpx solid var(--mg-color-border);
 }
 
 .meta-item {
@@ -186,7 +187,7 @@
   font-size: 28rpx;
   line-height: 1.7;
   color: var(--text-secondary);
-  background: #f7f8fa;
+  background: var(--mg-color-bg-page);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -198,7 +199,7 @@
   line-height: 1.6;
   text-align: center;
   color: var(--text-muted);
-  background: #f7f8fa;
+  background: var(--mg-color-bg-page);
 }
 
 /* ==================== 底部操作区 ==================== */
@@ -209,7 +210,7 @@
   bottom: 0;
   z-index: 20;
   background: rgba(255, 255, 255, 0.96);
-  border-top: 1rpx solid #f0f1f5;
+  border-top: 1rpx solid var(--mg-color-border);
 }
 
 .dock-hint {
@@ -307,7 +308,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 30rpx 32rpx 24rpx;
-  border-bottom: 1rpx solid #f0f1f5;
+  border-bottom: 1rpx solid var(--mg-color-border);
 }
 
 .modal-title {
@@ -348,7 +349,7 @@
   font-size: 28rpx;
   line-height: 1.6;
   color: var(--text-primary);
-  background: #f7f8fa;
+  background: var(--mg-color-bg-page);
   box-sizing: border-box;
 }
 
@@ -364,3 +365,5 @@
   gap: 20rpx;
   padding: 24rpx 32rpx 30rpx;
 }
+
+.action-dock { z-index: 200; padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); background: var(--mg-color-bg-surface); }

@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/ewa/summary/index.wxss
    工作量统计 - 白卡 + 细边框 + 品牌色点缀
    风格与「我的消息」「待办详情」「报修向导」保持一致：克制的色彩、清晰的信息层级 */
@@ -38,7 +39,7 @@ page {
   padding: 28rpx;
   margin-bottom: 20rpx;
   background: var(--bg-card);
-  border: 1rpx solid #f0f1f5;
+  border: 1rpx solid var(--mg-color-border);
   border-radius: 20rpx;
   box-sizing: border-box;
 }
@@ -69,7 +70,7 @@ page {
 .card-hint {
   margin-top: 24rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f1f5;
+  border-top: 1rpx solid var(--mg-color-border);
   font-size: 22rpx;
   line-height: 1.5;
   color: var(--text-muted);
@@ -82,7 +83,7 @@ page {
   padding: 32rpx 28rpx;
   margin-bottom: 20rpx;
   background: var(--bg-card);
-  border: 1rpx solid #f0f1f5;
+  border: 1rpx solid var(--mg-color-border);
   border-radius: 20rpx;
   box-sizing: border-box;
 }
@@ -101,7 +102,7 @@ page {
 .overview-split {
   width: 1rpx;
   height: 64rpx;
-  background: #f0f1f5;
+  background: var(--mg-color-border);
 }
 
 .overview-label {
@@ -177,7 +178,7 @@ page {
 .dist-track {
   height: 8rpx;
   margin-top: 12rpx;
-  background: #f0f1f5;
+  background: var(--mg-color-border);
   border-radius: 4rpx;
   overflow: hidden;
 }
@@ -215,3 +216,8 @@ page {
   font-size: 26rpx;
   color: var(--text-muted);
 }
+
+.mg-surface { padding: 32rpx; margin-bottom: 32rpx; }
+.ewa-text-row { padding: 24rpx 0; border-bottom: 1px solid var(--mg-color-border); font-size: 15px; line-height: 1.7; }
+.ewa-subject { font-weight: 600; }
+.overview { flex-wrap: wrap; gap: 24rpx; }

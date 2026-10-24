@@ -5,7 +5,7 @@
 
 class BaseChart {
   // 颜色配置
-  static COLORS = ['#0066FF', '#00C9A7', '#FFA940', '#FF6B9D', '#9C6ADE'];
+  static COLORS = ['#0369D7', '#19734A', '#8A5700'];
 
   // 获取颜色
   static getColor(index) {
@@ -22,21 +22,7 @@ class BaseChart {
     // 同一组件重复触发（如刷新后数据变化）时，先停掉上一轮动画，避免多个定时器同时绘制
     this.stop(component);
 
-    let progress = 0;
-    const interval = 16;
-    const steps = duration / interval;
-
-    component._chartTimer = setInterval(() => {
-      progress += 1 / steps;
-      if (progress >= 1) {
-        progress = 1;
-        this.stop(component);
-      }
-
-      component.setData({ animationProgress: this.easeOutCubic(progress) }, () => {
-        this.drawCanvas(component, canvasId);
-      });
-    }, interval);
+    component.setData({ animationProgress: 1 }, () => this.drawCanvas(component, canvasId));
   }
 
   // 停止动画（组件卸载或重新播放前调用）

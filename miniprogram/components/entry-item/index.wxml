@@ -1,6 +1,6 @@
 <!-- 功能入口组件 -->
 <view 
-  class="entry-item {{customClass}}" 
+  class="mg-theme entry-item {{customClass}}"
   style="{{bgColor ? 'background:' + bgColor + ';' : ''}}"
   bindtap="onTap">
   

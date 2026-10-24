@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/ewa/manage/index.wxss */
 @import '/styles/variables.wxss';
 

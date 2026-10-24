@@ -1,5 +1,5 @@
 <!-- components/charts/pie-chart/index.wxml -->
-<view class="chart-root">
+<view class="mg-theme chart-root">
   <view class="chart-canvas-wrap">
     <canvas 
       type="2d" 

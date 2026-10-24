@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/volunteer/list/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -228,8 +229,8 @@
   padding: 8rpx 24rpx;
   border-radius: 30rpx;
   line-height: 1.5;
-  background-color: #191970; /* 底色 */
-  border: 1rpx solid #191970; /* 边框 */
+  background-color: var(--mg-color-brand); /* 底色 */
+  border: 1rpx solid var(--mg-color-brand); /* 边框 */
   color: #ffffff; /* 纯白色文字 */
 }
 

@@ -1,5 +1,6 @@
 <!--pages/user/todo/volunteer-detail/index.wxml-->
-<view class="page">
+<view class="mg-theme mg-data-page page">
+  <view class="mg-page-notice mg-page-notice--error" wx:if="{{detailError}}">{{detailError}}<button class="mg-button mg-button--secondary" bindtap="loadTaskDetail">重新加载</button><button class="mg-button mg-button--text" bindtap="returnToList">返回列表</button></view>
   <scroll-view
     scroll-y="{{true}}"
     class="scroll-view"
@@ -7,7 +8,8 @@
     refresher-triggered="{{refreshing}}"
     bindrefresherrefresh="onPullDownRefresh"
   >
-    <!-- 加载中 -->
+    <view class="mg-page-notice">活动状态描述整体安排；个人参与、反馈及结算以待办记录为准。</view>
+  <!-- 加载中 -->
     <view class="loading-wrap" wx:if="{{loading}}">
       <loading-animation size="large"></loading-animation>
     </view>
@@ -62,7 +64,7 @@
       </view>
 
       <!-- 底部操作栏占位 -->
-      <view class="bottom-space" wx:if="{{showActionBar}}"></view>
+      <view class="bottom-space" style="height: {{bottomActionInset}}px;" wx:if="{{showActionBar}}"></view>
     </block>
   </scroll-view>
 

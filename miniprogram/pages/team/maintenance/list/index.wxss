@@ -1,3 +1,4 @@
+@import "/styles/data-pages.wxss";
 /* pages/team/maintenance/list/index.wxss */
 @import "/styles/variables.wxss";
 
@@ -142,14 +143,14 @@
 
 .management-tag {
   background-color: transparent;
-  color: #191970;
+  color: var(--mg-color-brand);
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 12rpx;
   margin-right: 10rpx;
   font-weight: 500;
   flex-shrink: 0;
-  border: 1rpx solid #191970;
+  border: 1rpx solid var(--mg-color-brand);
 }
 
 .appointment-time {
@@ -222,8 +223,8 @@
 }
 
 .btn-claim {
-  border-color: #191970;
-  background-color: #191970;
+  border-color: var(--mg-color-brand);
+  background-color: var(--mg-color-brand);
 }
 
 .btn:active { transform: scale(0.97); }

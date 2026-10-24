@@ -6,6 +6,7 @@ const time = require('../../../../utils/time');
 Page({
   data: {
     // 加载状态
+    confirming: false, confirmationMessage: '',
     isLoading: true,
     isDataReady: false,
 
@@ -50,10 +51,12 @@ Page({
 
   onLoad: function (options) {
     
+    this._firstShow = true;
     this.initPage()
   },
 
   onShow: function () {
+    if (this._firstShow) { this._firstShow = false; return; }
     
     // 页面显示时重新获取数据，以确保数据最新，并确保用户时段与当前周一致
     this.loadDutyData()
@@ -184,7 +187,7 @@ Page({
     const sunday = weekDates.find(d => d.dayOfWeek === 0)
 
     if (monday && sunday) {
-      return `${monday.dateDisplay} 至 ${sunday.dateDisplay}`
+      return `${monday.date || monday.dateDisplay} 至 ${sunday.date || sunday.dateDisplay}`
     }
 
     // 备选方案：使用第一个和最后一个日期
@@ -195,6 +198,7 @@ Page({
 
   // 值班格子点击事件
   onSlotTap: function (e) {
+    if (this.data.confirming) return;
     const { rowIndex, colIndex } = e.currentTarget.dataset
     
 
@@ -216,6 +220,8 @@ Page({
           title: '该时间段休假',
           icon: 'none'
         })
+      } else if (slotData.status === 'locked') {
+        wx.showToast({ title: '该时段操作中，请稍后刷新', icon: 'none' });
       } else if (slotData.status === 'assigned') {
         wx.showToast({
           title: `已被${slotData.statusText}认领`,
@@ -372,12 +378,6 @@ Page({
     // 检查编辑权限是否开启
     const isEditingEnabled = configData?.isEditingEnabled !== false
     
-    // 创建一个包含所有用户相关时间段的集合
-    const userSlotIds = new Set([
-      ...userSlots.preSelectedSlots.map(slot => slot.dutySlotId),
-      ...userSlots.confirmedSlots.map(slot => slot.dutySlotId),
-      ...selectedSlots
-    ])
     
     // 更新表格数据
     const updatedTableData = tableData.map(timeSlotRow => {
@@ -392,7 +392,7 @@ Page({
           let newStatus = slotInfo.slotData?.isAvailable ? 'available' : 'no-duty'
           let newStatusClass = slotInfo.slotData?.isAvailable ? 'can-duty' : 'no-duty'
           let canSelect = slotInfo.slotData?.isAvailable && !slotInfo.slotData?.dutyHolderId
-          let newStatusText = slotInfo.statusText // 保持原有状态文本
+          let newStatusText = slotInfo.slotData?.isAvailable ? '可选' : '休假'
           
           // 检查锁定状态
           const isLocked = slotInfo.slotData?.lockStatus === 'locked'
@@ -413,19 +413,22 @@ Page({
             }
           }
           
+          if (newStatus === 'locked') return { ...slotInfo, status: 'locked', statusClass: 'locked', statusText: '操作中，请稍后刷新', canSelect: false };
+
           // 如果编辑权限关闭，则禁用选择功能（但已确认的状态不变）
           if (!isEditingEnabled && !userSlots.confirmedSlots.find(slot => slot.dutySlotId === slotId)) {
             canSelect = false
           }
           
           // 如果时间段已被其他人分配，则显示已分配状态
-          if (slotInfo.slotData?.dutyHolderName && !userSlotIds.has(slotId)) {
+          if (slotInfo.slotData?.dutyHolderName && !userSlots.confirmedSlots.some(slot => slot.dutySlotId === slotId)) {
             newStatus = 'assigned'
             newStatusClass = 'assigned'
+            newStatusText = `${slotInfo.slotData.dutyHolderName}已占用`
             canSelect = false
           }
           // 如果是当前用户的时间段，则根据具体情况设置状态
-          else if (selectedSlots.includes(slotId)) {
+          else if (selectedSlots.includes(slotId) && slotInfo.slotData?.isAvailable) {
             // 当前预选的
             newStatus = 'selected'
             newStatusClass = 'selected'
@@ -480,141 +483,72 @@ Page({
   },
 
   // 确认选择
-  confirmSelection: async function () {
-    // 首先检查编辑权限
-    if (!this.checkEditPermission()) {
-      return
-    }
-
-    const selectedSlots = this.data.selectedSlots
-    
-    if (selectedSlots.length === 0) {
-      wx.showToast({
-        title: '请先选择值班时间段',
-        icon: 'none'
-      })
-      return
-    }
-    
-
-    
-    wx.showModal({
-      title: '确认值班选择',
-      content: `确定要选择这${selectedSlots.length}个时间段值班吗？确认后将添加到您的待办事项中。`,
-      confirmText: '确认',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          this.submitConfirmSelection()
-        }
-      }
-    })
+  // 核对固定快照；云端确认仍负责锁、权限和最终结果。
+  async confirmSelection() {
+    if (this.data.confirming || !this.checkEditPermission()) return;
+    const selected = [...this.data.selectedSlotsDisplay, ...(this.data.userSlots.preSelectedSlots || [])];
+    const unique = selected.filter((slot,index) => selected.findIndex(other => other.dutySlotId === slot.dutySlotId) === index);
+    if (!unique.length) { wx.showToast({ title: '请先预选值班时段', icon: 'none' }); return; }
+    const snapshot = {
+      week: this.data.currentWeek, year: this.data.currentYear,
+      ids: unique.map(slot => slot.dutySlotId),
+      summary: unique.map(slot => `${slot.date} ${slot.timeSlot} ${slot.startTime}-${slot.endTime}`).join('\n')
+    };
+    this.setData({ confirming: true, confirmationMessage: '' });
+    try {
+      const confirmation = await wx.showModal({ title: `核对第${snapshot.week}周值班`,
+        content: `${this.data.weekDateRange}\n${snapshot.summary}\n确认后不能自行取消。`, confirmText: '确认时段', cancelText: '返回修改' });
+      if (confirmation.confirm) await this.submitConfirmSelection(snapshot);
+    } finally { this.setData({ confirming: false }); }
   },
 
-  // 提交确认选择
-  submitConfirmSelection: async function () {
-    const selectedSlots = this.data.selectedSlots;
-    const SubscriptionAuth = require('../../../../utils/subscriptionAuth.js');
-    
-    // 请求值班提醒订阅消息授权
+  async submitConfirmSelection(snapshot) {
+    if (!snapshot || !snapshot.ids.length) return;
+    const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
     try {
-      const authResult = await SubscriptionAuth.requestSubscribeMessage(
-        [SubscriptionAuth.TEMPLATES.DUTY_REMINDER], 
-        SubscriptionAuth.SCENES.DUTY_SELECTION,
-        {
-          // 展示前置说明，并在用户确认后触发系统授权弹窗
-          showTip: true,
-          allowPartialSuccess: true
-        }
-      );
-      // 若本次一个也未授权，给出设置引导（不阻断后续流程）
-      if (authResult && authResult.analysis && authResult.analysis.acceptedCount === 0) {
-        wx.showToast({ title: '未开启值班提醒，可能收不到通知', icon: 'none', duration: 1800 });
-        try {
-          wx.getSetting({
-            withSubscriptions: true,
-            success: (setting) => {
-              const tmplId = SubscriptionAuth.TEMPLATES.DUTY_REMINDER;
-              const item = setting.subscriptionsSetting && setting.subscriptionsSetting.itemSettings ? setting.subscriptionsSetting.itemSettings[tmplId] : undefined;
-              const needGuide = setting.subscriptionsSetting && setting.subscriptionsSetting.mainSwitch === false || item === 'reject' || item === 'ban';
-              if (needGuide) {
-                wx.showModal({
-                  title: '开启值班提醒',
-                  content: '未授权或被系统拦截，您可以在设置中开启订阅消息权限。',
-                  confirmText: '去设置',
-                  cancelText: '稍后',
-                  success: (m) => {
-                    if (m.confirm) {
-                      wx.openSetting({ withSubscriptions: true });
-                    }
-                  }
-                });
-              }
-            }
-          });
-        } catch (e) {}
+      await SubscriptionAuth.requestSubscribeMessage([SubscriptionAuth.TEMPLATES.DUTY_REMINDER], SubscriptionAuth.SCENES.DUTY_SELECTION, { showTip: true, allowPartialSuccess: true });
+    } catch (_) { /* 拒绝通知不阻断值班确认。 */ }
+    wx.showLoading({ title: '核对当前周...' });
+    try {
+      const latest = await api.call('dutySchedule', { action: 'getDutySlots', timeout: 10000 });
+      if (!latest.success || !latest.data) throw new Error(latest.message || '无法核对当前周，请重新加载');
+      if (latest.data.weekNumber !== snapshot.week || latest.data.year !== snapshot.year) {
+        this.processDutyData(latest.data);
+        this.setData({ confirmationMessage: '当前周已变化，旧周预选未提交，请核对新周后重新选择。' });
+        return;
       }
-      
-      // 即使授权失败也继续提交，不阻断核心业务流程
-    } catch (error) {
-      console.error('值班提醒订阅授权异常:', error);
-      // 授权异常不影响提交流程
-    }
-    
-    wx.showLoading({
-      title: '确认中...'
-    });
-    
-    const requestId = api.generateRequestId();
-
-    try {
+      const requestId = api.generateRequestId();
       const res = await api.call('dutySchedule', {
-        action: 'confirmDutySelection',
-        params: { selectedSlots, requestId },
-        config: { timeout: 15000 }
+        action: 'confirmDutySelection', params: { selectedSlots: snapshot.ids, requestId },
+        timeout: 15000, config: { retries: 0, requestId }
       });
-
-      wx.hideLoading();
-      
       if (res.success) {
-        wx.showToast({
-          title: '确认成功',
-          icon: 'success'
-        });
-        
-        // 确认成功后，处理值班提醒调度
-        try {
-          await this.handleDutyReminderScheduling(selectedSlots);
-        } catch (error) {
-          console.error('[值班表] 处理值班提醒调度失败:', error);
-          // 提醒调度失败不影响主流程
-        }
-        
-        this.setData({
-          selectedSlots: [],
-          selectedSlotsDisplay: []
-        });
-        
-        Promise.all([
-          this.loadDutyData(),
-          this.loadUserDutySlots()
-        ]);
+        this.setData({ selectedSlots: [], selectedSlotsDisplay: [], confirmationMessage: '这些时段已确认，确认后不能自行取消。' });
+        getApp().publish('dutyChanged', { weekNumber: snapshot.week });
+        await this.handleDutyReminderScheduling(snapshot.ids);
       } else {
-        wx.showModal({
-          title: '确认失败',
-          content: res.message || '确认值班选择失败，请重试',
-          showCancel: false
-        });
+        this.setData({ confirmationMessage: res.code === 503
+          ? '暂时无法确认结果，正在重新读取排班。请核对已确认和预选列表，勿盲目重试。'
+          : `${res.message || '未能确认全部时段'}。请核对最新排班后重新选择。` });
       }
-    } catch (err) {
-      wx.hideLoading();
-      console.error('[值班表] 确认选择异常：', err);
-      wx.showModal({
-        title: '确认失败',
-        content: '网络异常，请检查网络连接后重试',
-        showCancel: false
-      });
-    }
+      // 后端可能逐条写入，必须读取实际结果，不推断整批成功或整批失败。
+      await this.loadDutyData(true);
+      await this.loadUserDutySlots();
+      this.reconcileLocalSelection();
+    } catch (error) {
+      this.setData({ confirmationMessage: error.message || '结果暂时无法核实，请刷新排班后检查' });
+    } finally { wx.hideLoading(); }
+  },
+
+  reconcileLocalSelection() {
+    const confirmed = new Set((this.data.userSlots.confirmedSlots || []).map(slot => slot.dutySlotId));
+    const available = new Set();
+    this.data.tableData.forEach(row => row.dailySlots.forEach(slot => {
+      if (slot.slotData && (slot.canSelect || slot.status === 'selected')) available.add(slot.slotData.dutySlotId);
+    }));
+    const keep = this.data.selectedSlots.filter(id => !confirmed.has(id) && available.has(id));
+    this.setData({ selectedSlots: keep, selectedSlotsDisplay: this.data.selectedSlotsDisplay.filter(slot => keep.includes(slot.dutySlotId)) });
+    this.updateTableDisplayStatus();
   },
 
   // 处理值班提醒调度
@@ -629,7 +563,7 @@ Page({
           selectedSlots: selectedSlots,
           miniprogramState: 'formal' // 使用正式版订阅消息
         },
-        config: { timeout: 10000 }
+        timeout: 10000, config: { retries: 0 }
       });
       
       if (res.success) {
@@ -667,6 +601,7 @@ Page({
 
   // 清空预选
   clearSelection: function () {
+    if (this.data.confirming) return;
     // 首先检查编辑权限
     if (!this.checkEditPermission()) {
       return
@@ -696,6 +631,7 @@ Page({
 
   // 移除特定的预选时间段（已确认的时间段不能移除）
   removeUserSlot: function (e) {
+    if (this.data.confirming) return;
     const { slotId, slotType } = e.currentTarget.dataset
     
     if (slotType === 'preSelected') {

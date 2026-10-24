@@ -7,7 +7,9 @@ Page({
   /**
    * 页面的初始数据
    */
+  returnToList() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/user/profile/index' }) }); },
   data: {
+    detailError: '',
     activityId: '',
     activity: null,
     participants: [],
@@ -129,7 +131,7 @@ Page({
    * 获取活动详情
    */
   getActivityDetail: async function() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, detailError: '' });
     try {
       const result = await api.call('volunteerActivities', {
         action: 'getVolunteerActivityDetail',
@@ -166,6 +168,8 @@ Page({
         });
       }
     } catch (err) {
+      this.setData({ detailError: err.message || '读取活动失败，请重试' });
+      this.setData({ detailError: err.message || '读取失败，请重试' });
       console.error('获取活动详情失败', err);
       wx.showToast({ title: '获取活动详情失败', icon: 'none' });
     } finally {
@@ -327,6 +331,7 @@ Page({
    * 关闭导入志愿者弹窗
    */
   closeImportModal(options = {}) {
+    if (this.data.importLoading && !options.completed) return;
     const immediate = !!options.immediate
     if (!this.data.showImportModal && !immediate) return
 
@@ -584,7 +589,7 @@ Page({
     }
     
     wx.showModal({
-      title: '确认导入',
+      title: '确认导入志愿者',
       content: `确定要导入${this.data.selectedMembers.length}名志愿者吗？`,
       success: (res) => {
         if (res.confirm) {
@@ -598,6 +603,7 @@ Page({
    * 批量导入志愿者
    */
   batchImportVolunteers: async function() {
+    if (this.data.importLoading) return;
     this.setData({ importLoading: true });
     
     wx.showLoading({
@@ -607,7 +613,7 @@ Page({
     
     try {
       const res = await api.call('volunteerActivities', {
-        action: 'batchImportVolunteers',
+        action: 'batchImportVolunteers', config: { retries: 0 },
         params: {
           activityId: this.data.activityId,
           selectedMembers: this.data.selectedMembers
@@ -619,14 +625,14 @@ Page({
           title: res.message || '导入成功',
           icon: 'success'
         });
-        await this.closeImportModal();
+        await this.closeImportModal({ completed: true });
         await this.getActivityDetail();
       } else {
         wx.showToast({
           title: res.message || '导入失败',
           icon: 'none'
         });
-        await this.closeImportModal();
+
       }
     } catch (err) {
       console.error('批量导入志愿者失败', err);
@@ -634,7 +640,7 @@ Page({
         title: '网络错误，请重试',
         icon: 'none'
       });
-      await this.closeImportModal();
+
     } finally {
       wx.hideLoading();
       this.setData({ importLoading: false });
@@ -659,6 +665,7 @@ Page({
    * 关闭按人EW弹窗
    */
   closeSetPerUserEWModal() {
+    if (this.data.savingParticipantEW) return;
     this.setData({ showPerUserEWModal: false })
   },
   preventTouch(e) {
@@ -687,6 +694,12 @@ Page({
    * 确认设置按人EW
    */
   async confirmSetPerUserEW() {
+    if (this.data.savingParticipantEW) return;
+    this.setData({ savingParticipantEW: true });
+    try { return await this._performConfirmSetPerUserEW(); }
+    finally { this.setData({ savingParticipantEW: false }); }
+  },
+  async _performConfirmSetPerUserEW() {
     const assignments = this.data.participants.map(p => ({
       openid: p.openid,
       ew: Number(this.data.perUserEWMap[p.openid] || 0)
@@ -695,7 +708,7 @@ Page({
     wx.showLoading({ title: '提交中...', mask: true });
     try {
       const res = await api.call('volunteerActivities', {
-        action: 'setParticipantsEW',
+        action: 'setParticipantsEW', config: { retries: 0 },
         params: {
           activityId: this.data.activityId,
           assignments
@@ -787,7 +800,7 @@ Page({
     try {
       const requestId = api.generateRequestId();
       const result = await api.call('volunteerActivities', {
-        action: 'deleteVolunteerActivity',
+        action: 'deleteVolunteerActivity', config: { retries: 0 },
         params: { activityId, requestId }
       });
 

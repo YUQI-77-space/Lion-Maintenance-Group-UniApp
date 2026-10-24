@@ -218,67 +218,39 @@ Page(Object.assign({
   /**
    * 获取活动列表
    */
-  getActivitiesList: async function(force = false) {
-    if (!this.data.hasMore || this.data.loading) {
-      return;
-    }
-
+  async getActivitiesList(force = false) {
     const status = this.data.currentStatus || 'all';
-    const role = app.globalData.role || wx.getStorageSync('role') || 'user';
-    const cacheKey = `vol:manage:list:${status}:${this.data.page}:${this.data.searchKeyword || ''}`;
-    const TTL_SEC = 60;
-
-    // 仅首屏用缓存快速展示
-    const cached = swr.get(cacheKey);
-    if (cached && cached.exists && this.data.page === 1 && this.data.activities.length === 0) {
-      this.setData({ activities: cached.data });
-    }
-
-    if (!cached || !cached.exists) {
-      this.setData({ loading: true });
-    }
-
-    if (!force) {
-      if (this._fetchingVolManage) return;
-    }
-    this._fetchingVolManage = true;
-
-    const params = {
-      page: this.data.page,
-      pageSize: this.data.pageSize,
-      includePending: true // 管理界面需要包含待发布状态
-    };
-    if (status !== 'all') params.status = status;
-    if (this.data.searchKeyword) params.keyword = this.data.searchKeyword;
-
+    const keyword = this.data.searchKeyword || '';
+    const page = this.data.page;
+    const signature = `${status}:${keyword}:${page}`;
+    if (this._readingSignature === signature || (!this.data.hasMore && !force)) return;
+    const generation = this._readGeneration = (this._readGeneration || 0) + 1;
+    this._readingSignature = signature;
+    const owner = app.globalData.openid || '';
+    const cacheKey = `vol:manage:${owner}:${app.globalData.role}:${signature}`;
+    this.setData({ loading: page === 1 && !this.data.activities.length, loadingMore: page > 1, loadError: '' });
     try {
+      const params = { page, pageSize: this.data.pageSize, includePending: true, };
+      if (status !== 'all') params.status = status;
+      if (keyword) params.keyword = keyword;
       const result = await api.call('volunteerActivities', { action: 'getVolunteerActivitiesList', params });
-      if (result.success) {
-        const activities = (result.data && result.data.activities) || [];
-        const processedActivities = ActivityStatusManager.processActivitiesForDisplay(activities);
-        // 为待发布活动添加倒计时
-        const activitiesWithCountdown = this.addCountdownToPendingActivities(processedActivities);
-        const merged = this.data.page === 1 ? activitiesWithCountdown : [...this.data.activities, ...activitiesWithCountdown];
-        const backendHasMore = result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : undefined;
-        const hasMore = typeof backendHasMore === 'boolean' ? backendHasMore : (activities.length >= this.data.pageSize);
-        this.setData({
-          activities: merged,
-          hasMore,
-          page: this.data.page + 1
-        });
-        swr.set(cacheKey, merged, TTL_SEC);
-        this.triggerCardAnimation(0);
-      } else {
-        wx.showToast({ title: result.message || '获取活动列表失败', icon: 'none' });
-      }
-    } catch (err) {
-      console.error('💥 [manage-getActivitiesList] 请求失败', err);
-      wx.showToast({ title: '获取活动列表失败', icon: 'none' });
+      if (generation !== this._readGeneration || status !== (this.data.currentStatus || 'all') || keyword !== (this.data.searchKeyword || '') || page !== this.data.page || owner !== app.globalData.openid) return;
+      if (!result.success) throw new Error(result.message || '活动读取失败');
+      const raw = result.data && result.data.activities || [];
+      const rows = this.addCountdownToPendingActivities(ActivityStatusManager.processActivitiesForDisplay(raw));
+      const merged = page === 1 ? rows : [...this.data.activities, ...rows.filter(row => !this.data.activities.some(old => old.activityId === row.activityId))];
+      this.setData({ activities: merged, page: page + 1, hasMore: result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : rows.length >= this.data.pageSize });
+      swr.set(cacheKey, rows, 60);
+    } catch (error) {
+      if (generation === this._readGeneration) this.setData({ loadError: error.message || '加载失败，原内容已保留' });
     } finally {
-      this._fetchingVolManage = false;
-      this.setData({ loading: false });
+      if (generation === this._readGeneration) {
+        this._readingSignature = '';
+        this.setData({ loading: false, loadingMore: false, initialLoading: false });
+      }
     }
   },
+  retryActivities() { return this.getActivitiesList(true); },
 
   /**
    * 切换状态筛选
@@ -295,34 +267,10 @@ Page(Object.assign({
       initialLoading: false
     });
     this.getActivitiesList();
-    this.prefetchOtherStatuses();
   },
 
   // 后台预取其它状态列表第一页以加速后续切换
-  prefetchOtherStatuses() {
-    const statuses = ['all', 'pending', 'inPreparation', 'inProgress', 'ended'];
-    const current = this.data.currentStatus || 'all';
-    const others = statuses.filter(s => s !== current);
-    const pageSize = this.data.pageSize;
-    others.forEach((status) => {
-      const cacheKey = `vol:manage:list:${status}:1:${this.data.searchKeyword || ''}`;
-      const cached = swr.get(cacheKey);
-      if (cached && cached.fresh) return;
-      const params = { page: 1, pageSize, includePending: true };
-      if (status !== 'all') params.status = status;
-      if (this.data.searchKeyword) params.keyword = this.data.searchKeyword;
-      api.call('volunteerActivities', { action: 'getVolunteerActivitiesList', params })
-        .then((result) => {
-          if (result && result.success) {
-            const activities = (result.data && result.data.activities) || [];
-            const processed = ActivityStatusManager.processActivitiesForDisplay(activities);
-            const withCountdown = this.addCountdownToPendingActivities(processed);
-            swr.set(cacheKey, withCountdown, 60);
-          }
-        })
-        .catch(() => {});
-    });
-  },
+
 
   /**
    * 跳转到详情页
@@ -460,7 +408,7 @@ Page(Object.assign({
           try {
             const requestId = api.generateRequestId();
             const result = await api.call('volunteerActivities', {
-              action: 'deleteVolunteerActivity',
+              action: 'deleteVolunteerActivity', config: { retries: 0 },
               params: {
                 activityId: activityId,
                 requestId

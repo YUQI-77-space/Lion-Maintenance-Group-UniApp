@@ -1,10 +1,10 @@
 {
   "navigationBarTitleText": "等效工作量",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "light",
-  "backgroundColor": "#f5f5f5",
-  "backgroundColorTop": "#f5f5f5",
-  "backgroundColorBottom": "#f5f5f5",
+  "backgroundTextStyle": "dark",
+  "backgroundColor": "#F5F7FA",
+  "backgroundColorTop": "#F5F7FA",
+  "backgroundColorBottom": "#F5F7FA",
   "usingComponents": {
     "avatar-display": "../../../../components/avatar-display/index",
     "loading-animation": "/components/loading-animation/index"
