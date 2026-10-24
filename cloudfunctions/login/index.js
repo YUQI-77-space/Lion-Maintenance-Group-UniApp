@@ -4,7 +4,6 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
 const usersCollection = db.collection('users')
-const proUsersCollection = db.collection('proUsers')
 const AUTH_CODE_LIST = {
   // 组长权限身份码
   'KMJpKVpRPt5VFtxsXrYUj4zjt38U': 'leader',
@@ -30,75 +29,25 @@ function getUserRoleByAuthCode(authCode) {
 }
 
 // 同步proUsers集合
-async function syncProUsersByUserDoc(userDoc, role) {
-  if (!userDoc || !userDoc.openid) return;
-  const openid = userDoc.openid;
-
-  if (role === 'member' || role === 'leader') {
-    const upsertData = {
-      openid: userDoc.openid,
-      role: role,
-      nickName: userDoc.nickName || '',
-      avatarUrl: userDoc.avatarUrl || '',
-      cloudAvatarUrl: userDoc.cloudAvatarUrl || null,
-      cloudAvatarFileID: userDoc.cloudAvatarFileID || null,
-      studentId: userDoc.studentId || '', // 添加学号字段
-      qqId: userDoc.qqId || '',
-      department: userDoc.department || null,
-      updateTime: db.serverDate(),
-      // 如果是首次写入，保留创建时间
-      createTime: userDoc.createTime || db.serverDate()
-    };
-
-    const existing = await proUsersCollection.where({ openid }).get();
-    const existingData = existing.data && existing.data[0];
-    // isEmergencyContact 只维护在 proUsers：新建成员默认 false，更新时沿用原值，避免被资料同步覆盖
-    upsertData.isEmergencyContact = existingData && typeof existingData.isEmergencyContact === 'boolean'
-      ? existingData.isEmergencyContact
-      : false;
-    if (existingData) {
-      // 更新时保留原有的department和lastDepartmentChangeTime字段
-      if (!upsertData.department && existingData.department) {
-        upsertData.department = existingData.department;
-      }
-      if (existingData.lastDepartmentChangeTime) {
-        upsertData.lastDepartmentChangeTime = existingData.lastDepartmentChangeTime;
-      }
-      await proUsersCollection.doc(existingData._id).update({ data: upsertData });
-    } else {
-      await proUsersCollection.add({ data: upsertData });
-    }
-  } else {
-    const existing = await proUsersCollection.where({ openid }).get();
-    if (existing.data && existing.data.length > 0) {
-      await proUsersCollection.doc(existing.data[0]._id).remove();
-    }
-  }
+async function syncProUsersByUserDoc(userDoc) {
+  if (userDoc && userDoc.openid) return require('./syncMemberProjection').syncMemberProjection(db, userDoc.openid)
 }
 
 // 更新用户权限
-async function updateUserRole(userId, role) {
-  try {
-    const updateData = {
-      role: role,
-      updateTime: db.serverDate()
-    };
-    
-    await usersCollection.doc(userId).update({
-      data: updateData
-    });
-    
-    const userDocRes = await usersCollection.doc(userId).get();
-    const userDoc = userDocRes && userDocRes.data ? userDocRes.data : null;
-    if (userDoc) {
-      await syncProUsersByUserDoc(userDoc, role);
-    }
-    
-    console.log(`用户 ${userId} 权限已更新为: ${role}，并已同步 proUsers`);
-  } catch (error) {
-    console.error('更新用户权限失败:', error);
-    throw error;
-  }
+async function updateUserRole(userId, proposedRole) {
+  const role = await db.runTransaction(async tx => {
+    const { data: user } = await tx.collection('users').doc(userId).get()
+    // 已移出身份不能凭旧权限码恢复；在组或管理者任命的身份以数据库为准。
+    const finalRole = user.membershipStatus === 'removed' ? 'user' :
+      (user.roleManaged || ['member', 'leader', 'admin'].includes(user.role) ? user.role : proposedRole)
+    await tx.collection('users').doc(userId).update({ data: {
+      role: finalRole, version: (user.version || 0) + 1, updateTime: db.serverDate()
+    } })
+    return finalRole
+  })
+  const { data: userDoc } = await usersCollection.doc(userId).get()
+  await syncProUsersByUserDoc(userDoc)
+  return role
 }
 
 exports.main = async (event, context) => {
@@ -113,11 +62,11 @@ exports.main = async (event, context) => {
     case 'userInfoAcquisition':
       return await userInfoAcquisition(wxContext)
     case 'userPermissionAuthentication':
-      return await userPermissionAuthentication(processedEvent.openid || openid, processedEvent.authCode)
+      return await userPermissionAuthentication(openid, processedEvent.authCode)
     case 'verifySession':
-      return await verifySession(processedEvent.openid || openid)
+      return await verifySession(openid)
     case 'revalidatePermissions':
-      return await revalidatePermissions(processedEvent.openid || openid, processedEvent.authCode)
+      return await revalidatePermissions(openid, processedEvent.authCode)
     default:
       return {
         success: false,
@@ -232,9 +181,7 @@ async function userPermissionAuthentication(openid, authCode) {
     
     const user = userResult.data[0]
     
-    const role = getUserRoleByAuthCode(authCode);
-    
-    await updateUserRole(user._id, role);
+    const role = await updateUserRole(user._id, getUserRoleByAuthCode(authCode));
     
     console.log(`权限认证完成，用户角色: ${role}`);
     
@@ -280,9 +227,7 @@ async function revalidatePermissions(openid, authCode) {
     const user = userResult.data[0];
     const currentRole = user.role || 'user';
     
-    const newRole = getUserRoleByAuthCode(authCode);
-    
-    await updateUserRole(user._id, newRole);
+    const newRole = await updateUserRole(user._id, getUserRoleByAuthCode(authCode));
     
     const roleChanged = currentRole !== newRole;
     

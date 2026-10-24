@@ -1,36 +1,20 @@
 // 用户管理云函数
 const cloud = require('wx-server-sdk')
 const sensitiveWordFilter = require('./sensitiveWordFilter')
+const { repairProUserEwa } = require('./repairProUserEwa')
+const memberManagement = require('./memberManagement')
+const { pickProfile, updateSelf } = require('./selfProfile')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
 const usersCollection = db.collection('users')
 const proUsersCollection = db.collection('proUsers')
-const PERMISSION_CODES = {
-  MEMBER: 'uychEQvNdHmcdSD3TErvkBBHU5aV', // 组员权限码
-  LEADER: 'KMJpKVpRPt5VFtxsXrYUj4zjt38U'  // 组长权限码
-}
-
-// 验证权限码
-function validatePermissionCode(permissionCode) {
-  if (!permissionCode || permissionCode.trim() === '') {
-    return 'user'; // 空权限码默认为普通用户
-  }
-  
-  const code = permissionCode.trim();
-  
-  if (code === PERMISSION_CODES.LEADER) {
-    return 'leader'; // 组长权限
-  } else if (code === PERMISSION_CODES.MEMBER) {
-    return 'member'; // 组员权限
-  } else {
-    return 'user'; // 无效权限码默认为普通用户
-  }
-}
-
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
+  if (memberManagement.ACTIONS.includes(event.action)) {
+    return memberManagement.handle(db, event.action, event.params || {}, wxContext.OPENID)
+  }
   
   let processedEvent = { ...event }
   if (event.params) {
@@ -42,17 +26,25 @@ exports.main = async (event, context) => {
     case 'updateUserInfo':
       return await updateUserInfo(processedEvent.userInfo, wxContext)
     case 'syncUserDataAcrossCollections':
-      return await syncUserDataAcrossCollections(processedEvent.openid, wxContext)
+      return await syncUserDataAcrossCollections(wxContext.OPENID)
     case 'getUserByOpenId':
-      return await getUserByOpenId(processedEvent.openid || wxContext.OPENID)
+      return await getUserByOpenId(wxContext.OPENID)
     case 'getProUsers':
+      {
+        const caller = await usersCollection.where({ openid: wxContext.OPENID }).limit(1).get()
+        if (!caller.data.length || !['member', 'leader', 'admin'].includes(caller.data[0].role) || caller.data[0].membershipStatus === 'removed') {
+          return { success: false, code: 403, message: '只有在组成员可以查询组员资料' }
+        }
+      }
       return await getProUsers()
+    case 'repairProUserEwa':
+      return await repairProUserEwa(db, event.params || {}, wxContext.OPENID)
     case 'getProUserByOpenId':
-      return await getProUserByOpenId(processedEvent.openid || wxContext.OPENID)
+      return await getProUserByOpenId(wxContext.OPENID)
     case 'getEmergencyContacts':
       return await getEmergencyContacts()
     case 'updateDepartment':
-      return await updateDepartment(processedEvent.department, wxContext)
+      return await require('./updateMemberDepartment').updateMemberDepartment(db, wxContext.OPENID, processedEvent.department)
     default:
       return {
         success: false,
@@ -166,7 +158,9 @@ async function saveUserInfo(userInfo, wxContext) {
       }
     }
     
-    const openid = userInfo.openid || wxContext.OPENID
+    const openid = wxContext.OPENID
+    if (!openid) throw new Error('请先登录')
+    userInfo = pickProfile(userInfo)
     
     // 查询用户是否已存在
     const userResult = await usersCollection.where({
@@ -179,17 +173,8 @@ async function saveUserInfo(userInfo, wxContext) {
     if (userResult.data && userResult.data.length > 0) {
       const userId = userResult.data[0]._id
       
-      await usersCollection.doc(userId).update({
-        data: {
-          ...userInfo,
-          openid: openid,
-          updateTime: now
-        }
-      })
-
-      // 如果角色为 member/leader，同步 proUsers
-      const role = userInfo.role || userResult.data[0].role || 'user'
-      await syncProUsers(openid, { ...userResult.data[0], ...userInfo, role })
+      const updated = await updateSelf(db, userId, userInfo)
+      await syncProUsers(openid, updated)
       
       return {
         success: true,
@@ -253,7 +238,9 @@ async function updateUserInfo(userInfo, wxContext) {
       }
     }
     
-    const openid = userInfo.openid || wxContext.OPENID
+    const openid = wxContext.OPENID
+    if (!openid) throw new Error('请先登录')
+    userInfo = pickProfile(userInfo)
     
     // 查询用户是否存在
     const userResult = await usersCollection.where({
@@ -270,36 +257,8 @@ async function updateUserInfo(userInfo, wxContext) {
     const userId = userResult.data[0]._id
     const oldUserInfo = userResult.data[0] // 保存旧的用户信息用于比较
     
-    // 权限码验证和角色确定
-    let newRole = oldUserInfo.role || 'user'; // 默认保持原有角色
-    
-    // 如果包含权限码，进行权限验证
-    if (userInfo.hasOwnProperty('permissionCode')) {
-      const permissionCode = userInfo.permissionCode?.trim() || '';
-      newRole = validatePermissionCode(permissionCode);
-    }
-    
-    // 准备更新数据，保留role字段
-    const updateData = {
-      nickName: userInfo.nickName,
-      avatarUrl: userInfo.avatarUrl,
-      studentId: userInfo.studentId, // 添加学号字段
-      qqId: userInfo.qqId, // 添加QQ号字段
-      cloudAvatarUrl: userInfo.cloudAvatarUrl, // 云存储头像URL
-      cloudAvatarFileID: userInfo.cloudAvatarFileID, // 云存储头像文件ID
-      role: newRole, // 设置角色
-      updateTime: db.serverDate()
-    };
-    
-    // 如果传入了权限码，也保存权限码字段
-    if (userInfo.hasOwnProperty('permissionCode')) {
-      updateData.permissionCode = userInfo.permissionCode?.trim() || '';
-    }
-    
-    // 更新用户信息
-    await usersCollection.doc(userId).update({
-      data: updateData
-    })
+    // 个人资料接口不再受理权限码；身份由登录认证与管理接口维护。
+    const updateData = await updateSelf(db, userId, userInfo)
 
     // 同步 proUsers（基于最终 role 与最新资料）
     await syncProUsers(openid, { ...oldUserInfo, ...updateData })
@@ -347,48 +306,8 @@ async function updateUserInfo(userInfo, wxContext) {
 }
 
 // 同步proUsers
-async function syncProUsers(openid, user) {
-  try {
-    if (!openid) return;
-    const role = (user && user.role) || 'user'
-    const existing = await proUsersCollection.where({ openid }).get()
-
-    if (role === 'member' || role === 'leader') {
-      const upsertData = {
-        openid,
-        role,
-        nickName: user.nickName || '',
-        avatarUrl: user.avatarUrl || '',
-        cloudAvatarUrl: user.cloudAvatarUrl || null,
-        cloudAvatarFileID: user.cloudAvatarFileID || null,
-        studentId: user.studentId || '',
-        qqId: user.qqId || '',
-        department: user.department || null,
-        updateTime: db.serverDate(),
-        createTime: user.createTime || db.serverDate()
-      }
-      const existingData = existing.data && existing.data[0]
-      // isEmergencyContact 只维护在 proUsers：新建成员默认 false，更新时沿用原值，避免被资料同步覆盖
-      upsertData.isEmergencyContact = existingData && typeof existingData.isEmergencyContact === 'boolean'
-        ? existingData.isEmergencyContact
-        : false
-      if (existingData) {
-        // 更新时保留原有的department字段（如果新数据中没有）
-        if (!upsertData.department && existingData.department) {
-          upsertData.department = existingData.department;
-        }
-        await proUsersCollection.doc(existingData._id).update({ data: upsertData })
-      } else {
-        await proUsersCollection.add({ data: upsertData })
-      }
-    } else {
-      if (existing.data && existing.data.length > 0) {
-        await proUsersCollection.doc(existing.data[0]._id).remove()
-      }
-    }
-  } catch (err) {
-    console.error('同步 proUsers 失败', err)
-  }
+async function syncProUsers(openid) {
+  return require('./syncMemberProjection').syncMemberProjection(db, openid)
 }
 
 /**
@@ -776,91 +695,3 @@ async function getProUserByOpenId(openid) {
     };
   }
 }
-
-// 更新部门信息（仅限维修组成员）
-async function updateDepartment(department, wxContext) {
-  try {
-    const openid = wxContext.OPENID;
-    
-    // 验证部门名称
-    const validDepartments = ['运营管理部', '电子技术部', '机电维修部'];
-    if (!department || !validDepartments.includes(department)) {
-      return {
-        success: false,
-        message: '无效的部门名称，请选择：运营管理部、电子技术部或机电维修部'
-      };
-    }
-    
-    // 检查用户是否存在且为维修组成员
-    const proUserResult = await proUsersCollection.where({ openid }).get();
-    if (!proUserResult.data || proUserResult.data.length === 0) {
-      return {
-        success: false,
-        message: '只有维修组成员才能设置部门'
-      };
-    }
-    
-    const proUser = proUserResult.data[0];
-    if (proUser.role !== 'member' && proUser.role !== 'leader') {
-      return {
-        success: false,
-        message: '只有维修组成员才能设置部门'
-      };
-    }
-    
-    // 检查CD（1小时 = 3600000毫秒）
-    const now = Date.now();
-    const lastDepartmentChangeTime = proUser.lastDepartmentChangeTime || 0;
-    const cdTime = 3600000; // 1小时
-    const timeSinceLastChange = now - lastDepartmentChangeTime;
-    
-    if (timeSinceLastChange < cdTime && lastDepartmentChangeTime > 0) {
-      const remainingSeconds = Math.ceil((cdTime - timeSinceLastChange) / 1000);
-      const remainingMinutes = Math.floor(remainingSeconds / 60);
-      const remainingSecs = remainingSeconds % 60;
-      return {
-        success: false,
-        message: `切换部门过于频繁，请等待 ${remainingMinutes}分${remainingSecs}秒 后再试`,
-        remainingTime: cdTime - timeSinceLastChange,
-        canChange: false
-      };
-    }
-    
-    // 如果部门没有变化，直接返回成功
-    if (proUser.department === department) {
-      return {
-        success: true,
-        message: '部门未发生变化',
-        data: {
-          department: department,
-          lastDepartmentChangeTime: now
-        }
-      };
-    }
-    
-    // 更新部门信息
-    await proUsersCollection.doc(proUser._id).update({
-      data: {
-        department: department,
-        lastDepartmentChangeTime: now,
-        updateTime: db.serverDate()
-      }
-    });
-    
-    return {
-      success: true,
-      message: '部门更新成功',
-      data: {
-        department: department,
-        lastDepartmentChangeTime: now
-      }
-    };
-  } catch (error) {
-    console.error('更新部门出错', error);
-    return {
-      success: false,
-      message: '更新部门失败',
-      error: error.message || '未知错误'
-    };
-  }
-} 

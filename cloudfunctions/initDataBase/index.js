@@ -6,6 +6,7 @@ const db = cloud.database()
 // 引入各个初始化模块
 const { initEwaSummaryCollection } = require('./initEwaSummaryCollection')
 const { initEmergencyContacts } = require('./initEmergencyContacts')
+const { initMemberManagement } = require('./initMemberManagement')
 
 /**
  * 数据库初始化云函数主入口
@@ -20,6 +21,8 @@ exports.main = async (event, context) => {
     
     // 根据action调用对应的初始化方法
     switch (action) {
+      case 'initMemberManagement':
+        return await initMemberManagement(OPENID, params.dryRun === undefined ? true : params.dryRun)
       case 'initServiceSummary':
       case 'initEwaSummaryCollection':
         console.log('调用initEwaSummaryCollection函数');

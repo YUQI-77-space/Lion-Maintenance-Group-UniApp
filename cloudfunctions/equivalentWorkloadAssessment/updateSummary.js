@@ -65,10 +65,18 @@ exports.updateSummary = async (params, OPENID) => {
       }
     }
     
-    // 获取所有维修组成员（从 proUsers 集合）
-    const memberResult = await db.collection('proUsers').where({
-      role: db.command.in(['member', 'leader'])
-    }).get()
+    // 分页读取全部成员，避免 .get() 默认只返回 100 人。
+    const memberResult = { data: [] }
+    let cursor = ''
+    while (true) {
+      const condition = { role: db.command.in(['member', 'leader']) }
+      if (cursor) condition._id = db.command.gt(cursor)
+      const page = await db.collection('proUsers').where(condition)
+        .orderBy('_id', 'asc').limit(100).get()
+      memberResult.data.push(...page.data)
+      if (page.data.length < 100) break
+      cursor = page.data[page.data.length - 1]._id
+    }
     
     // 更新每个成员的EW汇总
     const updatePromises = memberResult.data.map(async (member) => {
@@ -211,4 +219,4 @@ exports.updateSummary = async (params, OPENID) => {
       message: err.message || '更新EW汇总失败'
     }
   }
-} 
+}
