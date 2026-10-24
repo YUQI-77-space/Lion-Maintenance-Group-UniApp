@@ -1,0 +1,156 @@
+{
+  "version": "1.1.0",
+  "status": "design-baseline-not-integrated",
+  "updatedAt": "2026-10-24",
+  "platform": "wechat-native-miniprogram",
+  "cssVariablePrefix": "--mg-",
+  "notes": [
+    "这是本项目的设计参考格式，不是 W3C Design Tokens 标准格式，尚未接入运行样式。",
+    "品牌主蓝已由用户提供的两张官方标志确认为 #0369D7；不能以 Skill 推荐色板替换。",
+    "布局按 750rpx 基准；系统测量和最小热区使用 px，不能直接混加。",
+    "透明色、图片覆盖文字需按实际合成结果另测对比度。"
+  ],
+  "brandIdentity": {
+    "status": "user-confirmed",
+    "confirmedAt": "2026-10-24",
+    "primaryHex": "#0369D7",
+    "primaryRgb": [3, 105, 215],
+    "logoForeground": "#FFFFFF",
+    "samplingMethod": "Most frequent decoded RGB pixel in each original JPEG; both images agree. No embedded ICC profile; RGB channel values are used as digital sRGB reference.",
+    "sourceFiles": [
+      {
+        "name": "物科院维修组 (2).jpg",
+        "referencePath": "F:/College/维修组/维修组标志/标志/物科院维修组 (2).jpg",
+        "dimensionsPx": [9449, 2362],
+        "sha256": "e8403d4e104185a6eb5cb9bd7868eca9098d5751d9a3b73321ff1660f35dda35",
+        "dominantColor": "#0369D7",
+        "dominantPixelCount": 18144233,
+        "use": "horizontal-wordmark-reference"
+      },
+      {
+        "name": "方形.jpg",
+        "referencePath": "F:/College/维修组/维修组标志/标志/方形.jpg",
+        "dimensionsPx": [6250, 6250],
+        "sha256": "7fbde84cc0843ec94273324859a33ff99191bd969194b6fc520de6bdcbba2861",
+        "dominantColor": "#0369D7",
+        "dominantPixelCount": 35584916,
+        "use": "square-logo-reference"
+      }
+    ],
+    "referenceFilesAreRuntimeAssets": false,
+    "paletteGeneration": {
+      "method": "Mix base RGB channels with white or black, then round half up to integer; not perceptually uniform.",
+      "baseWeightsOnWhite": { "50": 0.05, "100": 0.10, "200": 0.20, "300": 0.40, "400": 0.70 },
+      "baseWeightsOnBlack": { "600": 0.88, "700": 0.76, "800": 0.60, "900": 0.40 }
+    }
+  },
+  "palette": {
+    "blue": {
+      "50": "#F2F8FD",
+      "100": "#E6F0FB",
+      "200": "#CDE1F7",
+      "300": "#9AC3EF",
+      "400": "#4F96E3",
+      "500": "#0369D7",
+      "600": "#035CBD",
+      "700": "#0250A3",
+      "800": "#023F81",
+      "900": "#012A56"
+    }
+  },
+  "color": {
+    "brand": "#0369D7",
+    "brand-pressed": "#035CBD",
+    "brand-soft": "#F2F8FD",
+    "brand-selected": "#E6F0FB",
+    "brand-strong": "#0250A3",
+    "on-brand": "#FFFFFF",
+    "bg-page": "#F5F7FA",
+    "bg-surface": "#FFFFFF",
+    "bg-subtle": "#EEF1F5",
+    "text-primary": "#182230",
+    "text-secondary": "#475467",
+    "text-muted": "#626D80",
+    "border": "#DCE2EA",
+    "control-border": "#7A8798",
+    "success": "#19734A",
+    "success-soft": "#EAF5EF",
+    "warning": "#8A5700",
+    "warning-soft": "#FFF4DE",
+    "danger": "#B83232",
+    "danger-soft": "#FDEEEE",
+    "info": "#0250A3",
+    "info-soft": "#F2F8FD",
+    "neutral": "#526174",
+    "neutral-soft": "#EEF1F5",
+    "scrim": "rgba(24,34,48,0.48)"
+  },
+  "typography": {
+    "fontFamily": "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+    "display": { "fontSize": "48rpx", "lineHeight": "60rpx", "fontWeight": 600 },
+    "title": { "fontSize": "40rpx", "lineHeight": "56rpx", "fontWeight": 600 },
+    "section": { "fontSize": "34rpx", "lineHeight": "48rpx", "fontWeight": 600 },
+    "body": { "fontSize": "30rpx", "lineHeight": "46rpx", "fontWeight": 400, "minFontSizePx": 15 },
+    "label": { "fontSize": "28rpx", "lineHeight": "40rpx", "fontWeight": 400 },
+    "caption": { "fontSize": "24rpx", "lineHeight": "36rpx", "fontWeight": 400 },
+    "weights": { "regular": 400, "medium": 500, "semibold": 600 }
+  },
+  "space": { "micro": "4rpx", "1": "8rpx", "2": "16rpx", "3": "24rpx", "4": "32rpx", "6": "48rpx", "8": "64rpx" },
+  "radius": { "tag": "8rpx", "control": "16rpx", "card": "24rpx", "modal": "24rpx", "pill": "999rpx", "avatar": "50%" },
+  "borderWidth": "1px",
+  "shadow": { "none": "none", "overlay": "0 8rpx 24rpx rgba(24,34,48,0.08)" },
+  "size": {
+    "button": "96rpx", "button-compact": "80rpx", "input-min": "96rpx", "textarea-min": "192rpx",
+    "touch-target-min": "48px", "touch-gap-min": "8px",
+    "icon-sm": "32rpx", "icon-md": "40rpx", "icon-lg": "48rpx",
+    "avatar-sm": "64rpx", "avatar-md": "88rpx", "avatar-lg": "120rpx",
+    "tabbar-content": "56px"
+  },
+  "layout": { "page-gutter": "32rpx", "page-gutter-compact": "24rpx", "card-padding": "32rpx", "section-gap": "32rpx", "chapter-gap": "48rpx", "field-label-gap": "12rpx", "field-error-gap": "8rpx", "scroll-bottom-extra": "16px" },
+  "motion": { "pressMs": 100, "selectionMs": 160, "overlayMs": 220, "easing": "ease-out", "reducedMotion": "none" },
+  "zIndex": { "content": 0, "sticky": 100, "actionBar": 200, "tabbar": 300, "scrim": 900, "modal": 1000, "inlineNotice": 1100 },
+  "chart": { "maintenance": "#0369D7", "volunteer": "#19734A", "duty": "#8A5700" },
+  "businessStatus": {
+    "maintenance": {
+      "pending": { "label": "待受理", "semantic": "warning" },
+      "inProgress": { "label": "进行中", "semantic": "info" },
+      "completed": { "label": "已完成", "semantic": "success" },
+      "cancelled": { "label": "已取消", "semantic": "neutral" }
+    },
+    "volunteer": {
+      "pending": { "label": "待发布", "semantic": "neutral" },
+      "inPreparation": { "label": "筹备中", "semantic": "info" },
+      "inProgress": { "label": "进行中", "semantic": "info" },
+      "ended": { "label": "已结束", "semantic": "neutral" }
+    }
+  },
+  "legacyAliases": {
+    "--primary": "color.brand", "--primary-color": "color.brand",
+    "--bg-page": "color.bg-page", "--background-color": "color.bg-page", "--bg-card": "color.bg-surface", "--card-background": "color.bg-surface",
+    "--text-primary": "color.text-primary", "--text-main": "color.text-primary", "--text-secondary": "color.text-secondary", "--text-muted": "color.text-muted",
+    "--border": "color.border", "--border-light": "color.border",
+    "--success": "color.success", "--warning": "color.warning", "--danger": "color.danger", "--info": "color.info"
+  },
+  "contrastChecks": [
+    { "foreground": "on-brand", "background": "brand", "minimum": 4.5 },
+    { "foreground": "on-brand", "background": "brand-pressed", "minimum": 4.5 },
+    { "foreground": "text-primary", "background": "bg-surface", "minimum": 4.5 },
+    { "foreground": "text-secondary", "background": "bg-surface", "minimum": 4.5 },
+    { "foreground": "text-muted", "background": "bg-surface", "minimum": 4.5 },
+    { "foreground": "text-muted", "background": "bg-page", "minimum": 4.5 },
+    { "foreground": "text-muted", "background": "bg-subtle", "minimum": 4.5 },
+    { "foreground": "brand", "background": "brand-soft", "minimum": 4.5 },
+    { "foreground": "on-brand", "background": "danger", "minimum": 4.5 },
+    { "foreground": "success", "background": "success-soft", "minimum": 4.5 },
+    { "foreground": "warning", "background": "warning-soft", "minimum": 4.5 },
+    { "foreground": "danger", "background": "danger-soft", "minimum": 4.5 },
+    { "foreground": "info", "background": "info-soft", "minimum": 4.5 },
+    { "foreground": "neutral", "background": "neutral-soft", "minimum": 4.5 },
+    { "foreground": "control-border", "background": "bg-surface", "minimum": 3.0 },
+    { "foreground": "brand", "background": "bg-page", "minimum": 4.5 },
+    { "foreground": "brand", "background": "bg-surface", "minimum": 4.5 },
+    { "foreground": "brand", "background": "brand-selected", "minimum": 4.5 },
+    { "foreground": "brand-strong", "background": "brand-soft", "minimum": 4.5 },
+    { "foreground": "text-muted", "background": "brand-selected", "minimum": 4.5 }
+  ]
+}

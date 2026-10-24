@@ -13,10 +13,20 @@
 
 ## Commands
 
-- **无根 package.json，也没有 lint/test/build 脚本**（云函数内的 `npm test` 是占位）。开发/预览/上传一律走「微信开发者工具」打开仓库根目录。
-- 云函数依赖：进入目录后 `cd cloudfunctions/<name> && npm install`；部署在开发者工具中右键云函数 →「上传并部署：云端安装依赖」。依赖仅 `wx-server-sdk`（~2.6.3）。
+- **无根 package.json，也没有根 lint/test/build 脚本**（云函数内的 `npm test` 是占位）。小程序开发/预览/上传使用「微信开发者工具」打开仓库根目录；云资源维护与云函数部署优先使用下述原生工具。
+- 云函数依赖：进入目录后 `cd cloudfunctions/<name> && npm install`；也可在开发者工具中右键云函数 →「上传并部署：云端安装依赖」。
 - 新环境初始化：手动触发一次 `initDataBase` 云函数建立全部集合。
 - 注意 `miniprogram/config/`、`miniprogram/images/`、`项目管理/`、`node_modules` 被 `.gitignore`/`.cursorignore` 排除：涉及外部链接、媒体资源的需求只写代码引用，不要假设这些路径可被索引到。
+
+### 云资源与数据库维护
+
+- **优先使用官方 CloudBase CLI、SDK 脚本或已连接的 CloudBase MCP；Computer Use/人工控制台操作仅作备用。** 遇到工具不可用时，先查官方文档和已安装版本的 `--help`，不要直接判断只能操作界面。
+- 独立 CloudBase CLI（`@cloudbase/cli`，命令 `tcb`）与微信开发者工具自带的 `cli.bat` 是两套工具。前者直接访问云服务，不依赖开发者工具服务端口；后者提示端口关闭，不代表 CloudBase CLI 或 SDK 不可用。
+- CLI 安装与授权：`npm install -g @cloudbase/cli` → `tcb login` → `tcb env list`。由用户完成浏览器/设备码授权，核对账号能访问本项目实际环境；已登录开发者工具不等于独立 CLI 已授权。
+- CLI v3 支持 `tcb db nosql execute` 执行文档数据库命令、`tcb db nosql dump` 导出集合、`tcb fn deploy` 部署云函数。执行前核对版本、参数和目标环境，显式指定环境 ID；本项目为文档型数据库，不套用 MySQL 操作。
+- 复杂的数据审查、补齐和迁移优先编写 Node.js 脚本，使用官方 `@cloudbase/node-sdk`；资源管理可使用 `@cloudbase/manager-node`。按各 SDK 文档配置凭证，不假定 SDK 自动复用 CLI 登录态。凭证仅保存在本地环境或受支持的凭证存储中，不写入代码、Git、日志或聊天。
+- 数据修复默认只读（dry-run），完整分页并报告缺失、重复和异常数据；执行时仅修改目标记录，支持幂等重试。写入前备份受影响数据，写入后复查数量与内容，确认无关记录和已有业务值未被覆盖。备份及含成员资料的报告存放在被 Git 忽略的目录。
+- 官方文档：[CLI 安装与授权](https://docs.cloudbase.net/cli-v1/install)、[文档数据库命令](https://docs.cloudbase.net/cli-v1/db/nosql/management)、[Node.js SDK](https://cloud.tencent.com/document/product/876/47058)。
 
 ## Architecture
 
@@ -67,3 +77,10 @@
 ## Notes
 
 - （留空：后续发现的坑、决策记录可随时追加在此。）
+
+## 设计规范与项目 Skill
+
+- 前端界面、组件和交互改造前，先阅读 `docs/知识库/Design/README.md` 及对应规范；设计值见同目录 `design-tokens.json`。这些是目标设计基线，不代表页面已完成迁移。
+- 已安装项目级 UI/UX Skill：`.agents/skills/ui-ux-pro-max/SKILL.md`。使用时同时阅读 `docs/知识库/Design/06-Skill安装与使用指南.md` 的小程序适配规则；检索脚本使用实际项目路径，不照抄上游的 `CLAUDE_PLUGIN_ROOT`。
+- 外部 Skill 的框架、字体、营销布局与动效推荐仅供参考；原生 WXML/WXSS/JS、既有业务规则、权限和本项目设计规范优先，不新增前端框架或在线字体依赖。
+- 品牌主蓝已由用户提供的横版、方形官方标志确认：`#0369D7`（RGB 3,105,215）。后续设计使用 Design 规范中的同源色阶与语义 Token，不自行更换品牌蓝或重绘标志；规范确认不等于现有页面已经迁移。
