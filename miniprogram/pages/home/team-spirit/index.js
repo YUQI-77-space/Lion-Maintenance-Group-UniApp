@@ -14,7 +14,8 @@ Page({
     currentPage: 1,
     skeletonCount: 12,
     isInitialized: false,
-    // 追踪已加载图片数量
+    // 页面级图片失败状态，不改变公共组件契约
+    imageErrors: {},
     loadedCount: 0,
     totalCount: 0
   },
@@ -87,23 +88,13 @@ Page({
 
   // 图片加载完成事件
   onImageLoadComplete: function(e) {
-    const newLoadedCount = this.data.loadedCount + 1;
-    this.setData({ loadedCount: newLoadedCount });
-
-    // 所有图片加载完成后，显示真实图片
-    if (newLoadedCount >= this.data.totalCount && this.data.totalCount > 0) {
-      this.showAllImages();
-    }
-  },
-
-  // 显示所有真实图片
-  showAllImages: function() {
-    const components = this.selectAllComponents('.skeleton-image');
-    components.forEach(comp => {
-      if (comp.showImage) {
-        comp.showImage();
-      }
+    this.setData({
+      imageErrors: { ...this.data.imageErrors, [e.currentTarget.dataset.index]: !!e.detail.error }
     });
+    const image = this.selectComponent('#' + e.currentTarget.id);
+    if (image && image.showImage) {
+      image.showImage();
+    }
   },
 
   // 保存数据到全局缓存
@@ -127,6 +118,7 @@ Page({
   onPullDownRefresh: function() {
     this.setData({
       teamSpirit: [],
+      imageErrors: {},
       hasMore: true,
       currentPage: 1,
       isInitialized: false,

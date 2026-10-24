@@ -1,5 +1,5 @@
 // pages/team/home/more/index.js
-const iconManager = require('../../../utils/iconManager');
+const iconManager = require('../../../../utils/iconManager');
 
 Page({
   data: {

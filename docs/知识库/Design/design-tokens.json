@@ -1,11 +1,11 @@
 {
-  "version": "1.1.0",
-  "status": "design-baseline-not-integrated",
+  "version": "1.2.0",
+  "status": "design-reference",
   "updatedAt": "2026-10-24",
   "platform": "wechat-native-miniprogram",
   "cssVariablePrefix": "--mg-",
   "notes": [
-    "这是本项目的设计参考格式，不是 W3C Design Tokens 标准格式，尚未接入运行样式。",
+    "这是本项目的设计参考格式，不是 W3C Design Tokens 标准格式，也不是可直接导入的 WXSS。",
     "品牌主蓝已由用户提供的两张官方标志确认为 #0369D7；不能以 Skill 推荐色板替换。",
     "布局按 750rpx 基准；系统测量和最小热区使用 px，不能直接混加。",
     "透明色、图片覆盖文字需按实际合成结果另测对比度。"

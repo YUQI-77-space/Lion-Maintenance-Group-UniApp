@@ -15,6 +15,7 @@ Page({
     currentPage: 1,
     skeletonCount: 12,
     isInitialized: false,
+    imageErrors: {},
     loadedCount: 0,
     totalCount: 0,
     iconEmpty: iconManager.get('common_empty')
@@ -88,22 +89,13 @@ Page({
 
   // 图片加载完成事件
   onImageLoadComplete: function(e) {
-    const newLoadedCount = this.data.loadedCount + 1;
-    this.setData({ loadedCount: newLoadedCount });
-
-    if (newLoadedCount >= this.data.totalCount && this.data.totalCount > 0) {
-      this.showAllImages();
-    }
-  },
-
-  // 显示所有真实图片
-  showAllImages: function() {
-    const components = this.selectAllComponents('.skeleton-image');
-    components.forEach(comp => {
-      if (comp.showImage) {
-        comp.showImage();
-      }
+    this.setData({
+      imageErrors: { ...this.data.imageErrors, [e.currentTarget.dataset.index]: !!e.detail.error }
     });
+    const image = this.selectComponent('#' + e.currentTarget.id);
+    if (image && image.showImage) {
+      image.showImage();
+    }
   },
 
   // 保存数据到全局缓存
@@ -127,6 +119,7 @@ Page({
   onPullDownRefresh: function() {
     this.setData({
       specialEvents: [],
+      imageErrors: {},
       hasMore: true,
       currentPage: 1,
       isInitialized: false,

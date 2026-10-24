@@ -1,45 +1,32 @@
-<!-- pages/team/home/more/index.wxml -->
-<view class="container">
-  <!-- 搜索框 -->
+<view class="tools-page">
+  <view class="tools-header">
+    <view class="eyebrow">维修组工作台</view>
+    <view class="page-title">{{pageTitle}}</view>
+    <view class="page-description" wx:if="{{type === 'daily'}}">值班、任务与常用工具，在这里找到。</view>
+    <view class="page-description" wx:if="{{type === 'manage'}}">按职责进入管理，妥善安排每一项工作。</view>
+  </view>
   <view class="search-container">
+    <label class="search-label" for="function-search">查找功能</label>
     <view class="search-box">
-      <image class="search-icon" src="{{iconSearch}}" mode="aspectFit"></image>
-      <input 
-        class="search-input" 
-        placeholder="搜索功能..." 
-        value="{{searchKeyword}}"
-        bindinput="onSearchInput"
-        bindconfirm="onSearchConfirm"
-        placeholder-style="color: #999"
-      />
-      <view class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch">
-        <image src="{{iconClose}}" mode="aspectFit"></image>
-      </view>
+      <image class="search-icon" src="{{iconSearch}}" mode="aspectFit" aria-hidden="true"></image>
+      <input id="function-search" class="search-input" placeholder="输入功能名称" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" placeholder-class="search-placeholder" />
+      <button class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch" hover-class="control-pressed" aria-label="清除搜索">清除</button>
     </view>
   </view>
-
-  <!-- 功能网格 - 4列布局 -->
   <view class="function-grid">
-    <view class="function-item" wx:for="{{functions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}">
-      <image class="function-icon" src="{{item.icon}}" mode="aspectFit"></image>
+    <button class="function-item" wx:for="{{functions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}" hover-class="item-pressed">
+      <view class="function-icon-wrap"><image class="function-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true"></image></view>
       <text class="function-name">{{item.name}}</text>
-    </view>
+      <text class="entry-arrow" aria-hidden="true"></text>
+    </button>
   </view>
-
-  <!-- 搜索无结果提示 -->
-  <view class="no-results-state" wx:if="{{functions.length === 0 && searchKeyword}}">
-    <image class="empty-icon" src="{{iconSearch}}" mode="aspectFit"></image>
-    <text class="empty-text">没有找到相关功能</text>
-    <text class="empty-sub-text">试试其他关键词</text>
-    <view class="reset-search-btn" bindtap="clearSearch">
-      <text>清除搜索</text>
-    </view>
+  <view class="empty-state" wx:if="{{functions.length === 0 && searchKeyword}}">
+    <view class="empty-title">没有找到相关功能</view>
+    <view class="empty-description">试试“值班”“维修”等功能名称。</view>
+    <button class="reset-search-btn" bindtap="clearSearch" hover-class="primary-pressed">清除搜索</button>
   </view>
-
-  <!-- 空状态提示 -->
   <view class="empty-state" wx:if="{{functions.length === 0 && !searchKeyword}}">
-    <image class="empty-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
-    <text class="empty-text">暂无功能</text>
+    <view class="empty-title">暂无可用功能</view>
+    <view class="empty-description">可通过左上角返回维修组工作台。</view>
   </view>
-
 </view>

@@ -1,76 +1,42 @@
-/* pages/team/manual/index.wxss */
-@import "/styles/variables.wxss";
+/* 阶段 1：页面局部 Token；不改变共享样式。 */
+.resource-page {
+  --mg-color-brand: #0369D7;
+  --mg-color-brand-pressed: #035CBD;
+  --mg-color-brand-soft: #F2F8FD;
+  --mg-color-brand-selected: #E6F0FB;
+  --mg-color-brand-strong: #0250A3;
+  --mg-color-bg-page: #F5F7FA;
+  --mg-color-bg-surface: #FFFFFF;
+  --mg-color-bg-subtle: #EEF1F5;
+  --mg-color-text-primary: #182230;
+  --mg-color-text-secondary: #475467;
+  --mg-color-text-muted: #626D80;
+  --mg-color-border: #DCE2EA;
+  --mg-color-control-border: #7A8798;
 
-page {
-  background-color: var(--background-color);
-}
-
-.container {
+  box-sizing: border-box;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40rpx;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.icon {
-  width: 160rpx;
-  height: 160rpx;
-  margin-bottom: 40rpx;
-  opacity: 0.8;
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20rpx);
-  }
-}
-
-.title {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: var(--text-main);
-  margin-bottom: 24rpx;
-}
-
-.description {
-  font-size: 30rpx;
-  color: var(--text-secondary);
-  margin-bottom: 40rpx;
+  padding: 32rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  background: var(--mg-color-bg-page);
+  color: var(--mg-color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  font-size: max(15px, 30rpx);
   line-height: 1.6;
 }
 
-.status-badge {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #5b8fff 100%);
-  color: white;
-  padding: 16rpx 40rpx;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  box-shadow: 0 8rpx 16rpx rgba(58, 117, 251, 0.3);
-  animation: pulse 2s ease-in-out infinite;
-}
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 8rpx 16rpx rgba(58, 117, 251, 0.3);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 12rpx 24rpx rgba(58, 117, 251, 0.4);
-  }
-}
-
+.resource-page .resource-header { padding: 16rpx 0 32rpx; }
+.resource-page .eyebrow { margin-bottom: 16rpx; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-brand-strong); }
+.resource-page .page-title { font-size: 40rpx; line-height: 56rpx; font-weight: 600; }
+.resource-page .resource-card { padding: 32rpx; background: var(--mg-color-bg-surface); border-radius: 24rpx; }
+.resource-page .resource-identity { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; margin-bottom: 32rpx; }
+.resource-page .resource-icon-wrap { display: flex; align-items: center; justify-content: center; width: 88rpx; height: 88rpx; flex-shrink: 0; border-radius: 16rpx; background: var(--mg-color-brand-soft); }
+.resource-page .resource-icon { width: 48rpx; height: 48rpx; }
+.resource-page .status-badge { padding: 8rpx 16rpx; color: #526174; background: var(--mg-color-bg-subtle); border-radius: 8rpx; font-size: 24rpx; line-height: 36rpx; }
+.resource-page .resource-title { font-size: 34rpx; line-height: 48rpx; font-weight: 600; }
+.resource-page .resource-description { margin-top: 16rpx; color: var(--mg-color-text-secondary); }
+.resource-page .resource-note { margin-top: 32rpx; padding-top: 32rpx; border-top: 1px solid var(--mg-color-border); color: var(--mg-color-text-secondary); }
+.resource-page .note-title { margin-bottom: 8rpx; color: var(--mg-color-text-primary); font-weight: 500; }
+.resource-page .resource-footer { margin-top: 32rpx; text-align: center; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-muted); }

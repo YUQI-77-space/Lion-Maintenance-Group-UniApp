@@ -1,237 +1,61 @@
-/* pages/user/about/index.wxss
-   关于我们 - 品牌头部 + 白卡信息块
-   与「我的消息」「待办详情」共用同一套版式语言 */
-@import "/styles/variables.wxss";
+/* 阶段 1：页面局部 Token；不改变共享样式。 */
+.about-page {
+  --mg-color-brand: #0369D7;
+  --mg-color-brand-pressed: #035CBD;
+  --mg-color-brand-soft: #F2F8FD;
+  --mg-color-brand-selected: #E6F0FB;
+  --mg-color-brand-strong: #0250A3;
+  --mg-color-bg-page: #F5F7FA;
+  --mg-color-bg-surface: #FFFFFF;
+  --mg-color-bg-subtle: #EEF1F5;
+  --mg-color-text-primary: #182230;
+  --mg-color-text-secondary: #475467;
+  --mg-color-text-muted: #626D80;
+  --mg-color-border: #DCE2EA;
+  --mg-color-control-border: #7A8798;
 
-.page {
+  box-sizing: border-box;
   min-height: 100vh;
-  padding: 24rpx;
-  background: var(--bg-page);
-  box-sizing: border-box;
-}
-
-/* ==================== 品牌头部 ==================== */
-.hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40rpx 24rpx 36rpx;
-}
-
-.hero-logo {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 32rpx;
-}
-
-.hero-name {
-  margin-top: 26rpx;
-  font-size: 34rpx;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: center;
-  color: var(--text-primary);
-}
-
-.hero-sub {
-  margin-top: 12rpx;
-  font-size: 24rpx;
-  line-height: 1.5;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.hero-slogan {
-  margin-top: 24rpx;
-  padding: 10rpx 26rpx;
-  border-radius: 999rpx;
-  font-size: 24rpx;
+  padding: 32rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  background: var(--mg-color-bg-page);
+  color: var(--mg-color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  font-size: max(15px, 30rpx);
   line-height: 1.6;
-  color: var(--primary);
-  background: rgba(0, 0, 205, 0.06);
 }
 
-/* ==================== 卡片 ==================== */
-.card {
-  padding: 28rpx;
-  margin-bottom: 20rpx;
-  background: var(--bg-card);
-  border: 1rpx solid #f0f1f5;
-  border-radius: 20rpx;
-  box-sizing: border-box;
-}
-
-.card:last-child {
-  margin-bottom: 0;
-}
-
-.card-title {
-  display: flex;
-  align-items: center;
-  margin-bottom: 22rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-title::before {
-  content: '';
-  width: 6rpx;
-  height: 26rpx;
-  margin-right: 12rpx;
-  border-radius: 3rpx;
-  background: var(--primary);
-}
-
-/* ==================== 正文段落 ==================== */
-.para {
-  font-size: 28rpx;
-  line-height: 1.8;
-  color: var(--text-secondary);
-  text-align: justify;
-}
-
-.para + .para {
-  margin-top: 18rpx;
-}
-
-/* ==================== 服务清单 ==================== */
-.service-list {
-  margin-top: 6rpx;
-}
-
-.service-item {
-  display: flex;
-  align-items: flex-start;
-  padding: 18rpx 0;
-}
-
-.service-item + .service-item {
-  border-top: 1rpx solid #f0f1f5;
-}
-
-.service-index {
-  flex-shrink: 0;
-  width: 36rpx;
-  height: 36rpx;
-  margin: 4rpx 16rpx 0 0;
-  border-radius: 50%;
-  font-size: 20rpx;
-  font-weight: 600;
-  line-height: 36rpx;
-  text-align: center;
-  color: var(--primary);
-  background: rgba(0, 0, 205, 0.06);
-}
-
-.service-text {
-  flex: 1;
-  min-width: 0;
-  font-size: 28rpx;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-.hint-line {
-  margin-top: 16rpx;
-  font-size: 24rpx;
-  line-height: 1.6;
-  color: var(--text-muted);
-}
-
-/* ==================== 可复制信息 ==================== */
-.copy-row {
-  display: flex;
-  align-items: center;
-  margin-top: 20rpx;
-  padding: 22rpx;
-  border-radius: 12rpx;
-  background: #f7f8fa;
-}
-
-.copy-row:active {
-  background: #f1f2f6;
-}
-
-.copy-row-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.copy-label {
-  display: block;
-  font-size: 22rpx;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.copy-value {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 30rpx;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--primary);
-}
-
-.copy-btn {
-  flex-shrink: 0;
-  margin-left: 16rpx;
-  padding: 8rpx 22rpx;
-  border: 1rpx solid rgba(0, 0, 205, 0.35);
-  border-radius: 999rpx;
-  font-size: 22rpx;
-  line-height: 1.5;
-  color: var(--primary);
-}
-
-/* ==================== 联系方式 ==================== */
-.info-row {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 0;
-}
-
-.info-row + .info-row {
-  border-top: 1rpx solid #f0f1f5;
-}
-
-.info-row:active {
-  opacity: 0.7;
-}
-
-.info-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.info-label {
-  display: block;
-  font-size: 22rpx;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.info-value {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 28rpx;
-  line-height: 1.5;
-  color: var(--text-primary);
-  word-break: break-all;
-}
-
-/* ==================== 页脚 ==================== */
-.footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32rpx 0 40rpx;
-}
-
-.footer-line {
-  font-size: 22rpx;
-  line-height: 1.8;
-  text-align: center;
-  color: var(--text-muted);
-}
+.about-page .hero { padding: 16rpx 0 48rpx; }
+.about-page .brand-row { display: flex; align-items: center; }
+.about-page .hero-logo { width: 88rpx; height: 88rpx; flex-shrink: 0; }
+.about-page .brand-copy { min-width: 0; margin-left: 24rpx; }
+.about-page .hero-name { display: block; margin-top: 8rpx; font-size: 40rpx; line-height: 56rpx; font-weight: 600; }
+.about-page .hero-sub { display: block; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-secondary); }
+.about-page .hero-slogan { margin-top: 32rpx; font-size: 40rpx; line-height: 1.4; font-weight: 600; letter-spacing: 1rpx; }
+.about-page .slogan-line { display: block; color: var(--mg-color-brand); }
+.about-page .hero-note { display: flex; align-items: center; margin-top: 24rpx; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-muted); }
+.about-page .brand-rule { width: 32rpx; height: 4rpx; background: var(--mg-color-brand); margin-right: 16rpx; flex-shrink: 0; }
+.about-page .card { padding: 32rpx; margin-bottom: 32rpx; border-radius: 24rpx; background: var(--mg-color-bg-surface); }
+.about-page .section-caption { margin-bottom: 8rpx; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-brand-strong); }
+.about-page .card-title { margin-bottom: 24rpx; font-size: 34rpx; line-height: 48rpx; font-weight: 600; }
+.about-page .para { color: var(--mg-color-text-secondary); line-height: 1.7; }
+.about-page .para + .para { margin-top: 24rpx; }
+.about-page .service-item { display: flex; align-items: flex-start; padding: 24rpx 0; }
+.about-page .service-item + .service-item { border-top: 1px solid var(--mg-color-border); }
+.about-page .service-index { min-width: 40rpx; margin: 0 16rpx 0 0; color: var(--mg-color-brand); font-weight: 500; font-size: 28rpx; line-height: 1.7; }
+.about-page .service-text { flex: 1; min-width: 0; color: var(--mg-color-text-secondary); line-height: 1.7; }
+.about-page .hint-line { font-size: 28rpx; line-height: 40rpx; color: var(--mg-color-text-muted); }
+.about-page .copy-row, .about-page .info-row { display: flex; align-items: center; width: 100%; min-height: 48px; margin: 0; padding: 24rpx 0; border: 0; border-radius: 0; text-align: left; font: inherit; background: var(--mg-color-bg-surface); color: var(--mg-color-text-primary); }
+.about-page .copy-row::after, .about-page .info-row::after { border: none; }
+.about-page .copy-row { margin-top: 24rpx; padding: 24rpx; border-radius: 16rpx; background: var(--mg-color-brand-soft); }
+.about-page .copy-row-main, .about-page .info-main { flex: 1; min-width: 0; }
+.about-page .copy-label, .about-page .info-label { display: block; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-muted); }
+.about-page .copy-value, .about-page .info-value { display: block; margin-top: 8rpx; font-size: 15px; font-size: max(15px, 30rpx); line-height: 1.6; overflow-wrap: break-word; word-break: break-all; }
+.about-page .copy-value { font-weight: 500; color: var(--mg-color-brand-strong); }
+.about-page .copy-btn { flex-shrink: 0; margin-left: 16rpx; font-size: 28rpx; line-height: 40rpx; color: var(--mg-color-brand); }
+.about-page .info-row + .info-row { border-top: 1px solid var(--mg-color-border); }
+.about-page .row-pressed { background: var(--mg-color-brand-selected); }
+.about-page .footer { padding: 16rpx 0 0; text-align: center; }
+.about-page .footer-line { display: block; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-muted); }
+.about-page .footer-line + .footer-line { margin-top: 8rpx; }

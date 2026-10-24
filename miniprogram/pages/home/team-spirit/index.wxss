@@ -1,110 +1,48 @@
-/* pages/home/team-spirit/index.wxss */
-.container {
-  padding: 20rpx;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+/* 阶段 1：页面局部 Token；不改变共享样式。 */
+.gallery-page {
+  --mg-color-brand: #0369D7;
+  --mg-color-brand-pressed: #035CBD;
+  --mg-color-brand-soft: #F2F8FD;
+  --mg-color-brand-selected: #E6F0FB;
+  --mg-color-brand-strong: #0250A3;
+  --mg-color-bg-page: #F5F7FA;
+  --mg-color-bg-surface: #FFFFFF;
+  --mg-color-bg-subtle: #EEF1F5;
+  --mg-color-text-primary: #182230;
+  --mg-color-text-secondary: #475467;
+  --mg-color-text-muted: #626D80;
+  --mg-color-border: #DCE2EA;
+  --mg-color-control-border: #7A8798;
+
+  box-sizing: border-box;
   min-height: 100vh;
+  padding: 32rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  background: var(--mg-color-bg-page);
+  color: var(--mg-color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  font-size: max(15px, 30rpx);
+  line-height: 1.6;
 }
 
-/* 图片网格 */
-.image-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15rpx;
-  margin-bottom: 40rpx;
-}
 
-.image-item {
-  position: relative;
-  height: 280rpx;
-  border-radius: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
+.gallery-page .gallery-header { padding: 16rpx 0 32rpx; }
+.gallery-page .eyebrow { font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-brand-strong); margin-bottom: 16rpx; }
+.gallery-page .page-title { font-size: 40rpx; line-height: 56rpx; font-weight: 600; }
+.gallery-page .page-description { color: var(--mg-color-text-secondary); margin-top: 16rpx; }
+.gallery-page .gallery-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24rpx; }
+.gallery-page .photo-card { min-width: 0; border-radius: 24rpx; overflow: hidden; background: var(--mg-color-bg-surface); }
+.gallery-page .photo-frame { position: relative; height: 0; padding-top: 75%; background: var(--mg-color-bg-subtle); }
+.gallery-page .skeleton-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.gallery-page .photo-caption { display: flex; align-items: flex-start; justify-content: space-between; gap: 8rpx; padding: 16rpx; color: var(--mg-color-text-secondary); font-size: 28rpx; line-height: 40rpx; }
+.gallery-page .photo-number { flex-shrink: 0; color: var(--mg-color-text-muted); }
+.gallery-page .skeleton-line { display: block; width: 64%; height: 24rpx; margin: 8rpx 0; border-radius: 8rpx; background: var(--mg-color-bg-subtle); }
+.gallery-page .gallery-status { margin-top: 32rpx; text-align: center; color: var(--mg-color-text-secondary); font-size: 28rpx; line-height: 40rpx; }
+.gallery-page .gallery-help { margin-top: 16rpx; text-align: center; color: var(--mg-color-text-muted); font-size: 24rpx; line-height: 36rpx; }
+.gallery-page .empty-state { padding: 64rpx 32rpx; background: var(--mg-color-bg-surface); border-radius: 24rpx; text-align: center; }
+.gallery-page .empty-mark { width: 48rpx; height: 4rpx; background: var(--mg-color-brand); margin: 0 auto 24rpx; }
+.gallery-page .empty-title { font-size: 34rpx; line-height: 48rpx; font-weight: 600; }
+.gallery-page .empty-description { margin-top: 16rpx; color: var(--mg-color-text-secondary); }
 
-.image-item:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
-}
-
-/* 骨架屏占位项 */
-.skeleton-item {
-  background: linear-gradient(135deg, #e8ecef 0%, #dde1e4 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.skeleton-shimmer {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* 响应式设计 */
-@media (max-width: 400px) {
-  .page-title {
-    font-size: 42rpx;
-  }
-  
-  .page-subtitle {
-    font-size: 24rpx;
-  }
-  
-  .image-item {
-    height: 250rpx;
-  }
-}
-
-/* 加载状态 */
-.loading-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 60rpx 20rpx;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20rpx;
-  margin: 20rpx 0;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
-}
-
-/* 没有更多数据 */
-.no-more {
-  text-align: center;
-  padding: 30rpx 0;
-}
-
-.no-more-text {
-  color: #95a5a6;
-  font-size: 26rpx;
-}
-
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 120rpx 20rpx;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 20rpx;
-  margin: 40rpx 0;
-}
-
-.empty-text {
-  color: #bdc3c7;
-  font-size: 32rpx;
-}
+.gallery-page .photo-error { padding: 0 16rpx 16rpx; font-size: 24rpx; line-height: 36rpx; color: var(--mg-color-text-secondary); }
