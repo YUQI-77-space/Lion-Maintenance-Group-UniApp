@@ -14,6 +14,8 @@
     "pages/user/message/index",
     "pages/user/about/index",
     "pages/team/home/index",
+    "pages/team/members/manage/index",
+    "pages/team/members/detail/index",
     "pages/team/home/more/index",
     "pages/team/manual/index",
     "pages/team/software/index",
@@ -84,4 +86,4 @@
       }
     ]
   }
-} 
+}

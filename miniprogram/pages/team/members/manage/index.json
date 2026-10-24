@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "组员管理",
+  "usingComponents": { "avatar-display": "/components/avatar-display/index" }
+}

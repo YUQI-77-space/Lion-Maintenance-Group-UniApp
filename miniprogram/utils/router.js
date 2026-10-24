@@ -25,6 +25,10 @@ const ROUTES = {
     EWA: {
       MANAGE: '/pages/team/ewa/manage/index',
     },
+    MEMBERS: {
+      MANAGE: '/pages/team/members/manage/index',
+      DETAIL: '/pages/team/members/detail/index',
+    },
   },
   REPAIR: '/pages/repair/index',
 };
@@ -293,6 +297,12 @@ const loginRouter = {
 };
 
 const teamRouter = {
+  toMemberManage() {
+    checkPermission('leader', () => navigateTo(ROUTES.TEAM.MEMBERS.MANAGE));
+  },
+  toMemberDetail(userId) {
+    checkPermission('leader', () => navigateTo(ROUTES.TEAM.MEMBERS.DETAIL, { userId }));
+  },
   toHome() {
     switchTab(ROUTES.TEAM.HOME);
   },
@@ -376,4 +386,4 @@ module.exports = {
   switchTab,
   getTabOrder,
   computeTabsByRole
-}; 
+};

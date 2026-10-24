@@ -77,6 +77,12 @@ Page({
         name: 'EWA管理',
         icon: iconManager.get('manage_ewa'),
         path: '/pages/team/ewa/manage/index'
+      },
+      {
+        id: 'memberManage',
+        name: '组员管理',
+        icon: iconManager.get('manage_members'),
+        path: '/pages/team/members/manage/index'
       }
     ],
     // Logo图标
@@ -177,6 +183,10 @@ Page({
   // 页面导航
   navigateTo: function (e) {
     const path = e.currentTarget.dataset.path;
+    if (path === '/pages/team/members/manage/index') {
+      require('../../../utils/router').teamRouter.toMemberManage();
+      return;
+    }
     const link = e.currentTarget.dataset.link;
     
     // 如果是外部链接，复制链接并提示操作步骤
@@ -215,4 +225,4 @@ Page({
       }
     });
   }
-}) 
+})

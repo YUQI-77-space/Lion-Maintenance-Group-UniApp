@@ -1,0 +1,59 @@
+<view class="members-page">
+  <view wx:if="{{loading}}" class="member-state">正在加载组员资料…</view>
+  <block wx:elif="{{member}}">
+    <view class="member-card member-profile">
+      <avatar-display userInfo="{{member}}" openid="{{member.openid}}" size="large" showBorder="{{false}}" />
+      <view class="member-identity">
+        <view class="member-name">{{member.nickName || '未设置昵称'}}</view>
+        <view class="member-badges"><text class="member-badge">{{roleName}}</text><text wx:if="{{member.isEmergencyContact}}" class="member-badge contact-badge">应急联系人</text></view>
+        <view class="member-caption">{{member.department || '未设置部门'}}</view>
+      </view>
+    </view>
+    <view class="member-card">
+      <view class="member-section-title">基本资料</view>
+      <view class="member-info-row"><text class="member-label">学号</text><text class="member-value" selectable>{{member.studentId || '未填写'}}</text></view>
+      <view class="member-info-row"><text class="member-label">QQ 号</text><text class="member-value" selectable>{{member.qqId || '未填写'}}</text></view>
+      <view class="member-info-row"><text class="member-label">所属部门</text><text class="member-value">{{member.department || '未设置'}}</text></view>
+      <view class="member-info-row last-row"><text class="member-label">应急联系人</text><text class="member-value">{{member.isEmergencyContact ? '已设为应急联系人' : '未设置'}}</text></view>
+    </view>
+    <button wx:if="{{member.permissions.canEdit}}" class="member-button member-primary" bindtap="edit" disabled="{{saving}}" hover-class="member-pressed">编辑资料</button>
+    <view wx:else class="member-note">当前身份仅可查看此成员资料。</view>
+    <view class="member-card member-actions" wx:if="{{member.permissions.canChangeRole || member.permissions.canRemove}}">
+      <view class="member-section-title">成员管理</view>
+      <button wx:if="{{member.permissions.canChangeRole}}" class="member-action" bindtap="changeRole" disabled="{{saving}}" hover-class="member-pressed"><view class="action-copy"><text class="action-title">调整角色</text><text class="action-description">{{member.role === 'member' ? '将组员设为组长' : '将组长调整为组员'}}</text></view><text class="member-chevron">›</text></button>
+      <button wx:if="{{member.permissions.canRemove}}" class="member-action member-remove" bindtap="openRemove" disabled="{{saving}}" hover-class="member-pressed"><view class="action-copy"><text class="action-title">移出维修组</text><text class="action-description">撤销组内权限，保留历史记录</text></view><text class="member-chevron">›</text></button>
+    </view>
+  </block>
+  <view class="member-error" wx:if="{{error && !removeVisible && !editing}}">{{error}}</view>
+  <button wx:if="{{!loading && error && !removeVisible && !editing}}" class="member-button member-secondary" bindtap="retry">重新加载资料</button>
+  <action-modal visible="{{editing}}" bottom="{{true}}" title="编辑资料" subtitle="{{member.nickName || '此成员'}} · 修改后保存即可" confirmText="保存修改" cancelText="取消" loading="{{saving}}" disabled="{{loading}}" bindcancel="closeEdit" bindconfirm="save">
+    <view class="edit-section">
+      <view class="member-section-title">基本资料</view>
+      <view class="edit-field"><label for="member-name">昵称</label><input id="member-name" class="edit-input" value="{{form.nickName}}" data-field="nickName" bindinput="onField" placeholder="填写成员昵称" maxlength="20" disabled="{{saving}}" /></view>
+      <view class="edit-field"><label for="member-student">学号</label><input id="member-student" class="edit-input" value="{{form.studentId}}" data-field="studentId" bindinput="onField" placeholder="填写完整学号" maxlength="32" disabled="{{saving}}" /></view>
+      <view class="edit-field"><label for="member-qq">QQ 号</label><input id="member-qq" class="edit-input" value="{{form.qqId}}" type="number" data-field="qqId" bindinput="onField" placeholder="填写 5–11 位 QQ 号" maxlength="11" disabled="{{saving}}" /></view>
+      <view class="member-note">头像由成员本人维护。</view>
+    </view>
+    <view class="edit-section">
+      <view class="member-section-title">组内设置</view>
+      <view class="edit-field"><text>所属部门</text><picker range="{{departments}}" value="{{departmentIndex < 0 ? 0 : departmentIndex}}" bindchange="onDepartment" disabled="{{saving}}"><view class="department-picker {{!form.department ? 'picker-placeholder' : ''}}"><text>{{form.department || '请选择部门'}}</text><text class="member-chevron">›</text></view></picker><view class="field-help">部门变更后，1 小时内不可再次切换。</view></view>
+      <view class="emergency-setting"><view class="emergency-copy"><text>应急联系人</text><view class="field-help">开启后，昵称与 QQ 号将在报修页展示。</view></view><switch color="#3a75fb" checked="{{form.isEmergencyContact}}" bindchange="onEmergency" disabled="{{saving}}" /></view>
+    </view>
+    <view class="member-error" wx:if="{{error}}">{{error}}</view>
+  </action-modal>
+  <action-modal visible="{{removeVisible}}" title="{{removeStep === 'reason' ? '移出维修组' : '确认移出成员'}}" subtitle="{{removeStep === 'reason' ? '第 1 步 · 填写原因' : '第 2 步 · 核对信息'}}" confirmText="{{removeStep === 'reason' ? '下一步' : '确认移出'}}" cancelText="{{removeStep === 'reason' ? '取消' : '返回修改'}}" danger="{{removeStep === 'confirm'}}" loading="{{saving}}" disabled="{{!reasonValid}}" bindcancel="closeRemove" bindconfirm="remove">
+    <view class="remove-person">{{member.nickName || '此成员'}}<text class="remove-role">{{roleName}}</text></view>
+    <block wx:if="{{removeStep === 'reason'}}">
+      <view class="modal-description">请说明移出原因，便于后续核对。提交前还需再次确认。</view>
+      <view class="reason-label">移出原因 <text class="required-mark">*</text></view>
+      <textarea class="remove-reason" placeholder="例如：毕业离组、本人申请退出" value="{{removeReason}}" bindinput="onReason" maxlength="200" disabled="{{saving}}" cursor-spacing="24" adjust-position />
+      <view class="reason-count">{{removeReason.length}} / 200</view>
+    </block>
+    <block wx:else>
+      <view class="remove-warning">移出后将撤销组内权限。普通账号、历史任务与 EWA 工作量仍会保留。</view>
+      <view class="reason-label">移出原因</view><view class="reason-preview">{{removeReason}}</view>
+    </block>
+    <view class="modal-blockers" wx:if="{{blockers.length}}"><view class="reason-label">请先完成以下交接</view><view wx:for="{{blockers}}" wx:key="id" class="modal-blocker">{{item.type === 'maintenance' ? '维修任务' : item.type === 'duty' ? '值班安排' : '志愿活动'}} · {{item.title}}</view><view class="modal-description">到对应管理模块处理后，再重试移出。</view></view>
+    <view class="member-error" wx:if="{{error}}">{{error}}</view>
+  </action-modal>
+</view>

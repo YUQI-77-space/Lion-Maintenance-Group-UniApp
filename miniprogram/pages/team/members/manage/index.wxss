@@ -1,0 +1,38 @@
+page { height: 100%; background: #f4f6fa; color: #202b40; }
+.directory-page { height: 100vh; display: flex; flex-direction: column; }
+.directory-header { flex-shrink: 0; padding: 32rpx 28rpx 24rpx; background: #fff; border-bottom: 1rpx solid #edf0f5; }
+.directory-heading { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.directory-title { font-size: 38rpx; font-weight: 600; }
+.directory-count { color: #788398; font-size: 24rpx; }
+.directory-subtitle { margin: 12rpx 0 28rpx; color: #8893a5; font-size: 24rpx; }
+.directory-search { display: flex; align-items: center; gap: 20rpx; height: 88rpx; padding: 0 24rpx; background: #f4f6fa; border: 1rpx solid #edf0f5; border-radius: 16rpx; }
+.search-icon { width: 24rpx; height: 24rpx; border: 3rpx solid #9aa6b9; border-radius: 50%; position: relative; flex-shrink: 0; margin-right: 6rpx; }
+.search-icon::after { content: ''; position: absolute; width: 12rpx; height: 3rpx; background: #9aa6b9; bottom: -6rpx; right: -9rpx; transform: rotate(45deg); }
+.directory-input { flex: 1; min-width: 0; height: 88rpx; font-size: 27rpx; }
+.clear-search { flex-shrink: 0; width: 64rpx; height: 80rpx; margin: 0 -16rpx 0 0; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; font-size: 38rpx; color: #8893a5; }
+.clear-search::after, .reset-filters::after, .directory-retry::after { border: 0; }
+.directory-filters { display: flex; gap: 16rpx; align-items: center; margin-top: 20rpx; }
+.filter-chip { display: flex; align-items: center; gap: 16rpx; min-height: 76rpx; padding: 0 24rpx; border-radius: 14rpx; background: #f4f6fa; color: #5f6c82; font-size: 25rpx; }
+.filter-active { background: #edf3ff; color: #3569dc; }
+.filter-caret { color: #8893a5; font-size: 28rpx; }
+.reset-filters { min-height: 76rpx; margin: 0 0 0 auto; padding: 0 12rpx; display: flex; align-items: center; background: transparent; color: #3569dc; font-size: 24rpx; }
+.directory-list { flex: 1; height: 0; min-height: 0; }
+.directory-group { background: #fff; border: 1rpx solid #edf0f5; border-radius: 24rpx; margin: 24rpx 28rpx 0; padding: 0 28rpx; overflow: hidden; }
+.directory-member { display: flex; align-items: center; padding: 28rpx 0; min-height: 156rpx; border-bottom: 1rpx solid #f0f2f6; gap: 24rpx; }
+.directory-member:last-child { border-bottom: 0; }
+.directory-info { flex: 1; min-width: 0; }
+.directory-name-row { display: flex; align-items: center; gap: 14rpx; }
+.directory-name { font-size: 30rpx; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.directory-role { flex-shrink: 0; padding: 4rpx 12rpx; background: #f0f4fa; color: #6d7c94; border-radius: 8rpx; font-size: 21rpx; line-height: 1.5; }
+.role-leader { color: #3569dc; background: #edf3ff; }
+.role-admin { color: #8a62bd; background: #f3edfc; }
+.directory-department { margin-top: 10rpx; color: #788398; font-size: 24rpx; }
+.directory-student { margin-top: 6rpx; color: #939daf; font-size: 23rpx; }
+.directory-arrow { color: #a2adbd; font-size: 36rpx; }
+.directory-state { padding: 80rpx 32rpx; text-align: center; color: #788398; font-size: 26rpx; line-height: 1.7; }
+.directory-end { padding: 32rpx; font-size: 23rpx; color: #939daf; }
+.directory-retry { width: 260rpx; height: 88rpx; margin: 28rpx auto 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 16rpx; font-size: 27rpx; background: #e9effa; color: #3569dc; }
+.empty-title { font-size: 30rpx; color: #4b5870; }
+.empty-hint { margin-top: 12rpx; font-size: 24rpx; color: #939daf; }
+.directory-bottom { height: calc(32rpx + env(safe-area-inset-bottom)); }
+.directory-pressed { opacity: .7; }

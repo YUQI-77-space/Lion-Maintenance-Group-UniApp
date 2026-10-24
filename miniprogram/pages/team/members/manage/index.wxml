@@ -1,0 +1,26 @@
+<view class="directory-page">
+  <view class="directory-header">
+    <view class="directory-heading"><view class="directory-title">组员管理</view><text class="directory-count">{{loading ? '加载中' : total + ' 位成员'}}</text></view>
+    <view class="directory-subtitle">查看组内成员，管理资料与权限</view>
+    <view class="directory-search"><view class="search-icon" /><input class="directory-input" placeholder="搜索昵称 / 输入完整学号" value="{{keyword}}" maxlength="40" bindinput="onSearch" bindconfirm="onSearchConfirm" confirm-type="search" /><button wx:if="{{keyword}}" class="clear-search" bindtap="clearSearch" aria-label="清空搜索">×</button></view>
+    <view class="directory-filters">
+      <picker range="{{departments}}" value="{{departmentIndex}}" bindchange="onDepartment"><view class="filter-chip {{departmentIndex ? 'filter-active' : ''}}">{{departments[departmentIndex]}}<text class="filter-caret">⌄</text></view></picker>
+      <picker range="{{roles}}" value="{{roleIndex}}" bindchange="onRole"><view class="filter-chip {{roleIndex ? 'filter-active' : ''}}">{{roles[roleIndex]}}<text class="filter-caret">⌄</text></view></picker>
+      <button wx:if="{{departmentIndex || roleIndex}}" class="reset-filters" bindtap="resetFilters">重置</button>
+    </view>
+  </view>
+  <scroll-view class="directory-list" scroll-y refresher-enabled refresher-triggered="{{refresherTriggered}}" bindrefresherrefresh="onRefresherRefresh" bindscrolltolower="onLoadMore" lower-threshold="100">
+    <view class="directory-group" wx:if="{{items.length}}">
+      <view class="directory-member" wx:for="{{items}}" wx:key="userId" bindtap="openDetail" data-id="{{item.userId}}" hover-class="directory-pressed" role="button" aria-label="查看{{item.nickName}}的资料">
+        <avatar-display userInfo="{{item}}" openid="{{item.openid}}" size="medium" showBorder="{{false}}" />
+        <view class="directory-info"><view class="directory-name-row"><text class="directory-name">{{item.nickName || '未设置昵称'}}</text><text class="directory-role role-{{item.role}}">{{item.roleName}}</text></view><view class="directory-department">{{item.department || '未设置部门'}}</view><view class="directory-student">学号 {{item.studentId || '未填写'}}</view></view><text class="directory-arrow">›</text>
+      </view>
+    </view>
+    <view class="directory-state" wx:if="{{loading}}">正在加载组员…</view>
+    <view class="directory-state" wx:elif="{{error}}"><view>{{error}}</view><button class="directory-retry" bindtap="retry">重试加载</button></view>
+    <view class="directory-state" wx:elif="{{!items.length}}"><view class="empty-title">{{keyword || departmentIndex || roleIndex ? '未找到匹配的成员' : '暂无组员'}}</view><view class="empty-hint">{{keyword || departmentIndex || roleIndex ? '试试其他昵称、完整学号，或清除筛选条件' : '组内成员将在这里显示'}}</view><button wx:if="{{keyword || departmentIndex || roleIndex}}" class="directory-retry" bindtap="resetSearch">查看全部成员</button></view>
+    <view class="directory-state directory-end" wx:elif="{{loadingMore}}">正在加载更多…</view>
+    <view class="directory-state directory-end" wx:elif="{{!hasMore}}">已显示全部 {{total}} 位成员</view>
+    <view class="directory-bottom" />
+  </scroll-view>
+</view>

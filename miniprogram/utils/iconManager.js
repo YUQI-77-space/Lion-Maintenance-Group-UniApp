@@ -90,6 +90,8 @@ class IconManager {
    * @returns {string} 图标的完整路径
    */
   getIcon(name, options = {}) {
+    // 组员管理使用随代码发布的矢量图，避免依赖本地忽略的媒体配置。
+    if (name === 'manage_members') return '/assets/icons/members.svg';
     const type = options.type || 'icon';
     const cacheKey = `${this._currentSet}:${name}:${type}`;
 

@@ -122,6 +122,8 @@ App({
 	// 小程序显示（从后台进入前台）
 	onShow: function(options) {
 		console.log('小程序进入前台');
+		// 从后台返回时刷新管理者可能调整的身份；不使用旧权限码重新计算角色。
+		if (this.globalData.isLogin && this.globalData.openid) this.refreshUserInfo({ sync: false });
 		// 🎵 小程序回到前台时，不自动恢复播放
 		// 让用户在音乐播放器页面手动控制播放
 	},
@@ -399,7 +401,7 @@ App({
 	// 已废弃旧方法，移除以减少冗余
 	
 	// 刷新用户信息
-	refreshUserInfo: async function() {
+	refreshUserInfo: async function(options = {}) {
 		try {
 			const res = await api.call('users', {
 				action: 'getUserByOpenId',
@@ -413,7 +415,7 @@ App({
 				wx.setStorageSync('isLogin', true);
 				this.updateUserRole(updatedUserInfo.role || 'user');
 				this.prefetchUserDepartment(updatedUserInfo.openid || this.globalData.openid).catch(() => {});
-				this.syncUserDataIfNeeded();
+				if (options.sync !== false) this.syncUserDataIfNeeded();
 			} else {
 				console.error('刷新用户信息失败:', res.message);
 			}
@@ -677,4 +679,4 @@ App({
 		theme: 'light',
 		currentTabs: []
 	}
-}) 
+})
