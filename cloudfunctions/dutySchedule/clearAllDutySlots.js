@@ -192,7 +192,8 @@ exports.clearAllDutySlots = async (event, openid) => {
         dutySlotId: true,
         assignedUser: true,
         dutyHolderId: true,
-        dutyHolderName: true
+        dutyHolderName: true,
+        dutyStatus: true
       })
       .get()
 
@@ -362,4 +363,4 @@ exports.clearAllDutySlots = async (event, openid) => {
       message: err.message || '清除值班时间段失败'
     }
   }
-} 
+}

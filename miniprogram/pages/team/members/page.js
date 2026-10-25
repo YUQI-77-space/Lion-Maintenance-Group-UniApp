@@ -123,9 +123,12 @@ module.exports = () => ({
       }
       return;
     }
-    getApp().publish('membersChanged', { userId: this._userId });
+    const app = getApp();
+    app.publish('membersChanged', { userId: this._userId });
+    const isSelf = this.data.member.openid === app.globalData.openid;
+    if (isSelf) await app.refreshUserInfo({ sync: false });
     wx.showToast({ title: result.message || '操作成功', icon: 'success' });
-    if (result.data.removed) {
+    if (result.data.removed || (isSelf && action === 'changeMemberRole' && values.role === 'member')) {
       if (wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
       wx.navigateBack();
     }

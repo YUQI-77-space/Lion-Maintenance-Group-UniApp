@@ -11,27 +11,14 @@ const db = cloud.database()
  * @returns {string} 任务状态：'pending' | 'inProgress' | 'ended'
  */
 function calculateDutyStatus(date, startTime, endTime) {
-  try {
-    // 使用东八区当前时间进行比较
-    const now = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
-    
-    // 直接构建带时区信息的完整时间字符串，避免使用setHours导致的时区问题
-    // 格式: YYYY-MM-DDTHH:MM:SS+08:00
-    const dutyStartTime = new Date(`${date}T${startTime}:00+08:00`)
-    const dutyEndTime = new Date(`${date}T${endTime}:00+08:00`)
-    
-    // 计算状态
-    if (now < dutyStartTime) {
-      return 'pending'    // 待值班
-    } else if (now >= dutyStartTime && now <= dutyEndTime) {
-      return 'inProgress' // 进行中
-    } else {
-      return 'ended'      // 已结束
-    }
-  } catch (error) {
-    console.error('[calculateDutyStatus] 计算状态失败：', error)
-    return 'pending' // 默认返回待值班
-  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime) ||
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(endTime)) return null
+  const start = Date.parse(`${date}T${startTime}:00+08:00`)
+  const end = Date.parse(`${date}T${endTime}:00+08:00`)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start ||
+      new Date(start + 8 * 3600000).toISOString().slice(0, 10) !== date) return null
+  const now = Date.now() // 起止时间已经带时区，当前绝对时间不能再加8小时。
+  return now < start ? 'pending' : now <= end ? 'inProgress' : 'ended'
 }
 
 /**
@@ -128,7 +115,7 @@ exports.updateSummary = async (params, OPENID) => {
         for (const slot of allUserDutySlots.data) {
           if (slot.date && slot.startTime && slot.endTime) {
             const newStatus = calculateDutyStatus(slot.date, slot.startTime, slot.endTime)
-            if (newStatus !== (slot.dutyStatus || 'pending')) {
+            if (newStatus && newStatus !== (slot.dutyStatus || 'pending')) {
               await db.collection('duty_slots').doc(slot.dutySlotId).update({
                 data: {
                   dutyStatus: newStatus,

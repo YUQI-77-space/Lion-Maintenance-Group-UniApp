@@ -16,7 +16,7 @@ const { removeDutySelection } = require('./removeDutySelection')
 const { removeDutyAssignment } = require('./removeDutyAssignment')
 const { getUserDutySlots } = require('./getUserDutySlots')
 const { cleanupExpiredLocks, forceReleaseUserLocks, getLockStatus } = require('./cleanupExpiredLocks')
-const { batchUpdateDutyStatus, scheduledStatusUpdate } = require('./dutyStatusManager')
+const { scheduledStatusUpdate } = require('./dutyStatusManager')
 const { scheduleDutyReminder } = require('./scheduleDutyReminder')
 const autoWeekSwitcher = require('./autoWeekSwitcher')
 const dutyReminderScheduler = require('./dutyReminderScheduler')
@@ -28,11 +28,13 @@ exports.main = async (event, context) => {
   console.log('[dutySchedule] TriggerName:', triggerNameRaw, 'event:', event)
   // 小程序调用不能通过伪造 TriggerName 进入系统权限分支。
   const callerOpenid = cloud.getWXContext().OPENID
-  if (!callerOpenid && (triggerName === 'autoweekswitchertimer' || triggerName.includes('autoweekswitcher'))) {
+  const isTimer = !callerOpenid && !event?.action && !event?.params?.action &&
+    (event?.Type === 'Timer' || !!context?.TriggerName)
+  if (isTimer && (triggerName === 'autoweekswitchertimer' || triggerName.includes('autoweekswitcher'))) {
     console.log('[dutySchedule] 命中自动切周触发器，开始执行 autoWeekSwitcher')
     return await autoWeekSwitcher.main(event, context)
   }
-  if (!callerOpenid && triggerName.includes('dutyreminder')) {
+  if (isTimer && triggerName.includes('dutyreminder')) {
     console.log('[dutySchedule] 命中值班提醒触发器，开始执行 dutyReminderScheduler')
     return await dutyReminderScheduler.main(event, context)
   }
@@ -102,10 +104,16 @@ exports.main = async (event, context) => {
         return await getLockStatus(processedEvent, OPENID)
         
       case 'batchUpdateDutyStatus':
-        return await batchUpdateDutyStatus(processedEvent.dutySlots)
-        
-      case 'scheduledStatusUpdate':
+      case 'scheduledStatusUpdate': {
+        // 客户端不能注入结算实体；内部 getDutySlots 仍可更新可信记录。
+        if (!OPENID) return { code: 403, data: null, message: '无权触发值班结算' }
+        const db = cloud.database()
+        const callers = await db.collection('users').where({ openid: OPENID }).limit(2).get()
+        if (callers.data.length !== 1 || !['leader', 'admin'].includes(callers.data[0].role)) {
+          return { code: 403, data: null, message: '只有组长或管理员可以触发值班结算' }
+        }
         return await scheduledStatusUpdate()
+      }
         
       case 'scheduleDutyReminder':
         return await scheduleDutyReminder(processedEvent, OPENID)
@@ -125,4 +133,4 @@ exports.main = async (event, context) => {
       message: err.message || '值班管理操作失败'
     }
   }
-} 
+}

@@ -1,10 +1,10 @@
 @import "/styles/data-pages.wxss";
 page { height: 100%; background: var(--mg-color-bg-page); color: var(--mg-color-text-primary); }
 .directory-page { height: 100vh; display: flex; flex-direction: column; }
-.directory-header { flex-shrink: 0; padding: 24rpx 28rpx 16rpx; background: #fff; border-bottom: 1rpx solid var(--mg-color-bg-subtle); }
+.directory-header { flex-shrink: 0; padding: 24rpx 28rpx 0; background: #fff; border-bottom: 1rpx solid var(--mg-color-bg-subtle); }
 .directory-count { flex-shrink: 0; margin-left: auto; color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); white-space: nowrap; }
 .reset-filters::after, .directory-retry::after { border: 0; }
-.directory-filters { display: flex; gap: 8px; align-items: center; margin-top: 16rpx; }
+.directory-filters { display: flex; gap: 8px; align-items: center; }
 .directory-picker { flex: 0 1 auto; min-width: 48px; padding: 8px 0; }
 .filter-chip { box-sizing: border-box; display: flex; align-items: center; gap: 12rpx; min-height: 32px; padding: 0 16rpx; border-radius: 14rpx; background: var(--mg-color-bg-page); color: var(--mg-color-text-muted); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
 .filter-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

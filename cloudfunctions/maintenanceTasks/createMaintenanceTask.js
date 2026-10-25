@@ -168,14 +168,33 @@ function formatDateTimeCN(date) {
  * @param {string} OPENID - 用户openid
  * @returns {Object} 返回创建结果
  */
-exports.createMaintenanceTask = async (params, OPENID) => {
+exports.createMaintenanceTask = async (params = {}, OPENID) => {
   try {
-    console.log('接收到的参数:', params);
-    console.log('用户OPENID:', OPENID);
+    if (!OPENID) return { code: 401, data: null, message: '请先登录' };
+    if (!params || typeof params !== 'object' || Array.isArray(params)) {
+      return { code: 400, data: null, message: '参数格式错误' };
+    }
+    const callerResult = await db.collection('users').where({ openid: OPENID }).limit(2).get();
+    if (callerResult.data.length !== 1) return { code: 401, data: null, message: '请先完成注册' };
+    const caller = callerResult.data[0];
+    const isManager = ['leader', 'admin'].includes(caller.role);
+    if ((params.applicantId !== undefined && (typeof params.applicantId !== 'string' || !params.applicantId.trim())) ||
+        (params.isManagementCreated !== undefined && typeof params.isManagementCreated !== 'boolean')) {
+      return { code: 400, data: null, message: '申请人或管理标志格式错误' };
+    }
+    if ((!isManager && params.applicantId && params.applicantId !== OPENID) ||
+        (params.isManagementCreated && !isManager)) {
+      return { code: 403, data: null, message: '无权代他人报修或使用管理通道' };
+    }
+    // 代建必须显式走经过授权的管理分支，普通通道绑定本人。
+    if (params.applicantId && params.applicantId !== OPENID && !params.isManagementCreated) {
+      return { code: 403, data: null, message: '请通过管理通道代建任务' };
+    }
+    const applicantOpenid = params.isManagementCreated ? (params.applicantId || OPENID) : OPENID;
     const requestId = params && params._requestId ? String(params._requestId) : '';
     
     // 检查参数
-    if (!params.level1 || !params.level2 || !params.level3 || !params.appointmentTime) {
+    if (['level1', 'level2', 'level3', 'appointmentTime'].some(key => typeof params[key] !== 'string' || !params[key].trim())) {
       console.log('参数验证失败:', {
         level1: params.level1,
         level2: params.level2,
@@ -191,7 +210,7 @@ exports.createMaintenanceTask = async (params, OPENID) => {
 
     // 幂等防重：若同一请求已写入则直接返回已有记录，避免客户端重试造成重复任务
     if (requestId) {
-      const existedTaskRes = await db.collection('maintenance_tasks').where({ requestId }).limit(1).get();
+      const existedTaskRes = await db.collection('maintenance_tasks').where({ requestId, applicantId: applicantOpenid }).limit(1).get();
       if (existedTaskRes.data && existedTaskRes.data.length > 0) {
         const existedTask = existedTaskRes.data[0];
         // 确保待办同步存在
@@ -243,7 +262,6 @@ exports.createMaintenanceTask = async (params, OPENID) => {
     }
     
     // 强制校验申请人必须为已注册用户，并一次性取回补全申请信息所需的字段（原为两次查询）
-    const applicantOpenid = (params && params.applicantId) || OPENID;
     let applicantUser = null;
     try {
       const userResult = await db.collection('users').where({
@@ -253,7 +271,7 @@ exports.createMaintenanceTask = async (params, OPENID) => {
         studentId: true,
         qqId: true
       }).get();
-      if (!userResult.data || userResult.data.length === 0) {
+      if (!userResult.data || userResult.data.length !== 1) {
         return {
           code: 401,
           data: null,
@@ -279,10 +297,10 @@ exports.createMaintenanceTask = async (params, OPENID) => {
     const formattedNow = formatDateTimeCN(now)
     
     // 处理申请人信息 - 针对组长创建任务的特殊处理
-    let finalApplicantId = params.applicantId || OPENID
-    let finalApplicantName = params.applicantName || ''
-    let finalApplicantStudentId = params.applicantStudentId || ''
-    let finalApplicantQqId = params.applicantQqId || ''
+    const finalApplicantId = applicantOpenid
+    let finalApplicantName = applicantUser.nickName || ''
+    let finalApplicantStudentId = applicantUser.studentId || ''
+    let finalApplicantQqId = applicantUser.qqId || ''
     
     // 如果不是管理员创建，尝试从用户信息中获取学号
     if (!params.isManagementCreated) {
@@ -301,6 +319,10 @@ exports.createMaintenanceTask = async (params, OPENID) => {
     // 如果是管理员创建且提供了申请人信息，尝试匹配真实用户
     if (params.isManagementCreated && params.applicantInfo) {
       const applicantInfo = params.applicantInfo
+      if (typeof applicantInfo !== 'object' || Array.isArray(applicantInfo) ||
+          ['nickName', 'studentId', 'qqId'].some(key => applicantInfo[key] !== undefined && typeof applicantInfo[key] !== 'string')) {
+        return { code: 400, data: null, message: '管理申请人资料格式错误' }
+      }
       finalApplicantName = applicantInfo.nickName || '维修组组长'
       finalApplicantStudentId = applicantInfo.studentId || ''
       finalApplicantQqId = applicantInfo.qqId || ''
@@ -344,7 +366,6 @@ exports.createMaintenanceTask = async (params, OPENID) => {
       additionalAssignees: []
     }
     
-    console.log('准备插入数据库的任务数据:', taskData);
     
     // 添加维修任务
     const addResult = await db.collection('maintenance_tasks').add({

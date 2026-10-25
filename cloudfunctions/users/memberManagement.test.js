@@ -117,14 +117,38 @@ test('完整分页超过100人；仅显示当前成员，支持部门、角色�
   assert.equal((await handle(h.db, 'getManagedMembers', { keyword: '成员12' }, 'leader')).data.total, 4)
 })
 
-test('组长不能编辑自己、其他组长和管理员；管理员可编辑组长但不能编辑管理员', async () => {
+test('组长和管理员可编辑、调整角色、移出所有在组人员，包含自己、同级组长和管理员', async () => {
+  for (const actor of ['leader', 'admin']) for (const userId of ['u0000', 'leader', 'other-leader', 'admin']) {
+    for (const action of ['updateManagedMember', 'changeMemberRole', 'removeTeamMember']) {
+      const h = harness()
+      h.state.users.push({ _id: 'other-leader', openid: 'other-leader', role: 'leader', nickName: '另一组长' })
+      for (const user of h.state.users.filter(row => ['leader', 'admin'].includes(row.role))) {
+        h.state.proUsers.push({ ...user, _id: 'p-' + user._id })
+      }
+      const user = h.state.users.find(row => row._id === userId)
+      const expected = { canEdit: true, canRemove: true, canChangeRole: true }
+      const detail = await handle(h.db, 'getManagedMemberDetail', { userId }, actor)
+      assert.deepEqual(detail.data.permissions, expected)
+      const list = await handle(h.db, 'getManagedMembers', {}, actor)
+      assert.deepEqual(list.data.items.find(row => row.userId === userId).permissions, expected)
+      const role = user.role === 'member' ? 'leader' : 'member'
+      const result = await h.write(action, { userId, fields: { nickName: '变更' }, role, reason: '本人申请退出' }, actor)
+      assert.equal(result.success, true, `${actor} ${action} ${userId}: ${result.message}`)
+      assert.equal(user.version, 1)
+      assert.equal(h.state.member_management_logs[0].targetUserId, userId)
+      if (action === 'changeMemberRole') assert.equal(user.role, role)
+      if (action === 'removeTeamMember') {
+        assert.equal(user.role, 'user')
+        assert.equal(user.membershipStatus, 'removed')
+        assert.equal(h.state.proUsers.some(row => row.openid === user.openid), false)
+      }
+      if (user.openid === actor && action !== 'updateManagedMember') {
+        assert.equal((await handle(h.db, 'getManagedMembers', {}, actor)).code, 403)
+      }
+    }
+  }
   const h = harness()
-  for (const userId of ['leader', 'admin']) assert.equal((await h.write('updateManagedMember', { userId, fields: { nickName: '变更' } })).code, 403)
-  assert.equal((await h.write('changeMemberRole', { role: 'leader' })).code, 403)
-  assert.equal((await h.write('updateManagedMember', { userId: 'admin', fields: { nickName: '变更' } }, 'admin')).code, 403)
-  assert.equal((await h.write('updateManagedMember', { userId: 'leader', fields: { nickName: '新组长' } }, 'admin')).code, 409)
-  h.state.proUsers.push({ _id: 'pl', openid: 'leader', role: 'leader' })
-  assert.equal((await h.write('updateManagedMember', { userId: 'leader', fields: { nickName: '新组长' } }, 'admin')).success, true)
+  assert.equal((await h.write('changeMemberRole', { role: 'invalid' })).code, 400)
 })
 
 test('字段白名单和输入校验；事务同时更新双集合与EWA姓名，保留工作量和历史快照', async () => {

@@ -20,7 +20,7 @@
     <view wx:else class="member-note">当前身份仅可查看此成员资料。</view>
     <view class="member-card member-actions" wx:if="{{member.permissions.canChangeRole || member.permissions.canRemove}}">
       <view class="member-section-title">成员管理</view>
-      <button wx:if="{{member.permissions.canChangeRole}}" class="member-action" bindtap="changeRole" disabled="{{saving}}" hover-class="member-pressed"><view class="action-copy"><text class="action-title">调整角色</text><text class="action-description">{{member.role === 'member' ? '将组员设为组长' : '将组长调整为组员'}}</text></view><text class="member-chevron">›</text></button>
+      <button wx:if="{{member.permissions.canChangeRole}}" class="member-action" bindtap="changeRole" disabled="{{saving}}" hover-class="member-pressed"><view class="action-copy"><text class="action-title">调整角色</text><text class="action-description">{{member.role === 'member' ? '将组员设为组长' : '将' + roleName + '调整为组员'}}</text></view><text class="member-chevron">›</text></button>
       <button wx:if="{{member.permissions.canRemove}}" class="member-action member-remove" bindtap="openRemove" disabled="{{saving}}" hover-class="member-pressed"><view class="action-copy"><text class="action-title">移出维修组</text><text class="action-description">撤销组内权限，保留历史记录</text></view><text class="member-chevron">›</text></button>
     </view>
   </block>

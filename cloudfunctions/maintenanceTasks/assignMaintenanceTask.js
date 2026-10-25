@@ -11,10 +11,15 @@ const db = cloud.database()
  * @param {string} OPENID - 用户openid
  * @returns {Object} 返回认领结果
  */
-exports.assignMaintenanceTask = async (params, OPENID) => {
+exports.assignMaintenanceTask = async (params = {}, OPENID) => {
   try {
+    if (!OPENID) return { code: 401, data: null, message: '请先登录' }
+    if (!params || typeof params !== 'object' || Array.isArray(params) ||
+        (params.assigneeId !== undefined && (typeof params.assigneeId !== 'string' || !params.assigneeId.trim()))) {
+      return { code: 400, data: null, message: '认领参数格式错误' }
+    }
     // 检查参数
-    if (!params.maintenanceTaskId) {
+    if (typeof params.maintenanceTaskId !== 'string' || !params.maintenanceTaskId.trim()) {
       return {
         code: 400,
         data: null,
@@ -24,13 +29,23 @@ exports.assignMaintenanceTask = async (params, OPENID) => {
     
     // 认领人ID，如果没有传入则使用当前用户ID
     const assigneeId = params.assigneeId || OPENID
+    const callers = await db.collection('users').where({ openid: OPENID }).limit(2).get()
+    const caller = callers.data.length === 1 ? callers.data[0] : null
+    if (!caller || !['member', 'leader', 'admin'].includes(caller.role) ||
+        (assigneeId !== OPENID && !['leader', 'admin'].includes(caller.role))) {
+      return { code: 403, data: null, message: '无权认领或代其他成员分配任务' }
+    }
+    const targets = assigneeId === OPENID ? callers : await db.collection('users').where({ openid: assigneeId }).limit(2).get()
+    if (targets.data.length !== 1 || !['member', 'leader', 'admin'].includes(targets.data[0].role)) {
+      return { code: 403, data: null, message: '受理人已不是维修组成员' }
+    }
     
     // 检查认领人权限（从 proUsers 集合获取，更高效）
     const userResult = await db.collection('proUsers').where({
       openid: assigneeId
     }).get()
     
-    if (userResult.data.length === 0) {
+    if (userResult.data.length !== 1) {
       return {
         code: 403,
         data: null,

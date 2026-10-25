@@ -17,10 +17,9 @@ async function caller(db, openid) {
   if (!user || !['leader', 'admin'].includes(user.role) || user.membershipStatus === 'removed') fail('只有组长及管理员可以管理组员', 403)
   return user
 }
-function permissions(actor, target) {
-  const editable = actor.openid !== target.openid && target.role !== 'admin' &&
-    (actor.role === 'admin' || target.role === 'member')
-  return { canEdit: editable, canRemove: editable, canChangeRole: editable && actor.role === 'admin' }
+function permissions(actor) {
+  const editable = ['leader', 'admin'].includes(actor.role) && actor.membershipStatus !== 'removed'
+  return { canEdit: editable, canRemove: editable, canChangeRole: editable }
 }
 function present(user, pro = {}, actor) {
   const result = { userId: user._id, openid: user.openid, role: user.role,
@@ -134,7 +133,7 @@ async function handle(db, action, params, openid) {
         return { success: true, code: 200, message: '操作已完成', data: previous.result }
       }
       const user = await target(tx, userId)
-      if (!permissions(currentActor, user).canEdit) fail('不能修改自己、管理员或同级组长', 403)
+      if (!permissions(currentActor, user).canEdit) fail('只有组长及管理员可以管理组员', 403)
       if ((user.version || 0) !== version) fail('资料已被更新，请刷新后重新编辑', 409)
       const pro = await one(tx, 'proUsers', { openid: user.openid })
       if (!pro) fail('成员资料不完整，请让该成员重新登录后再操作', 409)
@@ -146,7 +145,7 @@ async function handle(db, action, params, openid) {
         if ('department' in changes && changes.department !== before.department &&
             Date.now() - (pro.lastDepartmentChangeTime || 0) < 3600000) fail('部门切换冷却中，请一小时后再操作', 409)
       } else if (action === 'changeMemberRole') {
-        if (currentActor.role !== 'admin' || !['member', 'leader'].includes(params.role)) fail('只有管理员可以任免组长', 403)
+        if (!['member', 'leader'].includes(params.role)) fail('请选择有效的组内角色')
         if (user.role === params.role) fail('角色未发生变化')
         changes = { role: params.role, roleManaged: true }
       } else if (action === 'removeTeamMember') {

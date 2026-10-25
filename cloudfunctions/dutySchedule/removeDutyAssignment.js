@@ -151,6 +151,7 @@ exports.removeDutyAssignment = async (event, openid) => {
           weekNumber: slot.weekNumber,
           year: slot.year,
           wasConfirmed: !!(slot.dutyHolderName && slot.dutyHolderName !== ''),
+          dutyStatus: slot.dutyStatus,
           originalAssignedUser: slot.assignedUser || slot.dutyHolderId,
           originalAssignedName: slot.dutyHolderName || '预选状态'
         })

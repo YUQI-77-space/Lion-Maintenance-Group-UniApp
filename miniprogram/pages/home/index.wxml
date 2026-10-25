@@ -1,7 +1,5 @@
-<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
-<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!--pages/home/index.wxml-->
-<!-- 乳白毛玻璃导航栏，按胶囊位置避让 -->
+<!-- 导航栏独立于滚动容器，保持固定并按胶囊位置避让 -->
 <view class="custom-navbar {{navScrolled ? 'is-scrolled' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
@@ -9,6 +7,8 @@
   </view>
 </view>
 
+<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!-- 顶部复位内边距：首屏从导航栏下方开始，轮播图完整可见，
      不会被顶部毛玻璃吞掉 -->
 <view class="home-container" style="padding-top: {{navBarHeight}}px; padding-bottom: {{tabbarHeight + 16}}px;">

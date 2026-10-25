@@ -1,160 +1,66 @@
 // 值班EW管理模块
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
-const db = cloud.database()
+const db = cloud.database({ throwOnNotFound: false })
 
 // 默认每次值班的EW值
 const DEFAULT_DUTY_EW_PER_SLOT = 2
+const { createHash } = require('crypto')
 
-/**
- * 为用户添加值班EW
- * @param {string} openid - 用户openid
- * @param {number} slotCount - 值班时间段数量 
- * @param {number} ewPerSlot - 每个时间段的EW值，默认为2
- * @returns {Object} 操作结果
- */
-exports.addDutyEW = async (openid, slotCount = 1, ewPerSlot = DEFAULT_DUTY_EW_PER_SLOT) => {
+// 由状态事务调用：沿用历史文档ID和manual字段，只改值班展示值与加权总分。
+exports.adjustDutyEW = async (transaction, summaryId, openid, delta, userName = '') => {
+  if (!Number.isFinite(delta)) throw new Error('工作量增量无效')
+  const ref = transaction.collection('ewaSummary').doc(summaryId)
+  const { data: existing } = await ref.get()
+  if (existing && existing.ewaUserId !== openid) throw new Error('工作量记录归属异常')
+  const current = existing || { maintenanceEW: 0, volunteerEW: 0, dutyEW: 0 }
+  const values = ['maintenanceEW', 'volunteerEW', 'dutyEW'].map(key => {
+    const value = current[key] === undefined ? 0 : current[key]
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 300) {
+      throw new Error('历史工作量数值异常，请先核查，未自动覆盖')
+    }
+    return value
+  })
+  const dutyEW = Math.round(Math.max(0, Math.min(300, values[2] + delta)) * 100) / 100
+  const totalEW = Math.round((values[0] * 0.5 + values[1] * 0.4 + dutyEW * 0.1) * 100) / 100
+  const data = { dutyEW, totalEW, updateTime: db.serverDate() }
+  if (existing) await ref.update({ data })
+  else await ref.set({ data: { ewaUserId: openid, ewaUserName: userName,
+    maintenanceEW: 0, volunteerEW: 0, ...data, createTime: db.serverDate() } })
+  return dutyEW - values[2]
+}
+
+exports.findDutySummaryId = async openid => {
+  const result = await db.collection('ewaSummary').where({ ewaUserId: openid }).limit(2).get()
+  if (result.data.length > 1) throw new Error('工作量存在重复记录，请先核查')
+  return result.data.length ? result.data[0]._id : 'ewa_' + createHash('sha256').update(openid).digest('hex')
+}
+
+async function changeDutyEW(openid, slotCount, ewPerSlot, remove) {
+  let transaction
   try {
-    console.log(`[dutyEWManager] 为用户 ${openid} 添加值班EW，时间段数量: ${slotCount}，每段EW: ${ewPerSlot}`)
-    
-    const ewToAdd = slotCount * ewPerSlot
-    
-    // 获取用户信息
-    const userResult = await db.collection('users').where({
-      openid: openid
-    }).get()
-    
-    if (userResult.data.length === 0) {
-      return {
-        success: false,
-        message: '用户信息不存在'
-      }
-    }
-    
-    const user = userResult.data[0]
-    
-    // 查询用户的EWA汇总记录
-    const summaryResult = await db.collection('ewaSummary').where({
-      ewaUserId: openid
-    }).get()
-    
-    if (summaryResult.data.length > 0) {
-      // 更新现有记录
-      const currentSummary = summaryResult.data[0]
-      const newDutyEW = (currentSummary.dutyEW || 0) + ewToAdd
-      const newTotalEW = (currentSummary.maintenanceEW || 0) + (currentSummary.volunteerEW || 0) + newDutyEW
-      
-      await db.collection('ewaSummary').where({
-        ewaUserId: openid
-      }).update({
-        data: {
-          dutyEW: newDutyEW,
-          totalEW: newTotalEW,
-          updateTime: new Date()
-        }
-      })
-      
-      console.log(`[dutyEWManager] 更新现有记录：用户 ${openid}，新增值班EW: ${ewToAdd}，总值班EW: ${newDutyEW}`)
-    } else {
-      // 创建新记录
-      const newSummary = {
-        ewaUserId: openid,
-        ewaUserName: user.nickName || '',
-
-
-        maintenanceEW: 0,
-        volunteerEW: 0,
-        dutyEW: ewToAdd,
-        totalEW: ewToAdd,
-        createTime: new Date(),
-        updateTime: new Date()
-      }
-      
-      await db.collection('ewaSummary').add({
-        data: newSummary
-      })
-      
-      console.log(`[dutyEWManager] 创建新记录：用户 ${openid}，值班EW: ${ewToAdd}`)
-    }
-    
-    return {
-      success: true,
-      ewAdded: ewToAdd,
-      slotCount: slotCount,
-      message: `成功添加${ewToAdd}点值班EW`
-    }
-    
-  } catch (err) {
-    console.error('[dutyEWManager] 添加值班EW失败：', err)
-    return {
-      success: false,
-      message: err.message || '添加值班EW失败'
-    }
+    if (typeof openid !== 'string' || !openid || !Number.isInteger(slotCount) || slotCount < 0 ||
+        !Number.isFinite(ewPerSlot) || ewPerSlot < 0) throw new Error('工作量参数无效')
+    const users = await db.collection('users').where({ openid }).limit(2).get()
+    if (users.data.length !== 1) throw new Error('用户身份异常')
+    const summaryId = await exports.findDutySummaryId(openid)
+    transaction = await db.startTransaction()
+    const delta = await exports.adjustDutyEW(transaction, summaryId, openid,
+      slotCount * ewPerSlot * (remove ? -1 : 1), users.data[0].nickName || '')
+    await transaction.commit()
+    transaction = null
+    return { success: true, [remove ? 'ewRemoved' : 'ewAdded']: Math.abs(delta), slotCount, message: '值班工作量已更新' }
+  } catch (error) {
+    if (transaction) await transaction.rollback().catch(() => {})
+    return { success: false, message: error.message || '更新工作量失败' }
   }
 }
 
-/**
- * 为用户扣除值班EW
- * @param {string} openid - 用户openid
- * @param {number} slotCount - 值班时间段数量
- * @param {number} ewPerSlot - 每个时间段的EW值，默认为2
- * @returns {Object} 操作结果
- */
-exports.removeDutyEW = async (openid, slotCount = 1, ewPerSlot = DEFAULT_DUTY_EW_PER_SLOT) => {
-  try {
-    console.log(`[dutyEWManager] 为用户 ${openid} 扣除值班EW，时间段数量: ${slotCount}，每段EW: ${ewPerSlot}`)
-    
-    const ewToRemove = slotCount * ewPerSlot
-    
-    // 查询用户的EWA汇总记录
-    const summaryResult = await db.collection('ewaSummary').where({
-      ewaUserId: openid
-    }).get()
-    
-    if (summaryResult.data.length === 0) {
-      console.log(`[dutyEWManager] 用户 ${openid} 没有EWA记录，无需扣除`)
-      return {
-        success: true,
-        ewRemoved: 0,
-        message: '用户没有EWA记录，无需扣除'
-      }
-    }
-    
-    const currentSummary = summaryResult.data[0]
-    const currentDutyEW = currentSummary.dutyEW || 0
-    const newDutyEW = Math.max(0, currentDutyEW - ewToRemove) // 确保不会变成负数
-    const actualRemoved = currentDutyEW - newDutyEW
-    
-    const newTotalEW = (currentSummary.maintenanceEW || 0) + (currentSummary.volunteerEW || 0) + newDutyEW
-    
-    await db.collection('ewaSummary').where({
-      ewaUserId: openid
-    }).update({
-      data: {
-        dutyEW: newDutyEW,
-        totalEW: newTotalEW,
-        updateTime: new Date()
-      }
-    })
-    
-    console.log(`[dutyEWManager] 扣除值班EW：用户 ${openid}，扣除EW: ${actualRemoved}，剩余值班EW: ${newDutyEW}`)
-    
-    return {
-      success: true,
-      ewRemoved: actualRemoved,
-      slotCount: slotCount,
-      message: `成功扣除${actualRemoved}点值班EW`
-    }
-    
-  } catch (err) {
-    console.error('[dutyEWManager] 扣除值班EW失败：', err)
-    return {
-      success: false,
-      message: err.message || '扣除值班EW失败'
-    }
-  }
-}
-
+// 状态结算使用同一事务中的adjustDutyEW；兼容内部已有增减接口。
+exports.addDutyEW = (openid, slotCount = 1, ewPerSlot = DEFAULT_DUTY_EW_PER_SLOT) =>
+  changeDutyEW(openid, slotCount, ewPerSlot, false)
+exports.removeDutyEW = (openid, slotCount = 1, ewPerSlot = DEFAULT_DUTY_EW_PER_SLOT) =>
+  changeDutyEW(openid, slotCount, ewPerSlot, true)
 /**
  * 批量处理用户值班EW扣除（用于清除操作）
  * @param {Array} dutySlots - 包含用户信息的值班时间段数组
@@ -169,6 +75,8 @@ exports.batchRemoveDutyEW = async (dutySlots, ewPerSlot = DEFAULT_DUTY_EW_PER_SL
     const userEWMap = {}
     
     dutySlots.forEach(slot => {
+      // 确认不等于已入账；删除未来排班不能扣掉其他历史工作量。
+      if (slot.dutyStatus !== 'ended') return
       const userId = slot.assignedUser || slot.dutyHolderId || slot.originalAssignedUser
       if (userId) {
         userEWMap[userId] = (userEWMap[userId] || 0) + 1
