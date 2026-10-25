@@ -1,11 +1,3 @@
-<!-- 加载动画组件 -->
-<view class="mg-theme loading-animation {{size}} {{customClass}}">
-  <view class="typing-indicator">
-    <view class="typing-circle"></view>
-    <view class="typing-circle"></view>
-    <view class="typing-circle"></view>
-    <view class="typing-shadow"></view>
-    <view class="typing-shadow"></view>
-    <view class="typing-shadow"></view>
-  </view>
+<view class="mg-theme loading-animation {{size}} {{inverse ? 'inverse' : ''}} {{paused ? 'paused' : ''}} {{reducedMotion ? 'static' : ''}} {{customClass}}" aria-role="status" aria-label="{{label}}">
+  <view class="loading-stage" aria-hidden="true"><view class="loading-square"></view><view class="loading-square"></view></view>
 </view>

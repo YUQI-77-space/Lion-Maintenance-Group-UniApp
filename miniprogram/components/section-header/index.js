@@ -15,6 +15,11 @@ Component({
       type: String,
       value: ''
     },
+    // 标题右侧的只读说明，例如计数或单位
+    meta: {
+      type: String,
+      value: ''
+    },
     // 是否显示更多
     showMore: {
       type: Boolean,

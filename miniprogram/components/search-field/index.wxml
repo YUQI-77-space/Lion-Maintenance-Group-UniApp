@@ -1,0 +1,11 @@
+<view class="mg-theme">
+  <label wx:if="{{label}}" class="field-label" for="search-input">{{label}}</label>
+  <view class="search-field">
+    <button class="search-action" bindtap="onConfirm" hover-class="action-pressed" aria-label="搜索">
+      <image wx:if="{{!iconFailed}}" class="search-glyph" src="/assets/icons/search.svg" mode="aspectFit" binderror="onIconError" aria-hidden="true" />
+      <icon wx:else type="search" size="16" color="#626D80" aria-hidden="true" />
+    </button>
+    <input id="search-input" class="search-input" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="search-placeholder" maxlength="{{maxlength}}" confirm-type="search" aria-label="{{label || placeholder}}" bindinput="onInput" bindconfirm="onConfirm" bindfocus="onFocus" bindblur="onBlur" />
+    <button wx:if="{{value}}" class="search-action clear-action" bindtap="onClear" hover-class="action-pressed" aria-label="清空搜索">清空</button>
+  </view>
+</view>

@@ -3,7 +3,8 @@
   <view class="section-title-wrap">
     <text class="section-title {{titleClass}}">{{ title }}</text>
   </view>
-  <button
+  <text class="section-meta" wx:if="{{ meta }}">{{ meta }}</text>
+  <button size="mini"
     class="section-more" 
     wx:if="{{showMore}}" 
     bindtap="onMoreTap"

@@ -9,8 +9,8 @@
   background: var(--mg-color-bg-page);
   color: var(--mg-color-text-primary);
   font-family: var(--mg-font-family);
-  font-size: 15px;
-  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  font-size: var(--mg-font-body);
+
   line-height: 1.6;
 }
 
@@ -37,8 +37,8 @@
   border: var(--mg-border-width) solid transparent;
   border-radius: var(--mg-radius-control);
   font-family: var(--mg-font-family);
-  font-size: 15px;
-  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  font-size: var(--mg-font-body);
+
   font-weight: var(--mg-weight-medium);
   line-height: 1.6;
   white-space: normal;
@@ -95,8 +95,8 @@
   border: var(--mg-border-width) solid var(--mg-color-control-border);
   border-radius: var(--mg-radius-control);
   font-family: var(--mg-font-family);
-  font-size: 15px;
-  font-size: max(var(--mg-font-body-min), var(--mg-font-body));
+  font-size: var(--mg-font-body);
+
   color: var(--mg-color-text-primary);
   background: var(--mg-color-bg-surface);
 }

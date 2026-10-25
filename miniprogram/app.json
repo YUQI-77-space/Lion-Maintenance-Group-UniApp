@@ -47,7 +47,10 @@
       "desc": "您的位置信息将用于定位活动地点"
     }
   },
-  "usingComponents": {},
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index",
+    "loading-overlay": "/components/loading-overlay/index"
+  },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "darkmode": false,

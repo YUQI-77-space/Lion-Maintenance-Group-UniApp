@@ -1,0 +1,7 @@
+<view wx:if="{{visible}}" class="mg-theme waiting-layer" aria-role="alert" aria-label="{{title}}">
+  <view wx:if="{{mask}}" class="waiting-mask" catchtouchmove="block" catchtap="block"></view>
+  <view class="waiting-panel" catchtouchmove="block" catchtap="block">
+    <loading-animation id="waiting-animation" label="{{title}}" />
+
+  </view>
+</view>

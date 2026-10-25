@@ -1,7 +1,8 @@
 @import "../../styles/design-tokens.wxss";
 
+:host { display: block; width: 100%; height: 100%; border-radius: inherit; }
 .skeleton-wrapper { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: inherit; font-family: var(--mg-font-family); background: var(--mg-color-bg-subtle); }
-.skeleton-placeholder, .error-placeholder { box-sizing: border-box; position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: var(--mg-space-2); color: var(--mg-color-text-muted); background: var(--mg-color-bg-subtle); font-size: 12px; font-size: max(12px, var(--mg-font-caption)); line-height: 1.5; text-align: center; }
+.skeleton-placeholder, .error-placeholder { box-sizing: border-box; position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: var(--mg-space-2); color: var(--mg-color-text-muted); background: var(--mg-color-bg-subtle); font-size: var(--mg-font-caption); line-height: 1.5; text-align: center; }
 .actual-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity var(--mg-motion-selection) var(--mg-motion-easing); }
 .actual-image.visible { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .actual-image { transition: none; } }

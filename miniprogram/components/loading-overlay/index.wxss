@@ -1,0 +1,4 @@
+@import "/styles/design-tokens.wxss";
+.waiting-layer { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1100; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+.waiting-mask { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: auto; background: var(--mg-color-scrim); }
+.waiting-panel { position: relative; pointer-events: auto; display: flex; flex-direction: column; align-items: center; width: 96px; min-height: 96px; padding: 16px; box-sizing: border-box; border-radius: var(--mg-radius-card); background: var(--mg-color-bg-surface); box-shadow: var(--mg-shadow-overlay); }

@@ -19,7 +19,7 @@
         disabled="{{isConfirming}}"
       >
         <text wx:if="{{!isConfirming}}">确认收到</text>
-        <text wx:else>确认中...</text>
+        <loading-animation wx:else size="small" />
       </button>
     </view>
   </view>

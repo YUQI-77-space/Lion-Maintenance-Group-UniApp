@@ -74,7 +74,10 @@ test('六页显式接入、组件隔离内自带 Token；阶段3后全局使用�
 
 test('区块标题保留属性与 more 事件，原生更多按钮不引入路由', () => {
   const { definition, instance, events } = component('section-header');
-  assert.deepEqual(Object.keys(definition.properties), ['title', 'titleClass', 'customClass', 'showMore', 'moreText', 'showArrow']);
+  assert.deepEqual(Object.keys(definition.properties), ['title', 'titleClass', 'customClass', 'meta', 'showMore', 'moreText', 'showArrow']);
+  assert.equal(definition.properties.meta.type.name, 'String');
+  assert.equal(definition.properties.meta.value, '');
+  assert.match(read('components/section-header/index.wxml'), /<text class="section-meta" wx:if="{{ meta }}">{{ meta }}<\/text>/);
   instance.onMoreTap();
   assert.deepEqual(events, [['more']]);
   assert.match(read('components/section-header/index.wxml'), /<button[\s\S]*?bindtap="onMoreTap"/);
@@ -97,12 +100,12 @@ test('头像保留全部属性、原点击许可与事件内容、失败回退�
   assert.equal(instance.data.displayAvatarUrl, '/images/default/default-avatar.png');
 });
 
-test('图片保留父页放行、完成／失败事件及默认属性，仅更新占位色', () => {
+test('图片自动展示，保留完成／失败事件、默认属性与旧放行方法兼容', () => {
   const { definition, instance, events } = component('skeleton-image');
   assert.deepEqual(Object.keys(definition.properties), ['src', 'mode', 'lazyLoad', 'placeholderColor']);
   assert.equal(instance.properties.placeholderColor, tokens.color['bg-subtle']);
   instance.onImageLoad({ detail: { width: 800, height: 600 } });
-  assert.equal(instance.data.showRealImage, false);
+  assert.equal(instance.data.showRealImage, true);
   assert.equal(events[0][0], 'imageloadcomplete');
   assert.equal(events[0][1].width, 800);
   instance.onImageLoad({ detail: {} });
@@ -112,6 +115,9 @@ test('图片保留父页放行、完成／失败事件及默认属性，仅更�
   instance.onImageError({});
   assert.equal(instance.data.loadError, true);
   assert.equal(instance.data.loaded, false);
+  assert.equal(instance.data.showRealImage, false);
+  instance.showImage();
+  assert.equal(instance.data.showRealImage, false);
   assert.equal(events[1][0], 'imageloadcomplete');
   assert.equal(events[1][1].error, true);
   assert.doesNotMatch(read('components/skeleton-image/index.wxss'), /infinite|@keyframes/);

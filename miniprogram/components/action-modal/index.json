@@ -1,1 +1,6 @@
-{"component": true}
+{
+  "component": true,
+  "usingComponents": {
+    "loading-animation": "/components/loading-animation/index"
+  }
+}

@@ -1,4 +1,4 @@
-/* 设计值：docs/知识库/Design/design-tokens.json v1.2.0。
+/* 设计值：docs/知识库/Design/design-tokens.json v1.3.0。
    页面全局接入；隔离组件显式导入并在根容器挂 mg-theme。 */
 page, .mg-theme {
   --mg-color-brand: #0369D7;
@@ -27,20 +27,22 @@ page, .mg-theme {
   --mg-color-neutral-soft: #EEF1F5;
   --mg-color-scrim: rgba(24,34,48,0.48);
 
+  font-family: var(--mg-font-family);
+
   --mg-font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --mg-font-display: 48rpx;
-  --mg-line-display: 60rpx;
-  --mg-font-title: 40rpx;
-  --mg-line-title: 56rpx;
-  --mg-font-section: 34rpx;
-  --mg-line-section: 48rpx;
-  --mg-font-body: 30rpx;
-  --mg-line-body: 46rpx;
+  --mg-font-display: 22px;
+  --mg-line-display: 28px;
+  --mg-font-title: 18px;
+  --mg-line-title: 26px;
+  --mg-font-section: 16px;
+  --mg-line-section: 24px;
+  --mg-font-body: 15px;
+  --mg-line-body: 23px;
   --mg-font-body-min: 15px;
-  --mg-font-label: 28rpx;
-  --mg-line-label: 40rpx;
-  --mg-font-caption: 24rpx;
-  --mg-line-caption: 36rpx;
+  --mg-font-label: 13px;
+  --mg-line-label: 20px;
+  --mg-font-caption: 12px;
+  --mg-line-caption: 18px;
   --mg-weight-regular: 400;
   --mg-weight-medium: 500;
   --mg-weight-semibold: 600;

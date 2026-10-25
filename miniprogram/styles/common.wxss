@@ -76,11 +76,11 @@
 .text-danger { color: var(--danger); }
 .text-primary-color { color: var(--primary); }
 
-.text-title { font-size: var(--font-title); font-weight: 600; }
-.text-subtitle { font-size: var(--font-subtitle); font-weight: 500; }
-.text-body { font-size: var(--font-body); }
-.text-caption { font-size: var(--font-caption); }
-.text-hint { font-size: var(--font-hint); }
+.text-title { font-size: var(--mg-font-title); line-height: var(--mg-line-title); font-weight: 600; }
+.text-subtitle { font-size: var(--mg-font-section); line-height: var(--mg-line-section); font-weight: 600; }
+.text-body { font-size: var(--mg-font-body); }
+.text-caption { font-size: var(--mg-font-caption); }
+.text-hint { font-size: var(--mg-font-caption); }
 
 .text-center { text-align: center; }
 .text-right { text-align: right; }
@@ -137,13 +137,13 @@
 }
 
 .section-title {
-  font-size: var(--font-subtitle);
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .section-title-with-border {
-  font-size: var(--font-subtitle);
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
   padding-left: var(--space-sm);
@@ -151,7 +151,7 @@
 }
 
 .section-more {
-  font-size: var(--font-caption);
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
 }
 
@@ -161,7 +161,7 @@
   align-items: center;
   justify-content: center;
   padding: 20rpx 32rpx;
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   border-radius: var(--radius-btn);
   background: var(--mg-color-bg-surface);
   min-width: 48px; min-height: 48px;
@@ -229,12 +229,12 @@
 
 .btn-small {
   padding: 12rpx 20rpx;
-  font-size: var(--font-caption);
+  font-size: var(--mg-font-caption);
 }
 
 .btn-large {
   padding: 24rpx 40rpx;
-  font-size: var(--font-subtitle);
+  font-size: var(--mg-font-body);
 }
 
 .btn-disabled {
@@ -264,7 +264,7 @@
 }
 
 .entry-title {
-  font-size: var(--font-caption);
+  font-size: var(--mg-font-body);
   color: var(--text-primary);
   margin-top: var(--space-xs);
   text-align: center;
@@ -322,18 +322,18 @@
 }
 
 .list-item-title {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--text-primary);
 }
 
 .list-item-desc {
-  font-size: var(--font-caption);
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 4rpx;
 }
 
 .list-item-arrow {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--text-muted);
   margin-left: var(--space-sm);
 }
@@ -346,7 +346,7 @@
   display: block;
   margin-bottom: var(--space-xs);
   color: var(--text-primary);
-  font-size: var(--font-body);
+  font-size: var(--mg-font-label);
 }
 
 .form-label-required::after {
@@ -364,7 +364,7 @@
   border-radius: var(--radius-btn);
   background: var(--bg-card);
   color: var(--text-primary);
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   box-sizing: border-box;
 }
 
@@ -380,7 +380,7 @@
   border-radius: var(--radius-btn);
   background: var(--bg-card);
   color: var(--text-primary);
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   box-sizing: border-box;
 }
 
@@ -394,7 +394,7 @@
   padding: 4rpx 12rpx;
   border: 1px solid currentColor;
   border-radius: var(--radius-tag);
-  font-size: var(--font-hint);
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   background: transparent;
 }
@@ -484,7 +484,7 @@
 }
 
 .empty-text {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--text-muted);
   text-align: center;
 }
@@ -495,20 +495,6 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-xl);
-}
-
-.loading-spinner {
-  width: 48rpx;
-  height: 48rpx;
-  border: 3rpx solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 /* ==================== 动画 ==================== */
@@ -535,10 +521,10 @@
 }
 
 .btn[disabled] { background: var(--mg-color-bg-subtle); color: var(--mg-color-text-muted); border-color: var(--mg-color-border); opacity: 1; }
-.text-body, .form-input, .form-textarea, .list-item-title { font-size: 15px; font-size: max(15px, var(--mg-font-body)); }
+.text-body, .form-input, .form-textarea, .list-item-title { font-size: var(--mg-font-body); }
 .tag { border: 0; background: var(--mg-color-neutral-soft); color: var(--mg-color-neutral); line-height: 1.5; }
 .tag-primary { color: var(--mg-color-info); background: var(--mg-color-info-soft); }
 .tag-success { color: var(--mg-color-success); background: var(--mg-color-success-soft); }
 .tag-warning { color: var(--mg-color-warning); background: var(--mg-color-warning-soft); }
 .tag-danger { color: var(--mg-color-danger); background: var(--mg-color-danger-soft); }
-@media (prefers-reduced-motion: reduce) { .fade-in, .loading-spinner { animation: none; } .btn, .entry-item { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .fade-in, .btn, .entry-item { transition: none; } }

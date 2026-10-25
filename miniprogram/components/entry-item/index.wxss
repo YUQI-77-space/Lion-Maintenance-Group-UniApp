@@ -34,7 +34,8 @@
 
 /* 标题 */
 .entry-title {
-  font-size: var(--font-caption);
+  font-size: var(--mg-font-label);
+  line-height: var(--mg-line-label);
   color: var(--text-primary);
   margin-top: var(--space-xs);
   text-align: center;
@@ -46,7 +47,7 @@
 
 /* 描述 */
 .entry-desc {
-  font-size: var(--font-hint);
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 4rpx;
   text-align: center;
@@ -60,7 +61,7 @@
   min-width: 32rpx;
   height: 32rpx;
   padding: 0 8rpx;
-  font-size: 20rpx;
+  font-size: var(--mg-font-caption);
   color: #fff;
   background: var(--danger);
   border-radius: 16rpx;
@@ -97,7 +98,8 @@
 }
 
 .entry-item-small .entry-title {
-  font-size: var(--font-hint);
+  font-size: var(--mg-font-label);
+  line-height: var(--mg-line-label);
 }
 
 .entry-item-large {
@@ -110,13 +112,14 @@
 }
 
 .entry-item-large .entry-title {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-label);
+  line-height: var(--mg-line-label);
 }
 
 /* 功能入口 - 强调品牌色 */
 .entry-item-primary .entry-title {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .entry-item { min-height: 48px; }

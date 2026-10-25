@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "status": "design-reference",
   "updatedAt": "2026-10-24",
   "platform": "wechat-native-miniprogram",
@@ -7,7 +7,7 @@
   "notes": [
     "这是本项目的设计参考格式，不是 W3C Design Tokens 标准格式，也不是可直接导入的 WXSS。",
     "品牌主蓝已由用户提供的两张官方标志确认为 #0369D7；不能以 Skill 推荐色板替换。",
-    "布局按 750rpx 基准；系统测量和最小热区使用 px，不能直接混加。",
+    "布局按 750rpx 基准；文字字号与行高固定 px，避免随窗口宽度膨胀；系统测量和最小热区使用 px，不能直接混加。",
     "透明色、图片覆盖文字需按实际合成结果另测对比度。"
   ],
   "brandIdentity": {
@@ -87,12 +87,12 @@
   },
   "typography": {
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-    "display": { "fontSize": "48rpx", "lineHeight": "60rpx", "fontWeight": 600 },
-    "title": { "fontSize": "40rpx", "lineHeight": "56rpx", "fontWeight": 600 },
-    "section": { "fontSize": "34rpx", "lineHeight": "48rpx", "fontWeight": 600 },
-    "body": { "fontSize": "30rpx", "lineHeight": "46rpx", "fontWeight": 400, "minFontSizePx": 15 },
-    "label": { "fontSize": "28rpx", "lineHeight": "40rpx", "fontWeight": 400 },
-    "caption": { "fontSize": "24rpx", "lineHeight": "36rpx", "fontWeight": 400 },
+    "display": { "fontSize": "22px", "lineHeight": "28px", "fontWeight": 600 },
+    "title": { "fontSize": "18px", "lineHeight": "26px", "fontWeight": 600 },
+    "section": { "fontSize": "16px", "lineHeight": "24px", "fontWeight": 600 },
+    "body": { "fontSize": "15px", "lineHeight": "23px", "fontWeight": 400, "minFontSizePx": 15 },
+    "label": { "fontSize": "13px", "lineHeight": "20px", "fontWeight": 400 },
+    "caption": { "fontSize": "12px", "lineHeight": "18px", "fontWeight": 400 },
     "weights": { "regular": 400, "medium": 500, "semibold": 600 }
   },
   "space": { "micro": "4rpx", "1": "8rpx", "2": "16rpx", "3": "24rpx", "4": "32rpx", "6": "48rpx", "8": "64rpx" },
@@ -104,7 +104,7 @@
     "touch-target-min": "48px", "touch-gap-min": "8px",
     "icon-sm": "32rpx", "icon-md": "40rpx", "icon-lg": "48rpx",
     "avatar-sm": "64rpx", "avatar-md": "88rpx", "avatar-lg": "120rpx",
-    "tabbar-content": "56px"
+    "tabbar-content": "60px"
   },
   "layout": { "page-gutter": "32rpx", "page-gutter-compact": "24rpx", "card-padding": "32rpx", "section-gap": "32rpx", "chapter-gap": "48rpx", "field-label-gap": "12rpx", "field-error-gap": "8rpx", "scroll-bottom-extra": "16px" },
   "motion": { "pressMs": 100, "selectionMs": 160, "overlayMs": 220, "easing": "ease-out", "reducedMotion": "none" },

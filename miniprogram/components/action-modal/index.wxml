@@ -3,6 +3,6 @@
     <view wx:if="{{bottom}}" class="modal-handle" />
     <view class="modal-heading"><view class="modal-title">{{title}}</view><view wx:if="{{subtitle}}" class="modal-subtitle">{{subtitle}}</view></view>
     <scroll-view class="modal-body" scroll-y><slot /></scroll-view>
-    <view class="modal-actions"><button class="modal-button modal-cancel" bindtap="cancel" disabled="{{loading}}">{{cancelText}}</button><button class="modal-button modal-confirm {{danger ? 'modal-danger' : ''}}" bindtap="confirm" loading="{{loading}}" disabled="{{loading || disabled}}">{{loading ? '正在提交' : confirmText}}</button></view>
+    <view class="modal-actions"><button class="modal-button modal-cancel" bindtap="cancel" disabled="{{loading}}">{{cancelText}}</button><button class="modal-button modal-confirm {{danger ? 'modal-danger' : ''}}" bindtap="confirm" disabled="{{loading || disabled}}"><loading-animation wx:if="{{loading}}" size="small" /><text wx:else>{{confirmText}}</text></button></view>
   </view>
 </view>

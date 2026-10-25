@@ -1,0 +1,13 @@
+@import "/styles/design-tokens.wxss";
+:host { display: block; min-width: 0; }
+.field-label { display: block; margin-bottom: 12rpx; color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
+/* 可见框高 40px；外层与原生控件保留 48px 热区，文字大小不决定框高。 */
+.search-field { position: relative; box-sizing: border-box; display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 8rpx 0 0; }
+.search-field::before { content: ""; position: absolute; top: 4px; right: 0; bottom: 4px; left: 0; border: 1px solid var(--mg-color-control-border); border-radius: 999rpx; background: var(--mg-color-bg-surface); pointer-events: none; }
+.search-field > button, .search-field > input { position: relative; }
+.search-action { flex: 0 0 48px; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin: 0; padding: 0; border: 0; border-radius: 999rpx; background: transparent; color: var(--mg-color-text-muted); font-size: var(--mg-font-label); line-height: var(--mg-line-label); white-space: nowrap; }
+.search-action::after { border: 0; }
+.search-glyph { display: block; width: 16px; height: 16px; }
+.search-input { flex: 1; min-width: 0; width: 0; height: 48px; margin: 0; padding: 0; background: transparent; color: var(--mg-color-text-primary); font-size: var(--mg-font-label); font-weight: 400; line-height: var(--mg-line-label); }
+.search-placeholder { color: var(--mg-color-text-muted); font-size: var(--mg-font-label); font-weight: 400; }
+.action-pressed { opacity: 0.65; }

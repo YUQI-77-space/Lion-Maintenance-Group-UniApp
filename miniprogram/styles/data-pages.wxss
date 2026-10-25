@@ -10,10 +10,10 @@
   border: 0; box-shadow: none;
 }
 .mg-data-page .task-title, .mg-data-page .activity-title, .mg-data-page .hero-title,
-.mg-data-page .msg-title, .mg-data-page .member-card-name { color: var(--mg-color-text-primary); font-size: 15px; font-size: max(15px,30rpx); line-height: 1.55; white-space: normal; overflow-wrap: break-word; height: auto; }
-.mg-data-page .info-value, .mg-data-page .meta-value, .mg-data-page .description-content { font-size: 15px; font-size: max(15px,30rpx); line-height: 1.6; overflow-wrap: break-word; min-width: 0; }
+.mg-data-page .msg-title, .mg-data-page .member-card-name { color: var(--mg-color-text-primary); font-size: var(--mg-font-body); line-height: 1.55; white-space: normal; overflow-wrap: break-word; height: auto; }
+.mg-data-page .info-value, .mg-data-page .meta-value, .mg-data-page .description-content { font-size: var(--mg-font-body); line-height: 1.6; overflow-wrap: break-word; min-width: 0; }
 .mg-data-page .info-label, .mg-data-page .meta-label, .mg-data-page .member-caption,
-.mg-data-page .activity-id, .mg-data-page .task-id { color: var(--mg-color-text-secondary); line-height: 1.55; }
+.mg-data-page .activity-id, .mg-data-page .task-id { font-size: var(--mg-font-label); color: var(--mg-color-text-secondary); line-height: 1.55; }
 .mg-data-page .info-item, .mg-data-page .info-row { gap: 16rpx; }
 .mg-data-page .card-header, .mg-data-page .task-footer, .mg-data-page .participants-header { flex-wrap: wrap; gap: 16rpx; }
 .mg-data-page .card-info, .mg-data-page .hero-main, .mg-data-page .member-card-info { min-width: 0; }
@@ -24,7 +24,10 @@
 .mg-data-page .status-inPreparation { color: var(--mg-color-info); background: var(--mg-color-info-soft); }
 .mg-data-page .status-completed, .mg-data-page .task-status.completed, .mg-data-page .status-pill.completed { color: var(--mg-color-success); background: var(--mg-color-success-soft); }
 .mg-data-page .status-cancelled, .mg-data-page .status-ended, .mg-data-page .task-status.cancelled { color: var(--mg-color-neutral); background: var(--mg-color-neutral-soft); }
-.mg-data-page .task-card, .mg-data-page .activity-card, .mg-data-page .card { animation: none; transform: none; }
+/* 禁用旧入场动画时同步恢复可见初态，避免卡片停在页面定义的 opacity: 0。 */
+.mg-data-page .task-card, .mg-data-page .activity-card, .mg-data-page .card,
+.mg-data-page .task-card.card-animate, .mg-data-page .activity-card.card-animate,
+.mg-data-page .card.card-animate { opacity: 1; animation: none; transform: none; }
 .mg-data-page .sidebar-item, .mg-data-page .tab-item, .mg-data-page .filter-item,
 .mg-data-page .toolbar-btn, .mg-data-page .text-btn, .mg-data-page .close-btn,
 .mg-data-page .modal-close, .mg-data-page .remove-selected-btn, .mg-data-page .pill-button,
@@ -36,7 +39,7 @@
 .mg-data-page .modal-textarea, .mg-data-page .per-ew-input {
   border: 1px solid var(--mg-color-control-border); border-radius: var(--mg-radius-control);
   background: var(--mg-color-bg-surface); color: var(--mg-color-text-primary);
-  min-height: 48px; font-size: 15px; font-size: max(15px,30rpx);
+  min-height: 48px; font-size: var(--mg-font-body);
 }
 .mg-data-page .form-textarea, .mg-data-page .modal-textarea { min-height: 192rpx; }
 .mg-data-page .confirm-btn, .mg-data-page .btn-confirm, .mg-data-page .btn-claim,
@@ -55,12 +58,12 @@
 .mg-data-page .modal-body { overflow-y: auto; min-height: 0; max-height: 50vh; }
 .mg-data-page .modal-mask, .mg-data-page .import-sheet-mask, .mg-data-page .assignee-drawer-mask { background: var(--mg-color-scrim); }
 .mg-data-page .modal-footer, .mg-data-page .modal-foot, .mg-data-page .per-ew-footer { gap: 8px; padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); }
-.mg-page-notice { padding: 24rpx; margin: 16rpx 0; border-radius: 16rpx; background: var(--mg-color-info-soft); color: var(--mg-color-info); font-size: 15px; line-height: 1.6; overflow-wrap: break-word; }
+.mg-page-notice { padding: 24rpx; margin: 16rpx 0; border-radius: 16rpx; background: var(--mg-color-info-soft); color: var(--mg-color-info); font-size: var(--mg-font-body); line-height: 1.6; overflow-wrap: break-word; }
 .mg-page-notice--error { color: var(--mg-color-danger); background: var(--mg-color-danger-soft); }
 .mg-page-notice button { margin-top: 16rpx; }
 .mg-data-page .podium-container, .mg-data-page .podium-item { background: var(--mg-color-bg-surface); box-shadow: none; }
 .mg-data-page .podium-item.first, .mg-data-page .podium-item.second, .mg-data-page .podium-item.third { background: var(--mg-color-bg-surface); color: var(--mg-color-text-primary); box-shadow: none; }
-.mg-data-page .hero-title { font-size: var(--mg-font-title); font-weight: 600; line-height: 1.4; }
+.mg-data-page .hero-title { font-size: var(--mg-font-title); font-weight: 600; line-height: var(--mg-line-title); }
 .mg-data-page .directory-search, .mg-data-page .search-input-container, .mg-data-page .search-box { border: 1px solid var(--mg-color-control-border); min-height: 48px; box-shadow: none; background: var(--mg-color-bg-surface); }
 .mg-data-page .directory-clear, .mg-data-page .directory-filter, .mg-data-page .filter-reset { min-width: 48px; min-height: 48px; }
 .mg-data-page .sidebar > view { min-height: 48px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
@@ -90,7 +93,7 @@
 
 .mg-data-page .btn-submit, .mg-data-page .settings-btn { min-height: 48px; min-width: 48px; height: auto; }
 .mg-data-page .btn-outline, .mg-data-page .btn-outline-black, .mg-data-page .btn-outline-green, .mg-data-page .participant-action-btn, .mg-data-page .section-action-btn { border-color: var(--mg-color-control-border); }
-.mg-data-page .edit-input, .mg-data-page .remove-reason, .mg-data-page .department-picker { min-height: 48px; border-color: var(--mg-color-control-border); font-size: 15px; }
+.mg-data-page .edit-input, .mg-data-page .remove-reason, .mg-data-page .department-picker { min-height: 48px; border-color: var(--mg-color-control-border); font-size: var(--mg-font-body); }
 
 .mg-data-page .btn-submit, .mg-data-page .settings-btn.primary { color: var(--mg-color-on-brand); background: var(--mg-color-brand); border-color: var(--mg-color-brand); }
 .mg-data-page .settings-btn.ghost { color: var(--mg-color-text-primary); background: var(--mg-color-bg-surface); border-color: var(--mg-color-control-border); }

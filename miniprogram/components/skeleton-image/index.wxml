@@ -1,6 +1,6 @@
-<!-- 图片仍由父页调用 showImage 放行；只统一加载与失败外观。 -->
+<!-- 固定占位尺寸，单张图片完成后立即展示，不等待其他图片。 -->
 <view class="skeleton-wrapper mg-theme {{showRealImage ? 'loaded' : ''}} {{loadError ? 'has-error' : ''}}">
-  <view class="skeleton-placeholder" wx:if="{{!showRealImage && !loadError}}" style="background-color: {{placeholderColor}}"><text>图片加载中</text></view>
-  <image class="actual-image {{showRealImage ? 'visible' : ''}}" src="{{src}}" mode="{{mode}}" lazy-load="{{lazyLoad}}" bindload="onImageLoad" binderror="onImageError" />
-  <view class="error-placeholder" wx:if="{{loadError}}"><text>图片暂不可用</text></view>
+  <view class="skeleton-placeholder" wx:if="{{src && !showRealImage && !loadError}}" style="background-color: {{placeholderColor}}" aria-label="图片加载中"></view>
+  <image wx:if="{{src}}" class="actual-image {{showRealImage ? 'visible' : ''}}" src="{{src}}" mode="{{mode}}" lazy-load="{{lazyLoad}}" bindload="onImageLoad" binderror="onImageError" />
+  <view class="error-placeholder" wx:if="{{loadError || !src}}"><text>图片暂不可用</text></view>
 </view>

@@ -2,11 +2,11 @@
 .modal-mask { position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 32rpx; box-sizing: border-box; background: var(--mg-color-scrim); }
 .modal-panel { width: 100%; max-width: 660rpx; max-height: 100%; background: #fff; border-radius: 24rpx; overflow: hidden; display: flex; flex-direction: column; box-sizing: border-box; }
 .modal-heading { padding: 36rpx 32rpx 24rpx; flex-shrink: 0; }
-.modal-title { color: var(--mg-color-text-primary); font-size: 36rpx; font-weight: 600; line-height: 1.4; }
-.modal-subtitle { margin-top: 12rpx; font-size: 24rpx; color: var(--mg-color-text-secondary); }
+.modal-title { color: var(--mg-color-text-primary); font-size: var(--mg-font-section); font-weight: 600; line-height: var(--mg-line-section); }
+.modal-subtitle { margin-top: 12rpx; font-size: var(--mg-font-caption); color: var(--mg-color-text-secondary); }
 .modal-body { height: 560rpx; min-height: 0; max-height: 50vh; flex-shrink: 1; }
 .modal-actions { display: flex; gap: 20rpx; padding: 28rpx 32rpx 32rpx; flex-shrink: 0; }
-.modal-button { flex: 1; min-width: 0; width: 100%; height: auto; min-height: 48px; padding-top: 16rpx; padding-bottom: 16rpx; margin: 0; padding: 0 12rpx; display: flex; align-items: center; justify-content: center; border-radius: 16rpx; font-size: 28rpx; font-weight: 500; line-height: 1.4; box-sizing: border-box; }
+.modal-button { flex: 1; min-width: 0; width: 100%; height: auto; min-height: 48px; padding-top: 16rpx; padding-bottom: 16rpx; margin: 0; padding: 0 12rpx; display: flex; align-items: center; justify-content: center; border-radius: 16rpx; font-size: var(--mg-font-body); font-weight: 500; line-height: 1.4; box-sizing: border-box; }
 .modal-button::after { border: none; }
 .modal-cancel { background: var(--mg-color-bg-surface); color: var(--mg-color-text-primary); }
 .modal-confirm { background: var(--mg-color-brand); color: #fff; }

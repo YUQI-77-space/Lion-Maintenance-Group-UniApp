@@ -3,9 +3,8 @@
 
 /* 全局样式设置 */
 page {
-  font-size: 15px;
-  font-size: max(15px, var(--mg-font-body));
-  line-height: 1.55;
+  font-size: var(--mg-font-body);
+  line-height: var(--mg-line-body);
   color: var(--text-main);
   background-color: var(--background-color);
   box-sizing: border-box;
@@ -18,6 +17,11 @@ page {
 
 view, text, scroll-view, swiper, navigator {
   box-sizing: border-box;
+}
+
+button, input, textarea {
+  font-family: inherit;
+  font-size: var(--mg-font-body);
 }
 
 button {
@@ -48,3 +52,7 @@ button::after {
   background: var(--mg-color-bg-surface); z-index: 200;
   border-top: 1px solid var(--mg-color-border);
 }
+
+/* 所有刷新区共用加载动画，隐藏平台默认转圈。 */
+.unified-page-scroll { height: 100vh; width: 100%; }
+.unified-refresher { height: 45px; display: flex; align-items: center; justify-content: center; }

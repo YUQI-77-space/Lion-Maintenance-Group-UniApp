@@ -10,11 +10,9 @@
 .avatar-xlarge { width: 200rpx; height: 200rpx; }
 .with-border { border: var(--mg-border-width) solid var(--mg-color-border); }
 .avatar-image { position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; border-radius: inherit; }
-.avatar-fallback, .avatar-loading { position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: var(--mg-color-bg-subtle); color: var(--mg-color-text-muted); font-size: 12px; font-size: max(12px, var(--mg-font-caption)); line-height: 1.5; }
-.avatar-loading { z-index: 1; }
+.avatar-fallback { position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: var(--mg-color-bg-subtle); color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); line-height: 1.5; }
 .avatar-placeholder-head { position: absolute; width: 24%; height: 24%; top: 20%; left: 38%; border-radius: var(--mg-radius-avatar); background: var(--mg-color-text-muted); }
 .avatar-placeholder-body { position: absolute; width: 52%; height: 32%; left: 24%; bottom: 18%; border-radius: var(--mg-radius-pill); background: var(--mg-color-text-muted); }
-.avatar-loading-ring { width: 40%; height: 40%; border: 2px solid var(--mg-color-border); border-top-color: var(--mg-color-brand); border-radius: var(--mg-radius-avatar); }
 .click-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; opacity: 0; background: var(--mg-color-brand); color: var(--mg-color-on-brand); transition: opacity var(--mg-motion-press) var(--mg-motion-easing); }
 .avatar-pressed .click-overlay { opacity: 1; }
 .click-hint { font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); }

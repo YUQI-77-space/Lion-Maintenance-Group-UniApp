@@ -24,14 +24,15 @@
 .navbar-logo {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 0;
+  border-radius: 50%;
+  overflow: hidden;
   margin-right: var(--space-sm);
   flex-shrink: 0;
 }
 
 /* === 标题 === */
 .navbar-title {
-  font-size: var(--font-subtitle);
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 1rpx;
@@ -58,7 +59,7 @@
 }
 
 .navbar-back-text {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--primary);
 }
 
@@ -71,7 +72,7 @@
 }
 
 .navbar-action {
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--primary);
 }
 
@@ -90,7 +91,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: var(--font-body);
+  font-size: var(--mg-font-body);
   color: var(--text-secondary);
   position: relative;
 }

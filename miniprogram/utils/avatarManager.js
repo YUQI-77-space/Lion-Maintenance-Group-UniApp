@@ -1,3 +1,4 @@
+const loadingFeedback = require('./loading');
 /**
  * 头像管理工具
  * 专门处理用户头像的上传、缓存和展示
@@ -176,7 +177,7 @@ class AvatarManager {
 
         const waitTime = Math.min(config.baseDelay * Math.pow(2, attempt - 1), config.maxDelay);
 
-        wx.showLoading({
+        loadingFeedback.show({
           title: `网络不稳定，正在重试(${attempt}/${safeMaxRetries})...`,
           mask: true
         });
@@ -485,14 +486,14 @@ class AvatarManager {
    */
   async handleAvatarUpload(tempFilePath, openid, oldFileID) {
     try {
-      wx.showLoading({
+      loadingFeedback.show({
         title: '正在上传头像...',
         mask: true
       });
 
       const isNetworkAvailable = await this.checkNetworkStatus();
       if (!isNetworkAvailable) {
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showModal({
           title: '网络连接异常',
           content: '当前网络不可用，请检查网络连接后重试',
@@ -508,7 +509,7 @@ class AvatarManager {
       const uploadResult = await this.uploadAvatarToCloud(tempFilePath, openid);
 
       if (!uploadResult.success) {
-        wx.hideLoading();
+        loadingFeedback.hide();
 
         if (this.isNetworkError({ message: uploadResult.error })) {
           const res = await new Promise(resolve => {
@@ -549,7 +550,7 @@ class AvatarManager {
         this.saveAvatarUrlToLocalStorage(uploadResult.fileID, uploadResult.avatarUrl);
       }
 
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: '头像上传成功',
         icon: 'success'
@@ -564,7 +565,7 @@ class AvatarManager {
       };
 
     } catch (error) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       console.error('处理头像上传失败', error);
 
       const errorMessage = this.isNetworkError(error)
