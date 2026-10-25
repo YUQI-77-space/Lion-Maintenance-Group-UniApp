@@ -1,6 +1,8 @@
 {
   "navigationBarTitleText": "组员管理",
   "usingComponents": {
-    "avatar-display": "/components/avatar-display/index"
+    "avatar-display": "/components/avatar-display/index",
+    "search-field": "/components/search-field/index",
+    "loading-animation": "/components/loading-animation/index"
   }
 }

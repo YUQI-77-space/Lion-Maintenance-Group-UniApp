@@ -101,7 +101,7 @@ Page({
   onShow: function () {
     this.checkUserRole();
     const tab = this.getTabBar && this.getTabBar();
-    tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+    tab && tab.setSelectedByRoute && tab.setSelectedByRoute(this.route);
   },
 
   // 用户权限检查
@@ -127,7 +127,7 @@ Page({
         content: '您不是维修组成员，无法访问此页面',
         showCancel: false,
         success: function (res) {
-          wx.switchTab({ url: '/pages/user/profile/index' });
+          require('../../../utils/router').userRouter.toProfile();
         }
       });
     }

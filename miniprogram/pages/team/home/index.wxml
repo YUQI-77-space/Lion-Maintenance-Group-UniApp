@@ -43,4 +43,5 @@
 </view>
 
 <!-- 装饰猪猪图标 - 放置在页面下方空白区域 -->
-<!-- <image class="pig-decoration" src="/images/icons/pig.png" mode="aspectFit" />  --> 
+<!-- <image class="pig-decoration" src="/images/icons/pig.png" mode="aspectFit" />  -->
+<loading-overlay id="global-loading" />

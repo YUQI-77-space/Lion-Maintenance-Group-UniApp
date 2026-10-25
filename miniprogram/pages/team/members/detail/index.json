@@ -2,6 +2,7 @@
   "navigationBarTitleText": "组员详情",
   "usingComponents": {
     "avatar-display": "/components/avatar-display/index",
-    "action-modal": "/components/action-modal/index"
+    "action-modal": "/components/action-modal/index",
+    "loading-animation": "/components/loading-animation/index"
   }
 }

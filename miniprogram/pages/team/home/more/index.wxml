@@ -6,12 +6,7 @@
     <view class="page-description" wx:if="{{type === 'manage'}}">按职责进入管理，妥善安排每一项工作。</view>
   </view>
   <view class="search-container">
-    <label class="search-label mg-label" for="function-search">查找功能</label>
-    <view class="search-box mg-input">
-      <image class="search-icon" src="{{iconSearch}}" mode="aspectFit" aria-hidden="true"></image>
-      <input id="function-search" class="search-input" placeholder="输入功能名称" value="{{searchKeyword}}" bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search" placeholder-class="search-placeholder" />
-      <button class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch" hover-class="control-pressed" aria-label="清除搜索">清除</button>
-    </view>
+    <search-field value="{{searchKeyword}}" placeholder="输入功能名称" label="查找功能" bindinput="onSearchInput" bindconfirm="onSearchConfirm" bindclear="clearSearch" />
   </view>
   <view class="function-grid">
     <button class="function-item mg-surface" wx:for="{{functions}}" wx:key="id" bindtap="navigateTo" data-path="{{item.path}}" hover-class="item-pressed">
@@ -30,3 +25,4 @@
     <view class="empty-description">可通过左上角返回维修组工作台。</view>
   </view>
 </view>
+<loading-overlay id="global-loading" />

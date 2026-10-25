@@ -17,3 +17,4 @@
   </view>
   <view class="resource-footer">提供更好的服务，遇见更好的自己。</view>
 </view>
+<loading-overlay id="global-loading" />

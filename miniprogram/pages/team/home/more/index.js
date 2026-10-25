@@ -9,7 +9,6 @@ Page({
     allFunctions: [], // 所有功能列表（未筛选）
     searchKeyword: '', // 搜索关键词
     // 图标资源
-    iconSearch: iconManager.get('common_search'),
     iconClose: iconManager.get('common_close'),
     iconEmpty: iconManager.get('common_empty'),
     // 日常功能配置

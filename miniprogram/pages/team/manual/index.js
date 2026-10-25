@@ -12,10 +12,6 @@ Page({
     this.checkUserPermission();
   },
 
-  onShow: function () {
-    
-  },
-
   // 检查用户权限
   checkUserPermission: function () {
     const app = getApp();
