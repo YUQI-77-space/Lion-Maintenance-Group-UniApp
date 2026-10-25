@@ -52,10 +52,11 @@ test('胶囊与屏幕安全区统一口径，缺少系统 API 仍有标准栏高
     vm.runInNewContext(read('utils/layout.js'),ctx);
     const layout = ctx.module.exports.getLayout();
     assert.equal(layout.safeBottom,34);
-    assert.equal(layout.tabbarHeight,90);
+    assert.equal(layout.tabbarHeight,110);
     assert.equal(layout.navBarHeight,87);
     ctx.wx = {};
     assert.equal(ctx.module.exports.getLayout().navBarHeight,64);
+    assert.equal(ctx.module.exports.getLayout().tabbarHeight,76);
     return ctx.module.exports;
   })();
   assert.equal(typeof getLayout,'function');
@@ -64,7 +65,11 @@ test('胶囊与屏幕安全区统一口径，缺少系统 API 仍有标准栏高
 test('TabBar 连点只切一次，完成后释放锁，非法路径不导航', () => {
   let complete;
   const urls=[];
-  const { instance } = harness('custom-tab-bar/index.js', { wx: { switchTab: options => { urls.push(options.url); complete=options.complete; } } });
+  const wx = { switchTab: options => { urls.push(options.url); complete=options.complete; } };
+  const context = { module: { exports: {} }, wx, getCurrentPages: () => [{ route: 'pages/home/index' }], require: () => ({}), console };
+  vm.runInNewContext(read('utils/router.js'), context);
+  const router = context.module.exports;
+  const { instance } = harness('custom-tab-bar/index.js', { wx, modules: { '../utils/router': router } });
   instance.data.tabs=[{ pagePath: 'pages/home/index' },{ pagePath: 'pages/repair/index' }];
   const event={ currentTarget: { dataset: { url: '/pages/repair/index', index: 1 } } };
   instance.onTap(event); instance.onTap(event);
@@ -72,7 +77,7 @@ test('TabBar 连点只切一次，完成后释放锁，非法路径不导航', (
   complete();
   instance.onTap({ currentTarget: { dataset: { url: '/pages/team/home/index' } } });
   assert.equal(urls.length,1);
-  assert.equal(instance._switching,false);
+  assert.equal(router.isTabSwitching(),false);
 });
 
 test('entry-item 只分发原事件，不直接跳转', () => {
@@ -82,6 +87,23 @@ test('entry-item 只分发原事件，不直接跳转', () => {
   instance.onTap({});
   assert.equal(events[0][0],'tap');
   assert.equal(events[0][1].index,2);
+});
+
+test('我的首次 onLoad/onShow 只刷新一批资料与反馈；不重复提交未变计数', () => {
+  const { instance } = harness('pages/user/profile/index.js');
+  const calls = [];
+  instance.route = 'pages/user/profile/index';
+  instance.getTabBar = () => ({ setSelectedByRoute: route => calls.push(route) });
+  instance.getUserInfo = () => calls.push('user');
+  instance.checkPendingFeedbackMessages = () => calls.push('feedback');
+  instance.applyDepartmentFromGlobal = () => {};
+  const patches = [];
+  const setData = instance.setData.bind(instance);
+  instance.setData = patch => { patches.push(patch); setData(patch); };
+  instance.onLoad();
+  instance.onShow();
+  assert.deepEqual(calls, ['pages/user/profile/index', 'user', 'feedback']);
+  assert.equal(patches.length, 0);
 });
 
 test('报修锁覆盖订阅授权，拒绝通知仍只创建一次，超时保留核对与输入', async () => {
@@ -110,13 +132,30 @@ test('报修成功仅使用真实 ID；共享适用字段保留、无效字段�
   assert.equal(instance.data.currentStep,5); assert.equal(instance.data.submittedTaskId,'real-test-id');
 });
 
-test('EWA 100/50/20 加权贡献为 50/20/2，总分保持后端72；0与缺失区分', () => {
-  const normal=display.summarize([{ maintenanceEW:100,volunteerEW:50,dutyEW:20,totalEW:72 }]);
-  assert.deepEqual(normal.rows.map(row=>row.contribution),[50,20,2]); assert.equal(normal.totalText,'72');
-  const zero=display.summarize([{maintenanceEW:0,volunteerEW:0,dutyEW:0,totalEW:0}]);
-  assert.equal(zero.totalText,'0'); assert.equal(zero.hasMissing,false);
-  const missing=display.summarize([{maintenanceEW:0,volunteerEW:null,dutyEW:0}]);
-  assert.equal(missing.rows[1].valueText,'—'); assert.equal(missing.totalText,'—');
+
+test('EWA 编辑数值工具保留真实零、缺失与非法值语义', () => {
+  for (const value of [null, undefined, '', '非法', NaN, Infinity]) {
+    assert.equal(display.number(value), null);
+    assert.equal(display.format(value), '—');
+  }
+  assert.equal(display.number('0'), 0);
+  assert.equal(display.format(0), '0');
+  assert.equal(display.number('12.5'), 12.5);
+  assert.equal(display.format(12.345), '12.35');
+});
+
+test('EWA 统计路由、入口、汇总代码及失去调用的图表完整移除', () => {
+  const app = JSON.parse(read('app.json'));
+  assert.ok(!app.pages.includes('pages/team/ewa/summary/index'));
+  assert.equal(fs.existsSync(path.resolve('miniprogram/pages/team/ewa/summary')), false);
+  assert.equal(fs.existsSync(path.resolve('miniprogram/components/charts')), false);
+  assert.doesNotMatch(read('pages/team/ewa/manage/index.js'), /goToSummary|ewa\/summary/);
+  assert.doesNotMatch(read('pages/team/ewa/manage/index.wxml'), /查看统计|goToSummary|ewa-footer/);
+  assert.deepEqual(Object.keys(display).sort(), ['format', 'number']);
+  for (const action of ['getRanking', 'updateUserEW', 'updateSummary', 'exportExcel']) {
+    assert.ok(read('pages/team/ewa/manage/index.js').includes("action: '" + action + "'"));
+    assert.ok(fs.readFileSync(path.resolve('cloudfunctions/equivalentWorkloadAssessment/index.js'), 'utf8').includes("case '" + action + "'"));
+  }
 });
 
 test('志愿筛选旧响应不覆盖新响应，追加失败不推进页码', async () => {
@@ -174,8 +213,8 @@ test('下拉 EWA 只读，不执行重算；管理保存取消不写接口', asy
   await instance.saveUserEW();assert.equal(calls.length,0);assert.equal(instance.data.savingEW,false);
 });
 
-test('全部注册路由保留；本次新增相对 require 与样式导入均可解析', () => {
-  const app=JSON.parse(read('app.json'));assert.equal(app.pages.length,31);
+test('移除统计后其余注册路由完整，样式导入均可解析', () => {
+  const app=JSON.parse(read('app.json'));assert.equal(app.pages.length,30);
   for (const page of app.pages) for (const ext of ['js','json','wxml','wxss']) assert.ok(fs.existsSync(path.resolve('miniprogram',page+'.'+ext)));
   function walk(dir) { return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory() && !['images','config','node_modules'].includes(entry.name) ? walk(path.join(dir,entry.name)) : entry.isFile() ? [path.join(dir,entry.name)] : []); }
   for (const file of walk(path.resolve('miniprogram'))) {
@@ -210,12 +249,6 @@ test('旧身份与无身份归属的队列不能自动重放', async () => {
   await queue.processQueue();assert.equal(calls,0);assert.equal(storage.length,1);assert.equal(storage[0].status,'failed');
 });
 
-test('EWA 汇总读取全部分页，失败不伪造 0 或抹掉已展示内容', async () => {
-  let fail=false;
-  const {instance,calls}=harness('pages/team/ewa/summary/index.js',{call:async(name,payload)=>fail?{success:false,message:'汇总失败'}:{success:true,data:{list:payload.params.page===1?Array.from({length:100},()=>({maintenanceEW:0,volunteerEW:0,dutyEW:0,totalEW:0})):[{maintenanceEW:100,volunteerEW:50,dutyEW:20,totalEW:72}],total:101}}});
-  await instance.fetchSummary();assert.equal(calls.length,2);assert.equal(instance.data.totalUsers,101);assert.equal(instance.data.totalText,'72');
-  fail=true;await instance.fetchSummary();assert.equal(instance.data.totalText,'72');assert.equal(instance.data.loadError,'汇总失败');
-});
 
 test('值班刷新遇到他人锁或占用时不再把失效的本地预选显示为可提交', () => {
   const {instance}=harness('pages/team/duty/roster/index.js');
@@ -241,4 +274,110 @@ test('EWA 调整缺失字段不能被空字符串自动保存为0', async () => 
   const {instance,calls}=harness('pages/team/ewa/manage/index.js');
   instance.data.editUser={ewaUserId:'sample',maintenanceEW:'',volunteerEW:0,dutyEW:0};
   await instance.saveUserEW();assert.equal(calls.length,0);assert.equal(instance.data.savingEW,false);
+});
+
+
+test('首页轮播随页面显示自动恢复，无手动暂停入口；荣誉宽度匹配实际图片高度', () => {
+  const { instance } = harness('pages/home/index.js');
+  instance.initHomeWidgets = () => {};
+  instance.startDutyTicker = () => {};
+  instance.stopDutyTicker = () => {};
+  instance.onShow();
+  assert.equal(instance.data.pageVisible, true);
+  instance.onHide();
+  assert.equal(instance.data.pageVisible, false);
+  instance.onShow();
+  assert.equal(instance.data.pageVisible, true);
+  assert.equal('bannerPaused' in instance.data, false);
+  assert.equal('honorsPaused' in instance.data, false);
+  assert.equal(instance.toggleBannerPause, undefined);
+  assert.equal(instance.toggleHonorsPause, undefined);
+  const markup = read('pages/home/index.wxml');
+  assert.match(markup, /autoplay="{{pageVisible}}"/);
+  assert.match(markup, /conveyor-track {{!pageVisible \? 'paused' : ''}}/);
+  assert.doesNotMatch(markup, /toggleBannerPause|toggleHonorsPause|banner-control|honors-control|暂停轮播|继续轮播/);
+  instance.data.teamHonors = [{ id: 'portrait', displayWidth: 200 }];
+  instance.onHonorImageLoad({ currentTarget: { dataset: { id: 'portrait' } }, detail: { width: 600, height: 900 } });
+  assert.equal(instance.data.teamHonors[0].displayWidth, 160);
+  assert.equal(instance.data.conveyorWidth, 176);
+  assert.equal(instance.getConveyorWidth([{displayWidth:160},{displayWidth:240}]), 432);
+});
+
+
+test('首页重建后即使 App 已标记加载，仍恢复当前页缺失的荣誉数据', () => {
+  const { instance, app } = harness('pages/home/index.js');
+  app._homeDataLoaded = true;
+  let scheduled = 0;
+  instance.initSwiperImages = () => {};
+  instance.scheduleContentLoad = () => { scheduled++; };
+  instance.initHomeWidgets = () => {};
+  instance.onLoad({});
+  assert.equal(scheduled, 1);
+});
+
+
+test('EWA 刷新排队后只展示和缓存最后结果，移除搜索参数', async () => {
+  const first=deferred(); const writes=[];
+  const {instance,calls}=harness('pages/team/ewa/manage/index.js',{
+    wx:{setStorageSync:(key,value)=>writes.push(value)},
+    call:async(name,payload)=>payload.params.pageSize===30?first.promise:{success:true,data:{list:[{ewaUserId:'new',totalEW:2}],total:1}}
+  });
+  const initial=instance.fetchUsers({pageSize:30});
+  await instance.fetchUsers({pageSize:100});
+  first.resolve({success:true,data:{list:[{ewaUserId:'old',totalEW:1}],total:1}});
+  await initial; await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(calls.length,2); assert.equal(instance.data.users[0].ewaUserId,'new');
+  assert.equal(writes.length,1); assert.equal(instance.data.loading,false);
+  assert.equal(writes[0].users[0].ewaUserId,'new');
+  assert.ok(calls.every(call=>!('search' in call.payload.params)));
+  await instance.fetchUsers({pageSize:100}); assert.equal(writes.length,2); assert.equal(writes[1].totalCount,1);
+});
+
+test('EWA 下拉菜单先收起再执行选项，忙碌与无权限时不分发操作', () => {
+  const {instance}=harness('pages/team/ewa/manage/index.js');
+  const actions=[];
+  instance.data.hasPermission=true;
+  instance.updateAllEW=()=>{assert.equal(instance.data.showDataMenu,false);actions.push('refresh');};
+  instance.exportEWData=()=>{assert.equal(instance.data.showDataMenu,false);actions.push('export');};
+  const choose=action=>instance.onDataMenuAction({currentTarget:{dataset:{action}}});
+  instance.toggleDataMenu(); assert.equal(instance.data.showDataMenu,true);
+  choose('refresh'); instance.toggleDataMenu(); choose('export');
+  instance.toggleDataMenu(); instance.closeDataMenu(); assert.equal(instance.data.showDataMenu,false);
+  instance.data.exporting=true; instance.toggleDataMenu(); choose('refresh');
+  assert.equal(instance.data.showDataMenu,false);
+  instance.data.exporting=false; instance.data.hasPermission=false;
+  instance.toggleDataMenu(); choose('export');
+  assert.equal(instance.data.showDataMenu,false);
+  assert.deepEqual(actions,['refresh','export']);
+});
+
+test('EWA 下线统计后调整、重新汇总和导出仍分发原接口', async () => {
+  let confirmation;
+  const downloads = [];
+  const {instance,calls} = harness('pages/team/ewa/manage/index.js', {
+    wx: {
+      showModal: async options => { if (options.success) confirmation = options.success; return {confirm:true}; },
+      downloadFile: options => { downloads.push(options.url); options.complete(); }
+    },
+    call: async (name,payload) => ({success:true,data:payload.action === 'exportExcel' ? {fileUrl:'https://example.invalid/test.xlsx'} : {}})
+  });
+  instance.fetchUsers = async () => {};
+  instance.data.editUser = {ewaUserId:'sample',ewaUserName:'示例',maintenanceEW:0,volunteerEW:0,dutyEW:0};
+  await instance.saveUserEW();
+  assert.equal(calls[0].payload.action,'updateUserEW');
+  assert.equal(calls[0].payload.params.maintenanceEW,0);
+  assert.equal(calls[0].payload.config.retries,0);
+  for (const invalid of ['', -1, 301, '非法']) {
+    instance.data.editUser.maintenanceEW = invalid;
+    await instance.saveUserEW();
+  }
+  assert.equal(calls.length,1);
+  instance.updateAllEW(); await confirmation({confirm:true});
+  assert.equal(calls[1].payload.action,'updateSummary');
+  assert.equal(calls[1].payload.config.retries,0);
+  assert.equal(instance.data.updatingEW,false);
+  await instance.exportEWData();
+  assert.equal(calls[2].payload.action,'exportExcel');
+  assert.deepEqual(downloads,['https://example.invalid/test.xlsx']);
+  assert.equal(instance.data.exporting,false);
 });
