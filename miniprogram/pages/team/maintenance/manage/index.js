@@ -12,7 +12,15 @@ const STATUS_MAP = {
   cancelled: '已取消'
 };
 
-// const theme = require('../../../../utils/theme');
+// 首屏、分页及离线缓存统一派生展示字段，不改写业务时间。
+function formatTask(task) {
+  const createTime = time.toDate(task.createTime);
+  return {
+    ...task,
+    taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态',
+    createTimeFormatted: createTime && !isNaN(createTime.getTime()) ? time.formatToMinute(createTime) : '暂无记录'
+  };
+}
 
 Page({
 
@@ -20,7 +28,6 @@ Page({
    * 页面的初始数据
    */
   data: {
-    themeClass: '',
     activeTab: 'all', // 当前激活的选项卡
     activeTabName: '', // 当前选项卡名称
     allTasks: [], // 所有任务
@@ -71,14 +78,7 @@ Page({
     this.loadMaintenanceTasks(true);
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
   retryList() { return this.data.appendFailed ? this.loadMoreTasks() : this.loadMaintenanceTasks(true); },
-  onReady() {
-
-  },
-
   /**
    * 生命周期函数--监听页面显示
    */
@@ -90,25 +90,6 @@ Page({
     }
     this._isFirstLoad = false;
   },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {},
 
 // scroll-view 下拉刷新
 onRefresherRefresh: function() {
@@ -226,10 +207,7 @@ onRefresherRefresh: function() {
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
-        const tasks = tasksData.map(task => ({
-          ...task,
-          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
-        }));
+        const tasks = tasksData.map(formatTask);
         const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : tasks.length >= this.data.pageSize;
         this.setData({
           allTasks: tasks,
@@ -248,7 +226,7 @@ onRefresherRefresh: function() {
       console.error('获取维修任务列表失败', err);
       if (cached && cached.exists) {
         // 使用缓存结果兜底展示，同时给出提示
-        this.setData({ allTasks: cached.data });
+        this.setData({ allTasks: cached.data.map(formatTask) });
         this.filterTasksByStatus(this.data.activeTab);
         wx.showToast({ title: '网络异常，已展示上次数据', icon: 'none' });
       } else {
@@ -279,10 +257,7 @@ onRefresherRefresh: function() {
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
-        const newTasks = tasksData.map(task => ({
-          ...task,
-          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
-        }));
+        const newTasks = tasksData.map(formatTask);
         if (newTasks.length > 0) {
           const merged = [...this.data.allTasks, ...newTasks.filter(task => !this.data.allTasks.some(old => old.maintenanceTaskId === task.maintenanceTaskId))];
           const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : newTasks.length >= this.data.pageSize;
@@ -414,306 +389,6 @@ onRefresherRefresh: function() {
     // 导航到任务详情页面，添加fromManage参数标识来源
     wx.navigateTo({
       url: '../detail/index?taskId=' + task.maintenanceTaskId + '&fromManage=true'
-    });
-  },
-
-  // 旧版管理列表操作（已迁移至管理详情页，页面不再调用）
-  // 设置EW值
-  setEW: function(e) {
-    const task = e.currentTarget.dataset.task;
-
-    const ew = Number(task.ew || 0.5);
-    this.setData({
-      currentTask: task,
-      ewValue: ew,
-      ewInputText: ew % 1 === 0 ? ew.toString() : Number(ew.toFixed(2)).toString(),
-      showEWModal: true
-    });
-  },
-
-  // EW滑块实时变化
-  onEWSliderChanging: function(e) {
-    const value = Number(e.detail.value) || 0.5
-    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() })
-  },
-
-  // EW滑块值变化（最终）
-  onEWSliderChange: function(e) {
-    const value = Number(e.detail.value) || 0.5
-    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() })
-  },
-
-  // EW文本输入变化（仅更新受控文本，不立即归一化）
-  onEWInputChange: function(e) {
-    const text = e.detail.value
-    this.setData({ ewInputText: text })
-  },
-
-  // 文本框失焦时做归一化（范围与步长）并回填至显示
-  onEWInputBlur: function() {
-    let value = parseFloat(this.data.ewInputText)
-    if (isNaN(value)) value = 0.5
-    value = Math.min(10, Math.max(0.5, value))
-    value = Math.round(value / 0.5) * 0.5
-    this.setData({ ewValue: value, ewInputText: value % 1 === 0 ? value.toString() : Number(value.toFixed(2)).toString() })
-  },
-
-  // 取消设置EW
-  cancelEWSetting: function() {
-    this.setData({
-      showEWModal: false,
-      currentTask: null,
-      ewValue: 0.5,
-      ewInputText: '0.5'
-    });
-  },
-
-  // 阻止穿透滚动（空处理器即可拦截）
-  preventTouchMove: function() {
-    return
-  },
-
-  // 确认设置EW
-  async confirmEWSetting() {
-    if (this.data.operationBusy) return;
-    this.setData({ operationBusy: true });
-    try { return await this._guardedConfirmEWSetting(); }
-    finally { this.setData({ operationBusy: false }); }
-  },
-  async _guardedConfirmEWSetting() {
-    if (!this.data.currentTask) return;
-
-    const taskId = this.data.currentTask.maintenanceTaskId;
-    const ewValue = this.data.ewValue;
-
-    wx.showLoading({
-      title: '保存中...',
-    });
-
-    try {
-      // 离线处理逻辑保持不变
-      const network = require('../../../../utils/network');
-      if (!network.isOnline()) {
-
-        wx.hideLoading();
-        this.cancelEWSetting();
-        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
-        return;
-      }
-
-      // 步骤1: 更新任务本身的EW值
-      const updateTaskRes = await api.call('maintenanceTasks', {
-        action: 'updateMaintenanceTasks', config: { retries: 0 },
-        params: {
-          maintenanceTaskId: taskId,
-          updateData: { ew: ewValue }
-        }
-      });
-
-      if (!updateTaskRes.success) {
-        throw new Error(updateTaskRes.message || '设置EW失败');
-      }
-
-      this.updateLocalTaskEW(taskId, ewValue);
-
-      // 步骤2: 更新等效工作量汇总
-      await api.call('equivalentWorkloadAssessment', {
-        action: 'updateTasksEW', config: { retries: 0 },
-        params: {
-          maintenanceTaskId: taskId,
-          ew: ewValue
-        }
-      });
-
-      wx.hideLoading();
-
-      // 先关闭弹窗，再显示成功提示
-      this.cancelEWSetting();
-
-      // 延迟显示成功提示，确保弹窗关闭完成
-      setTimeout(() => {
-        wx.showToast({
-          title: 'EW值设置成功',
-          icon: 'success',
-          duration: 2000
-        });
-      }, 100);
-
-    } catch (err) {
-      console.error('设置EW失败', err);
-      wx.hideLoading();
-      this.cancelEWSetting();
-
-      wx.showToast({
-        title: err.message || '网络错误，请重试',
-        icon: 'none',
-        duration: 3000
-      });
-    }
-  },
-
-  // 更新本地任务的EW值
-  updateLocalTaskEW: function(taskId, ewValue) {
-    if (!taskId) return;
-
-    // 使用路径更新，避免整表写回
-    const updates = {};
-    const updateIndex = (list, listName) => {
-      const idx = list.findIndex(t => t && t.maintenanceTaskId === taskId);
-      if (idx !== -1) {
-        updates[`${listName}[${idx}].ew`] = ewValue;
-      }
-    };
-
-    updateIndex(this.data.allTasks, 'allTasks');
-    updateIndex(this.data.filteredTasks, 'filteredTasks');
-    updateIndex(this.data.originalFilteredTasks, 'originalFilteredTasks');
-
-    if (Object.keys(updates).length > 0) {
-      this.setData(updates);
-    }
-  },
-
-  // 删除任务
-  deleteTask: function(e) {
-    const task = e.currentTarget.dataset.task;
-    if (!task || !task.maintenanceTaskId) return;
-
-    // 第一次确认
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除此维修任务吗？删除后无法恢复。',
-      success: res => {
-        if (res.confirm) {
-          // 显示自定义二次确认弹窗
-          this.setData({
-            showDeleteConfirmModal: true,
-            taskToDelete: task,
-            deleteConfirmInput: ''
-          });
-        }
-      }
-    });
-  },
-
-  // 删除确认输入事件
-  onDeleteConfirmInput: function(e) {
-    this.setData({
-      deleteConfirmInput: e.detail.value
-    });
-  },
-
-  // 取消删除确认
-  cancelDeleteConfirm: function() {
-    this.setData({
-      showDeleteConfirmModal: false,
-      taskToDelete: null,
-      deleteConfirmInput: ''
-    });
-  },
-
-  // 确认删除
-  async confirmDelete() {
-    if (this.data.operationBusy) return;
-    this.setData({ operationBusy: true });
-    try { return await this._guardedConfirmDelete(); }
-    finally { this.setData({ operationBusy: false }); }
-  },
-  async _guardedConfirmDelete() {
-    // 防御性检查：立即读取并清空，避免竞态
-    const task = this.data.taskToDelete;
-    const taskId = task ? task.maintenanceTaskId : undefined;
-
-    if (!task || !taskId) {
-      this.cancelDeleteConfirm();
-      return;
-    }
-
-    const input = this.data.deleteConfirmInput;
-
-    // 验证输入的任务ID是否正确
-    if (input !== taskId) {
-      wx.showToast({
-        title: '任务编号不匹配，请重新输入',
-        icon: 'none',
-        duration: 2000
-      });
-      return;
-    }
-
-    this.setData({ showDeleteConfirmModal: false });
-
-    wx.showLoading({
-      title: '删除中...',
-    });
-
-    try {
-      // 离线处理逻辑保持不变
-      const network = require('../../../../utils/network');
-      if (!network.isOnline()) {
-
-        wx.hideLoading();
-        this.cancelDeleteConfirm();
-        wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
-        return;
-      }
-
-      const res = await api.call('maintenanceTasks', {
-        action: 'deleteMaintenanceTask', config: { retries: 0 },
-        params: { maintenanceTaskId: taskId }
-      });
-
-      if (res.success) {
-        // 立即从本地列表移除，让用户看到即时效果
-        this.removeLocalTask(taskId);
-
-        wx.showToast({
-          title: '删除成功',
-          icon: 'success'
-        });
-
-        // 异步全量刷新，确保后端状态与本地完全一致
-        setTimeout(() => {
-          this.loadMaintenanceTasks();
-        }, 500);
-
-        app.getTodoTotalCount && app.getTodoTotalCount();
-      } else {
-        wx.showToast({
-          title: res.message || '删除失败',
-          icon: 'none'
-        });
-      }
-    } catch (err) {
-      console.error('删除任务失败', err);
-      wx.showToast({
-        title: '网络错误，请重试',
-        icon: 'none'
-      });
-    } finally {
-      wx.hideLoading();
-      this.cancelDeleteConfirm();
-    }
-  },
-
-  // 从本地列表中移除任务
-  removeLocalTask: function(taskId) {
-    if (!taskId) return;
-
-    // 从allTasks中移除
-    const allTasks = this.data.allTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-
-    // 从filteredTasks中移除
-    const filteredTasks = this.data.filteredTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-
-    // 从originalFilteredTasks中移除
-    const originalFilteredTasks = this.data.originalFilteredTasks.filter(t => t && t.maintenanceTaskId !== taskId);
-
-    // 更新数据
-    this.setData({
-      allTasks,
-      filteredTasks,
-      originalFilteredTasks
     });
   },
 

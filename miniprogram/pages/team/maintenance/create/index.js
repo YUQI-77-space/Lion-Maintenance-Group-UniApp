@@ -4,7 +4,6 @@ const network = require('../../../../utils/network');
 
 const api = require('../../../../utils/apiAdapter');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
-const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
 
 Page({
@@ -14,11 +13,6 @@ Page({
 	data: {
 		userRole: '',
 		userInfo: {},
-		// 图标资源
-		iconTools: iconManager.get('biz_tools'),
-		iconCalendar: iconManager.get('team_calendar'),
-		iconEdit: iconManager.get('common_edit'),
-		
 		// 3级分类数据
 		categoryData: {
 			'电子数码类': {
@@ -436,7 +430,7 @@ Page({
 		}
 
 		this.setData({ isSubmitting: true });
-		wx.showLoading({ title: '提交中...' });
+
 		
 		try {
 			const { selectedLevel1, selectedLevel2, selectedLevel3, formData, userInfo } = this.data;
@@ -447,7 +441,7 @@ Page({
 					icon: 'none'
 				});
 				this.setData({ isSubmitting: false });
-				wx.hideLoading();
+
 				return;
 			}
 			
@@ -476,7 +470,7 @@ Page({
 					duration: 2500
 				});
 				this.setData({ isSubmitting: false });
-				wx.hideLoading();
+
 				return;
 			}
 
@@ -508,7 +502,7 @@ Page({
 				duration: 3000
 			});
 		} finally {
-			wx.hideLoading();
+
 			this.setData({ isSubmitting: false });
 		}
 	}

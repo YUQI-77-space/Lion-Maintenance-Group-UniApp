@@ -18,27 +18,21 @@
   min-height: 300rpx;
 }
 
-/* 卡片统一：白底 + 细描边 + 圆角，与志愿活动详情页同一套线框风格 */
+/* 信息分组使用白色内容面与留白，不叠加容器描边。 */
 .task-info,
 .applicant-info,
 .assignees-section {
   background-color: var(--card-background);
-  border: 1rpx solid var(--border-light);
+  border: 0;
   border-radius: 10rpx;
   padding: 24rpx 30rpx;
   margin-bottom: 20rpx;
 }
 
-/* 任务信息卡片：按状态着色描边 */
-.task-info.status-pending { border-color: var(--maintenance-pending-color); }
-.task-info.status-inProgress { border-color: var(--maintenance-inProgress-color); }
-.task-info.status-completed { border-color: var(--maintenance-completed-color); }
-.task-info.status-cancelled { border-color: var(--maintenance-cancelled-color); }
-
 /* 卡片内标题：与内容同处一块，用下划线区分层级 */
 .section-title {
-  font-size: 30rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   margin-bottom: 15rpx;
   padding-bottom: 15rpx;
@@ -64,7 +58,7 @@
 }
 
 .section-action-btn {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--primary-color);
   padding: 10rpx 24rpx;
   border-radius: 999rpx;
@@ -82,28 +76,17 @@
   align-items: center;
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   font-weight: 500;
   flex-shrink: 0;
   background-color: transparent;
   border: 1rpx solid;
 }
 
-.status-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  margin-right: 6rpx;
-}
-
 .status-pending { color: var(--maintenance-pending-color); border-color: var(--maintenance-pending-color); }
-.status-pending .status-dot { background-color: var(--maintenance-pending-color); }
 .status-inProgress { color: var(--maintenance-inProgress-color); border-color: var(--maintenance-inProgress-color); }
-.status-inProgress .status-dot { background-color: var(--maintenance-inProgress-color); }
 .status-completed { color: var(--maintenance-completed-color); border-color: var(--maintenance-completed-color); }
-.status-completed .status-dot { background-color: var(--maintenance-completed-color); }
 .status-cancelled { color: var(--maintenance-cancelled-color); border-color: var(--maintenance-cancelled-color); }
-.status-cancelled .status-dot { background-color: var(--maintenance-cancelled-color); }
 
 .info-item {
   display: flex;
@@ -146,7 +129,7 @@
 }
 
 .copy-hint {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-left: 12rpx;
   opacity: 0.8;
@@ -154,11 +137,10 @@
 
 /* 撤销原因样式 */
 .cancel-reason {
-  background-color: #fff5f5;
-  border: 1rpx solid var(--danger-color);
-  border-radius: 8rpx;
-  padding: 16rpx;
-  color: var(--danger-color);
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--mg-color-danger);
   font-weight: 500;
 }
 
@@ -171,7 +153,7 @@
   margin: 30rpx auto;
   text-align: center;
   color: var(--info-color);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   box-shadow: var(--box-shadow);
 }
 
@@ -186,7 +168,7 @@
 
 .btn {
   padding: 22rpx 80rpx; /* 稍宽些 */
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   border-radius: 999rpx; /* 宽圆角矩形 */
   border: 2rpx solid;
   line-height: 1;
@@ -226,7 +208,7 @@
 .management-action-area .btn {
   flex: 0 0 auto;
   padding: 20rpx 48rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
 }
 
 /* 完成：实心绿色 */
@@ -285,7 +267,7 @@
 }
 
 .assignee-title {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-main);
 }
@@ -297,7 +279,7 @@
 }
 
 .assignee-remove-btn {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--danger-color);
   padding: 8rpx 20rpx;
   border-radius: 999rpx;
@@ -375,18 +357,18 @@
 }
 
 .drawer-title {
-  font-size: 36rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .drawer-subtitle {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
 }
 
 .drawer-count {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.1);
   padding: 6rpx 18rpx;
@@ -416,7 +398,7 @@
   flex: 1;
   text-align: center;
   padding: 24rpx 16rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   position: relative;
   transition: all 0.2s ease;
@@ -490,7 +472,7 @@
 }
 
 .member-card-name {
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-main);
   display: flex;
@@ -500,7 +482,7 @@
 }
 
 .member-role-tag {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.12);
   border-radius: 999rpx;
@@ -512,7 +494,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   border-radius: 999rpx;
   padding: 4rpx 20rpx;
   font-weight: 500;
@@ -539,7 +521,7 @@
 }
 
 .member-card-meta {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   display: flex;
   gap: 16rpx;
@@ -609,7 +591,7 @@
   padding: 120rpx 0;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
 }
 
 .selected-layer {
@@ -695,12 +677,12 @@
 }
 
 .selected-bar-label {
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   font-weight: 600;
 }
 
 .selected-bar-count {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   opacity: 0.8;
   display: block;
   margin-top: 6rpx;
@@ -748,7 +730,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: #ffffff;
   flex-shrink: 0;
 }
@@ -764,7 +746,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: #ffffff;
 }
@@ -781,13 +763,13 @@
 }
 
 .panel-title {
-  font-size: 32rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .panel-clear {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--danger-color);
 }
 
@@ -836,7 +818,7 @@
 }
 
 .selected-section-title {
-  font-size: 26rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   color: var(--text-secondary);
   margin: 20rpx 0 10rpx;
 }
@@ -862,7 +844,7 @@
 }
 
 .selected-name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -871,7 +853,7 @@
 }
 
 .selected-meta {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 6rpx;
 }
@@ -934,11 +916,6 @@
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 /* ============================================
    弹窗外壳（EW设置 / 删除二次确认）
    与全局「线框 + 极简」风格保持一致：白底、细描边、无多余装饰
@@ -974,7 +951,7 @@
 
 .modal-header {
   padding: 32rpx 40rpx 0;
-  font-size: 34rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
   text-align: center;
@@ -1007,13 +984,13 @@
 }
 
 .ew-head-title {
-  font-size: 34rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .ew-head-tag {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1;
   color: var(--primary-color);
   border: 1rpx solid var(--primary-color);
@@ -1027,7 +1004,7 @@
   display: flex;
   align-items: baseline;
   gap: 16rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
 }
 
 .ew-task-id {
@@ -1057,15 +1034,15 @@
 }
 
 .ew-value-num {
-  font-size: 72rpx;
-  line-height: 1;
+  font-size: var(--mg-font-display);
+  line-height: var(--mg-line-display);
   font-weight: 600;
   color: var(--primary);
   letter-spacing: -1rpx;
 }
 
 .ew-value-unit {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
   padding-bottom: 8rpx;
 }
@@ -1085,7 +1062,7 @@
 .ew-input {
   width: 96rpx;
   height: 68rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   text-align: center;
   color: var(--text-main);
@@ -1099,7 +1076,7 @@
 .ew-scale {
   display: flex;
   justify-content: space-between;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
   padding: 0 8rpx;
 }
@@ -1108,7 +1085,7 @@
   margin-top: 20rpx;
   padding-left: 20rpx;
   border-left: 4rpx solid var(--primary);
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.5;
   color: var(--text-secondary);
 }
@@ -1122,7 +1099,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   font-weight: 600;
   color: var(--text-main);
   padding-bottom: 12rpx;
@@ -1130,7 +1107,7 @@
 }
 
 .ew-count {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   font-weight: 400;
   color: var(--text-muted);
 }
@@ -1164,7 +1141,7 @@
 .ew-assignee-name {
   flex: 1;
   min-width: 0;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-main);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1173,7 +1150,7 @@
 
 .ew-assignee-role {
   flex-shrink: 0;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1;
   color: var(--text-secondary);
   background: var(--bg-page);
@@ -1190,7 +1167,7 @@
 .ew-assignee-empty {
   padding: 32rpx 0;
   text-align: center;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-muted);
 }
 
@@ -1207,7 +1184,7 @@
   flex: 1;
   height: 76rpx;
   line-height: 72rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   border-radius: var(--radius-btn);
   border: 2rpx solid;
   margin: 0;
@@ -1241,7 +1218,7 @@
 }
 
 .confirm-text {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-main);
   margin-bottom: 30rpx;
   text-align: center;
@@ -1254,7 +1231,7 @@
   border: 1rpx solid var(--border-light);
   border-radius: 8rpx;
   padding: 0 20rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   box-sizing: border-box;
   background-color: var(--background-color);
   color: var(--text-main);

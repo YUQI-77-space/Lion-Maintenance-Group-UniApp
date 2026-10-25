@@ -54,12 +54,11 @@ module.exports = {
 
   <!-- 页面内容 -->
   <view wx:if="{{!loading}}">
-    <!-- 任务基本信息（边框颜色按状态） -->
-    <view class="task-info status-{{taskDetail.taskStatus}}">
+    <!-- 任务基本信息 -->
+    <view class="task-info">
       <view class="card-header">
         <view class="section-title">任务信息</view>
         <view class="status-tag status-{{taskDetail.taskStatus}}">
-          <view class="status-dot"></view>
           <text>{{taskDetail.taskStatusText}}</text>
         </view>
       </view>
@@ -273,7 +272,7 @@ module.exports = {
       <view class="btn btn-complete {{completing ? 'btn-disabled' : ''}}"
             wx:if="{{taskDetail.taskStatus === 'inProgress'}}"
             bindtap="completeTask">
-        {{completing ? '进行中...' : '完成'}}
+        <loading-animation wx:if="{{completing}}" size="small" /><text wx:else>完成</text>
       </view>
       <view class="btn btn-ew"
             wx:if="{{taskDetail.taskStatus === 'completed'}}"
@@ -358,7 +357,7 @@ module.exports = {
     <view class="modal-footer ew-footer">
       <button class="btn-cancel" bindtap="cancelEWSetting">取消</button>
       <button class="btn-confirm {{ewSaving ? 'btn-confirm-disabled' : ''}}"
-        bindtap="confirmEWSetting">{{ewSaving ? '保存中...' : '确认'}}</button>
+        bindtap="confirmEWSetting"><loading-animation wx:if="{{ewSaving}}" size="small" /><text wx:else>确认</text></button>
     </view>
   </view>
 </view>
@@ -546,8 +545,9 @@ module.exports = {
       </view>
       <view class="selected-confirm-area {{assigneeLoading || !hasPendingChanges ? 'disabled' : ''}}"
             catchtap="handleSelectedConfirm">
-        {{assigneeLoading ? '提交中...' : '确定'}}
+        <loading-animation wx:if="{{assigneeLoading}}" size="small" /><text wx:else>{{'确定'}}</text>
       </view>
     </view>
   </view>
 </view>
+<loading-overlay id="global-loading" />

@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/maintenance/detail/index.js
 const app = getApp();
 const api = require('../../../../utils/apiAdapter');
@@ -120,48 +121,6 @@ Page({
 
     // 获取任务详情
     this.getTaskDetail();
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
   },
 
   /**
@@ -301,14 +260,14 @@ Page({
     if (!modalRes || !modalRes.confirm) return;
 
     this.setData({ completing: true });
-    wx.showLoading({ title: '处理中...' });
+    loadingFeedback.show({ title: '处理中...' });
 
     try {
       // 离线处理：进入队列，等网络恢复后由服务端校验状态与权限
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
 
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
       }
@@ -349,7 +308,7 @@ Page({
       console.error('组长完成任务失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.setData({ completing: false });
     }
   },
@@ -431,7 +390,7 @@ Page({
     const taskId = this.data.currentTask.maintenanceTaskId;
     const ewValue = this.data.ewValue;
     this.setData({ ewSaving: true });
-    wx.showLoading({ title: '保存中...' });
+    loadingFeedback.show({ title: '保存中...' });
 
     try {
       const network = require('../../../../utils/network');
@@ -439,7 +398,7 @@ Page({
 
         this.updateLocalTaskEW(taskId, ewValue);
         this.refreshPreviousPage(true);
-        wx.hideLoading();
+        loadingFeedback.hide();
         this.cancelEWSetting();
         wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
@@ -471,18 +430,18 @@ Page({
 
       this.updateLocalTaskEW(taskId, ewValue);
       this.refreshPreviousPage(true);
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.cancelEWSetting();
       setTimeout(() => {
         wx.showToast({ title: 'EW值设置成功', icon: 'success', duration: 2000 });
       }, 100);
     } catch (err) {
       console.error('设置EW失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.cancelEWSetting();
       wx.showToast({ title: err.message || '网络错误，请重试', icon: 'none', duration: 3000 });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.setData({ ewSaving: false });
     }
   },
@@ -570,13 +529,13 @@ Page({
     }
 
     this.setData({ deleting: true, showDeleteConfirmModal: false });
-    wx.showLoading({ title: '删除中...' });
+    loadingFeedback.show({ title: '删除中...' });
 
     try {
       const network = require('../../../../utils/network');
       if (!network.isOnline()) {
 
-        wx.hideLoading();
+        loadingFeedback.hide();
         this.cancelDeleteConfirm();
         wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
         return;
@@ -599,7 +558,7 @@ Page({
       console.error('删除任务失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.cancelDeleteConfirm();
       this.setData({ deleting: false });
     }
@@ -751,7 +710,7 @@ Page({
   // 获取维修组成员列表
   getMembersList: async function(showLoading = false) {
     if (showLoading) {
-      wx.showLoading({
+      loadingFeedback.show({
         title: '加载中...',
         mask: true
       });
@@ -803,7 +762,7 @@ Page({
       });
     } finally {
       if (showLoading) {
-        wx.hideLoading();
+        loadingFeedback.hide();
       }
       this.setData({
         assigneeLoading: false
@@ -1027,7 +986,7 @@ Page({
       return;
     }
     
-    wx.showLoading({
+    loadingFeedback.show({
       title: '保存中...',
       mask: true
     });
@@ -1047,7 +1006,7 @@ Page({
       
       this.closeAssigneeModal({ immediate: true });
       
-      wx.hideLoading();
+      loadingFeedback.hide();
       
       this.showEWReminderModal();
       
@@ -1056,7 +1015,7 @@ Page({
       
     } catch (err) {
       console.error('编辑受理人失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: err.message || '编辑失败，请重试',
         icon: 'none',
@@ -1127,7 +1086,7 @@ Page({
     if (!openid) return;
     this.setData({ assigneeLoading: true });
     
-    wx.showLoading({
+    loadingFeedback.show({
       title: '移除中...',
       mask: true
     });
@@ -1145,12 +1104,12 @@ Page({
         throw new Error(removeRes.message || '移除失败');
       }
       
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.showEWReminderModal();
       this.getTaskDetail();
     } catch (err) {
       console.error('移除协助受理人失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: err.message || '移除失败，请稍后重试',
         icon: 'none'

@@ -1,150 +1,50 @@
-<!--pages/team/maintenance/create/index.wxml-->
-<view class="mg-theme mg-data-page container">
-  <!-- 顶部介绍区域已移除 -->
-
-  <!-- 表单内容 -->
-  <view class="form-container wide">
-    
-    <!-- 维修分类选择 -->
-    <view class="form-section">
-      <view class="section-header">
-        <view class="section-icon transparent">
-          <image src="{{iconTools}}" class="header-icon-img"></image>
-        </view>
-        <view class="section-title">
-          <text class="title-text">维修分类</text>
-          <text class="title-desc">选择具体的服务类型</text>
-        </view>
-        <text class="required">*</text>
-      </view>
-      
-      <view class="picker-group">
-        <!-- 一级分类 -->
-        <view class="picker-item">
-          <view class="picker-label-wrap">
-            <view class="label-dot"></view>
-            <text class="picker-label">主要类别</text>
-          </view>
-          <picker range="{{level1Array}}" value="{{level1Index}}" bindchange="onLevel1Change" class="category-picker">
-            <view class="picker-display {{selectedLevel1 ? 'selected' : ''}}">
-              <text class="picker-text">{{selectedLevel1 || '请选择类别'}}</text>
-              <text class="picker-arrow">></text>
-            </view>
-          </picker>
-        </view>
-        
-        <!-- 二级分类 -->
-        <view class="picker-item">
-          <view class="picker-label-wrap">
-            <view class="label-dot"></view>
-            <text class="picker-label">设备类型</text>
-          </view>
-          <picker range="{{level2Array}}" value="{{level2Index}}" bindchange="onLevel2Change" class="category-picker">
-            <view class="picker-display {{selectedLevel2 ? 'selected' : ''}}">
-              <text class="picker-text">{{selectedLevel2 || '请选择类型'}}</text>
-              <text class="picker-arrow">></text>
-            </view>
-          </picker>
-        </view>
-        
-        <!-- 三级分类 -->
-        <view class="picker-item">
-          <view class="picker-label-wrap">
-            <view class="label-dot"></view>
-            <text class="picker-label">具体服务</text>
-          </view>
-          <picker range="{{level3Array}}" value="{{level3Index}}" bindchange="onLevel3Change" class="category-picker">
-            <view class="picker-display {{selectedLevel3 ? 'selected' : ''}}">
-              <text class="picker-text">{{selectedLevel3 || '请选择服务'}}</text>
-              <text class="picker-arrow">></text>
-            </view>
-          </picker>
-        </view>
-      </view>
+<view class="mg-theme mg-page task-create-page">
+  <view class="task-create-note">除选填项外均为必填</view>
+  <view class="mg-surface task-create-section">
+    <view class="task-create-heading">维修分类</view>
+    <view class="mg-field task-create-field">
+      <view class="mg-label">主要类别</view>
+      <picker range="{{level1Array}}" value="{{level1Index}}" bindchange="onLevel1Change" aria-label="主要类别，{{selectedLevel1}}">
+        <view class="mg-input task-create-choice" hover-class="task-create-choice--pressed"><text class="task-create-value">{{selectedLevel1 || '请选择'}}</text><view class="task-create-caret" aria-hidden="true"></view></view>
+      </picker>
     </view>
-
-    <!-- 预约时间 -->
-    <view class="form-section">
-      <view class="section-header">
-        <view class="section-icon transparent">
-          <image src="{{iconCalendar}}" class="header-icon-img"></image>
-        </view>
-        <view class="section-title">
-          <text class="title-text">预约时间</text>
-          <text class="title-desc">选择合适的服务时间</text>
-        </view>
-        <text class="required">*</text>
-      </view>
-      
-      <view class="time-picker-group">
-        <!-- 日期选择 -->
-        <view class="time-picker-item">
-          <view class="time-label">
-            <image src="{{iconCalendar}}" class="time-icon"></image>
-            <text>预约日期</text>
-          </view>
-          <picker mode="date" bindchange="onDatePickerConfirm" value="{{formData.appointmentDate}}" start="{{startDate}}" end="{{endDate}}">
-            <view class="time-display {{formData.appointmentDate ? 'selected' : ''}}">
-              <text class="time-text">{{formData.appointmentDate || '选择日期'}}</text>
-              <text class="time-arrow">></text>
-            </view>
-          </picker>
-        </view>
-        
-        <!-- 时间选择 -->
-        <view class="time-picker-item">
-          <view class="time-label">
-            <image src="{{iconCalendar}}" class="time-icon"></image>
-            <text>预约时间</text>
-          </view>
-          <picker mode="time" bindchange="onTimePickerConfirm" value="{{formData.appointmentTime}}" start="08:00" end="22:00">
-            <view class="time-display {{formData.appointmentTime ? 'selected' : ''}}">
-              <text class="time-text">{{formData.appointmentTime || '选择时间'}}</text>
-              <text class="time-arrow">></text>
-            </view>
-          </picker>
-        </view>
-      </view>
+    <view class="mg-field task-create-field">
+      <view class="mg-label">设备类型</view>
+      <picker range="{{level2Array}}" value="{{level2Index}}" bindchange="onLevel2Change" aria-label="设备类型，{{selectedLevel2}}">
+        <view class="mg-input task-create-choice" hover-class="task-create-choice--pressed"><text class="task-create-value">{{selectedLevel2 || '请选择'}}</text><view class="task-create-caret" aria-hidden="true"></view></view>
+      </picker>
     </view>
-
-    <!-- 问题描述 -->
-    <view class="form-section">
-      <view class="section-header">
-        <view class="section-icon transparent">
-          <image src="{{iconEdit}}" class="header-icon-img"></image>
-        </view>
-        <view class="section-title">
-          <text class="title-text">问题描述</text>
-          <text class="title-desc">详细说明遇到的问题（选填）</text>
-        </view>
-      </view>
-      
-      <view class="textarea-container">
-        <textarea 
-          class="enhanced-textarea" 
-          placeholder="请详细描述遇到的问题或需要的服务，例如：具体故障现象、设备型号、问题发生时间等..."
-          value="{{formData.description}}"
-          data-field="description"
-          bindinput="onInputChange"
-          maxlength="500"
-          show-confirm-bar="{{false}}">
-        </textarea>
-        <view class="textarea-footer">
-          <text class="char-count">{{formData.description.length}}/500</text>
-        </view>
-      </view>
+    <view class="mg-field task-create-field">
+      <view class="mg-label">具体服务</view>
+      <picker range="{{level3Array}}" value="{{level3Index}}" bindchange="onLevel3Change" aria-label="具体服务，{{selectedLevel3}}">
+        <view class="mg-input task-create-choice" hover-class="task-create-choice--pressed"><text class="task-create-value">{{selectedLevel3 || '请选择'}}</text><view class="task-create-caret" aria-hidden="true"></view></view>
+      </picker>
     </view>
-
   </view>
-
-  <!-- 提交按钮 -->
-  <view class="submit-container plain">
-    <button class="submit-btn primary {{isSubmitting ? 'submitting' : ''}}" bindtap="submitTask" disabled="{{isSubmitting}}">
-      <view class="btn-content">
-        <text class="btn-text">{{isSubmitting ? '提交中...' : '提交维修任务'}}</text>
-        <loading-animation size="small" wx:if="{{isSubmitting}}"></loading-animation>
+  <view class="mg-surface task-create-section">
+    <view class="task-create-heading">预约时间</view>
+    <view class="task-create-datetime">
+      <view class="mg-field">
+        <view class="mg-label">预约日期</view>
+        <picker mode="date" bindchange="onDatePickerConfirm" value="{{formData.appointmentDate}}" start="{{startDate}}" end="{{endDate}}" aria-label="预约日期，{{formData.appointmentDate}}">
+          <view class="mg-input task-create-choice" hover-class="task-create-choice--pressed"><text class="task-create-value">{{formData.appointmentDate || '选择日期'}}</text><view class="task-create-caret" aria-hidden="true"></view></view>
+        </picker>
       </view>
-    </button>
+      <view class="mg-field">
+        <view class="mg-label">预约时间</view>
+        <picker mode="time" bindchange="onTimePickerConfirm" value="{{formData.appointmentTime}}" start="08:00" end="22:00" aria-label="预约时间，{{formData.appointmentTime}}">
+          <view class="mg-input task-create-choice" hover-class="task-create-choice--pressed"><text class="task-create-value">{{formData.appointmentTime || '选择时间'}}</text><view class="task-create-caret" aria-hidden="true"></view></view>
+        </picker>
+      </view>
+    </view>
   </view>
-
+  <view class="mg-surface task-create-section">
+    <view class="task-create-heading">问题描述<text class="task-create-optional">选填</text></view>
+    <textarea class="mg-input task-create-description" placeholder="例如：故障现象、设备型号、发生时间" placeholder-class="task-create-placeholder" value="{{formData.description}}" data-field="description" bindinput="onInputChange" maxlength="500" show-confirm-bar="{{false}}" aria-label="问题描述，选填，最多500字" />
+    <view class="task-create-count">{{formData.description.length}}/500</view>
+  </view>
+  <button class="mg-button mg-button--primary {{isSubmitting ? 'mg-button--loading' : ''}}" hover-class="mg-button--pressed" bindtap="submitTask" disabled="{{isSubmitting || submitUnknown}}" aria-label="{{isSubmitting ? '正在提交维修任务' : '提交维修任务'}}">
+    <loading-animation wx:if="{{isSubmitting}}" size="small" inverse="{{true}}" /><text wx:else>提交维修任务</text>
+  </button>
 </view>
+<loading-overlay id="global-loading" />

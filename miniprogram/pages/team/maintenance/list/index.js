@@ -2,6 +2,7 @@ const app = getApp();
 const api = require('../../../../utils/apiAdapter');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const swr = require('../../../../utils/swrCache');
+const time = require('../../../../utils/time');
 
 const STATUS_MAP = {
   pending: '待受理',
@@ -9,6 +10,16 @@ const STATUS_MAP = {
   completed: '已完成',
   cancelled: '已取消'
 };
+
+// 首屏、分页及离线缓存统一派生展示字段，不改写业务时间。
+function formatTask(task) {
+  const createTime = time.toDate(task.createTime);
+  return {
+    ...task,
+    taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态',
+    createTimeFormatted: createTime && !isNaN(createTime.getTime()) ? time.formatToMinute(createTime) : '暂无记录'
+  };
+}
 
 Page({
   data: {
@@ -42,8 +53,6 @@ Page({
   },
 
   retryList() { return this.data.appendFailed ? this.loadMoreTasks() : this.loadMaintenanceTasks(true); },
-  onReady() {},
-
   onShow() {
     if (!this._isFirstLoad) {
       this.setData({ page: 1, hasMore: true });
@@ -51,12 +60,6 @@ Page({
     }
     this._isFirstLoad = false;
   },
-
-  onHide() {},
-
-  onUnload() {},
-
-  onPullDownRefresh() {},
 
   // scroll-view 下拉刷新
   onRefresherRefresh: function() {
@@ -126,10 +129,7 @@ Page({
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
-        const tasks = tasksData.map(task => ({
-          ...task,
-          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
-        }));
+        const tasks = tasksData.map(formatTask);
         const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : tasks.length >= this.data.pageSize;
         this.setData({
           allTasks: tasks,
@@ -148,7 +148,7 @@ Page({
       this.setData({ loadError: '加载失败，已保留上次内容，请重试' });
       console.error('获取维修任务列表失败', err);
       if (cached && cached.exists) {
-        this.setData({ allTasks: cached.data, loading: false, cardDelays: {} });
+        this.setData({ allTasks: cached.data.map(formatTask), loading: false, cardDelays: {} });
         this.triggerCardAnimation();
         wx.showToast({ title: '网络异常，已展示上次数据', icon: 'none' });
       } else {
@@ -179,10 +179,7 @@ Page({
       if (result.success) {
         const rawData = result.data;
         const tasksData = (rawData && Array.isArray(rawData.tasks)) ? rawData.tasks : (Array.isArray(rawData) ? rawData : []);
-        const newTasks = tasksData.map(task => ({
-          ...task,
-          taskStatusText: STATUS_MAP[task.taskStatus] || '未知状态'
-        }));
+        const newTasks = tasksData.map(formatTask);
         if (newTasks.length > 0) {
           const merged = [...this.data.allTasks, ...newTasks.filter(task => !this.data.allTasks.some(old => old.maintenanceTaskId === task.maintenanceTaskId))];
           const hasMore = (rawData && typeof rawData.hasMore === 'boolean') ? rawData.hasMore : newTasks.length >= this.data.pageSize;

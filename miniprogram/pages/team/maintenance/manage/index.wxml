@@ -45,16 +45,12 @@ module.exports = {
   <view class="content-wrapper">
     <!-- 粘性头部：搜索框固定在页面上方 -->
     <view class="sticky-header">
-      <!-- 搜索框毛玻璃效果 -->
-      <view class="search-box">
-        <input class="search-input" placeholder="搜索任务..." bindinput="onSearchInput" value="{{searchKeyword}}" confirm-type="search" bindconfirm="onSearch"/>
-        <view class="search-clear" wx:if="{{searchKeyword}}" bindtap="clearSearchInput">✕</view>
-        <view class="search-icon" bindtap="onSearch">搜索</view>
-      </view>
+      <search-field value="{{searchKeyword}}" placeholder="搜索任务" bindinput="onSearchInput" bindconfirm="onSearch" bindclear="clearSearchInput" />
     </view>
 
     <!-- 列表滚动区域 -->
-    <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}" refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryList">重试加载</button></view>
       <!-- 加载动画 -->
       <view class="loading-container" wx:if="{{loading}}">
@@ -66,27 +62,28 @@ module.exports = {
       <block wx:for="{{filteredTasks}}" wx:key="maintenanceTaskId">
         <view class="task-card {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
           <view class="status-indicator {{item.taskStatus}}"></view>
-          <text class="ew-corner" wx:if="{{item.taskStatus === 'completed' && (item.ew || item.ew === 0)}}">{{item.ew}}</text>
 
           <!-- 任务信息 -->
           <view class="task-info" bindtap="viewTaskDetail" data-task="{{item}}">
-            <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
-            <view class="task-category">
-              {{item.level1}} > {{item.level2}} > {{item.level3}}
+            <view class="task-header">
+              <view class="task-title">{{item.level3}}</view>
+              <view class="task-status-column">
+                <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
+            <view class="task-ew" wx:if="{{item.taskStatus === 'completed' && (item.ew || item.ew === 0)}}">EW：{{format.formatEW(item.ew)}}</view>
+              </view>
             </view>
+            <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
+            <view class="application-time">申请时间: {{item.createTimeFormatted}}</view>
             <view class="task-meta">
               <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
               <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
-            </view>
-            <view class="task-footer">
-              <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
             </view>
           </view>
         </view>
       </block>
       <!-- 加载更多 -->
       <view class="load-more" wx:if="{{filteredTasks.length > 0}}">
-        <text wx:if="{{loadingMore}}">加载中...</text>
+        <view wx:if="{{loadingMore}}"><loading-animation size="small" /></view>
         <text wx:elif="{{!hasMore}}">— 已加载全部 —</text>
       </view>
       </view>
@@ -103,3 +100,4 @@ module.exports = {
     <image class="add-icon" src="{{iconAdd}}"></image>
   </view>
 </view>
+<loading-overlay id="global-loading" />

@@ -14,7 +14,8 @@
   </view>
 
   <!-- 右侧内容区域 -->
-  <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+  <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}" refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
     <view class="container">
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryList">重试加载</button></view>
       <!-- 加载动画 -->
@@ -28,16 +29,17 @@
           <view class="task-card {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
             <view class="status-indicator {{item.taskStatus}}"></view>
             <view class="task-info" bindtap="viewTaskDetail" data-task="{{item}}">
-              <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
-              <view class="task-category">
-                {{item.level1}} > {{item.level2}} > {{item.level3}}
+              <view class="task-header">
+                <view class="task-title">{{item.level3}}</view>
+                <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
               </view>
+              <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
+              <view class="application-time">申请时间: {{item.createTimeFormatted}}</view>
               <view class="task-meta">
                 <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
                 <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
               </view>
-              <view class="task-footer">
-                <view class="task-status status-{{item.taskStatus}}">{{item.taskStatusText}}</view>
+              <view class="task-footer" wx:if="{{item.taskStatus === 'pending'}}">
                 <view class="btn btn-claim" 
                       wx:if="{{item.taskStatus === 'pending'}}"
                       catchtap="claimTask" 
@@ -50,7 +52,7 @@
         </block>
         <!-- 加载更多 -->
         <view class="load-more" wx:if="{{allTasks.length > 0}}">
-          <text wx:if="{{loadingMore}}">加载中...</text>
+          <view wx:if="{{loadingMore}}"><loading-animation size="small" /></view>
           <text wx:elif="{{!hasMore}}">— 已加载全部 —</text>
         </view>
       </view>
@@ -62,3 +64,4 @@
     </view>
   </scroll-view>
 </view>
+<loading-overlay id="global-loading" />
