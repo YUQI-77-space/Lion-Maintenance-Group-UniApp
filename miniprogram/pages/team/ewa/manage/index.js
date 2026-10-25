@@ -1,8 +1,10 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/ewa/manage/index.js
 const api = require('../../../../utils/apiAdapter');
-const iconManager = require('../../../../utils/iconManager');
+const router = require('../../../../utils/router');
 
 Page({
+  behaviors: [require('../../../../utils/pageRefresh')],
 
   /**
    * 页面的初始数据
@@ -10,23 +12,13 @@ Page({
   data: {
     hasPermission: false,
     loading: true,
-    searchText: '',
+    loadError: '',
+    exporting: false,
+    updatingEW: false,
+    savingEW: false,
+    showDataMenu: false,
+    focusField: '',
     users: [],
-    filteredUsers: [],
-    // 图标资源
-    iconLock: iconManager.get('status_lock'),
-    iconSearch: iconManager.get('common_search'),
-    iconClose: iconManager.get('common_close'),
-    iconRanking: iconManager.get('status_ranking'),
-    iconEdit: iconManager.get('common_edit'),
-    iconEmpty: iconManager.get('common_empty'),
-    summaryData: {
-      totalUsers: 0,
-      totalEW: 0,
-      totalMaintenanceEW: 0,
-      totalDutyEW: 0,
-      totalVolunteerEW: 0
-    },
     showEditModal: false,
     editUser: {
       ewaUserId: '',
@@ -49,47 +41,27 @@ Page({
   },
 
   /**
-   * 格式化EW数值为最多2位小数（智能显示：整数不补零，超过2位小数则截断）
-   */
-  formatEW(value) {
-    if (value === null || value === undefined || isNaN(value)) {
-      return '—'
-    }
-    const num = Number(value)
-    // 如果是整数，直接返回整数
-    if (num % 1 === 0) {
-      return num.toString()
-    }
-    // 如果有小数，最多保留2位，去除尾随零
-    return Number(num.toFixed(2)).toString()
-  },
-
-  /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-    this.setData({ _cacheKey: `ewa_manage_cache_v2:${getApp().globalData.openid || ''}:${getApp().globalData.role || 'user'}` });
+    this.setData({ _cacheKey: `ewa_manage_cache_v3:${getApp().globalData.openid || ''}:${getApp().globalData.role || 'user'}` });
     this.checkUserPermission()
+    if (!this.data.hasPermission) return;
     // 先尝试读取缓存，提升首屏速度
     try {
       const cached = wx.getStorageSync(this.data._cacheKey)
       if (cached && cached.users && Array.isArray(cached.users)) {
         this.setData({
           users: cached.users,
-          filteredUsers: cached.users,
-          summaryData: cached.summaryData || this.data.summaryData,
+          totalCount: typeof cached.totalCount === 'number' ? cached.totalCount : cached.users.length,
+          hasMore: cached.users.length < cached.totalCount,
+          page: cached.page || 1,
+          pageSize: cached.pageSize || 30,
           _lastLoadedAt: cached.timestamp || 0,
           loading: false
         })
       }
     } catch (e) { /* ignore */ }
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
   },
 
   /**
@@ -110,14 +82,49 @@ Page({
    * 生命周期函数--监听页面隐藏
    */
   onHide() {
-
+    this.closeDataMenu();
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
   onUnload() {
+    this._unloaded = true;
+    this._pendingFetch = null;
+  },
 
+  preventMove() {},
+
+  /** 无权限时回到上一页 */
+  goBack() {
+    wx.navigateBack({ delta: 1 })
+  },
+
+  /** 数据操作菜单：选择后先收起，再进入既有业务流程。 */
+  toggleDataMenu() {
+    if (!this.data.hasPermission || this.data.updatingEW || this.data.exporting) return;
+    this.setData({ showDataMenu: !this.data.showDataMenu });
+  },
+
+  closeDataMenu() {
+    this.setData({ showDataMenu: false });
+  },
+
+  onDataMenuAction(e) {
+    this.closeDataMenu();
+    if (!this.data.hasPermission || this.data.updatingEW || this.data.exporting) return;
+    const action = e.currentTarget.dataset.action;
+    if (action === 'refresh') this.updateAllEW();
+    if (action === 'export') this.exportEWData();
+  },
+
+  /** 调整抽屉的焦点外观 */
+  onFieldFocus(e) {
+    this.setData({ focusField: (e.currentTarget.dataset || {}).field || '' })
+  },
+
+  onFieldBlur() {
+    this.setData({ focusField: '' })
   },
 
   /**
@@ -130,7 +137,7 @@ Page({
     
     
     if (role === 'leader') {
-      this.setData({ hasPermission: true, loading: false })
+      this.setData({ hasPermission: true })
       
     } else {
       
@@ -151,10 +158,13 @@ Page({
   fetchUsers: async function(opts = {}) {
     const page = typeof opts.page === 'number' ? opts.page : 1
     const pageSize = typeof opts.pageSize === 'number' ? opts.pageSize : this.data.pageSize
-    const search = typeof opts.search === 'string' ? opts.search.trim() : ''
     const append = !!opts.append
-    if (this.data._isFetching) return
-    this.setData({ _isFetching: true, loading: !append, loadingMore: append });
+    if (this.data._isFetching) {
+      if (!append) this._pendingFetch = opts;
+      return;
+    }
+    if (this._unloaded) return;
+    this.setData({ _isFetching: true, loading: !append, loadingMore: append, loadError: '' });
     try {
       const result = await api.call('equivalentWorkloadAssessment', {
         action: 'getRanking',
@@ -163,34 +173,15 @@ Page({
           pageSize,
           sortField: 'totalEW',
           sortOrder: 'desc',
-          includeUserRanking: false,
-          search
+          includeUserRanking: false
         }
       });
-      if (result.success) {
-        const { list = [], total = 0 } = result.data || {};
+      if (this._unloaded || this._pendingFetch) return;
+      if (result.success && result.data && Array.isArray(result.data.list)) {
+        const { list = [], total = 0 } = result.data;
         const merged = append ? (this.data.users || []).concat(list) : list
-        // 汇总基于当前已加载的数据
-        let totalEW = 0;
-        let totalMaintenanceEW = 0;
-        let totalDutyEW = 0;
-        let totalVolunteerEW = 0;
-        merged.forEach(item => {
-          totalEW += item.totalEW || 0;
-          totalMaintenanceEW += item.maintenanceEW || 0;
-          totalDutyEW += item.dutyEW || 0;
-          totalVolunteerEW += item.volunteerEW || 0;
-        });
         this.setData({
           users: merged,
-          filteredUsers: merged,
-          summaryData: {
-            totalUsers: merged.length,
-            totalEW,
-            totalMaintenanceEW,
-            totalDutyEW,
-            totalVolunteerEW
-          },
           totalCount: total,
           page: page,
           pageSize: pageSize,
@@ -201,81 +192,25 @@ Page({
         try {
           wx.setStorageSync(this.data._cacheKey, {
             users: merged,
-            summaryData: this.data.summaryData,
+            totalCount: total, page, pageSize,
             timestamp: Date.now()
           })
         } catch (e) { /* ignore */ }
       } else {
-        wx.showToast({ title: result.message || '获取用户列表失败', icon: 'none' });
+        this.setData({ loadError: result.message || '获取成员排名失败，请重试' });
       }
     } catch (err) {
       console.error('获取用户列表失败', err);
-      wx.showToast({ title: '获取用户列表失败', icon: 'none' });
+      if (!this._unloaded) this.setData({ loadError: '获取成员排名失败，请重试' });
     } finally {
-      this.setData({ loading: false, loadingMore: false, _isFetching: false });
-      wx.stopPullDownRefresh();
-    }
-  },
-
-  /**
-   * 搜索输入事件
-   */
-  onSearchInput(e) {
-    const searchText = e.detail.value.trim()
-    this.setData({ searchText })
-    // 简单防抖处理
-    if (this._searchTimer) {
-      clearTimeout(this._searchTimer)
-    }
-    this._searchTimer = setTimeout(() => {
-      if (!searchText) {
-        // 清空搜索，回到默认列表
-        const pageSize = this.data.showAllRankings ? 100 : 30
-        this.setData({ page: 1, pageSize, hasMore: true })
-        this.fetchUsers({ page: 1, pageSize, append: false })
-      } else {
-        // 服务端搜索，减少前端处理与数据量
-        const pageSize = this.data.showAllRankings ? 100 : 30
-        this.setData({ page: 1, pageSize, hasMore: true })
-        this.fetchUsers({ page: 1, pageSize, search: searchText, append: false })
+      if (!this._unloaded) {
+        this.setData({ loading: false, loadingMore: false, _isFetching: false });
+        this.setData({ unifiedRefreshing: false });
+        const pending = this._pendingFetch;
+        this._pendingFetch = null;
+        if (pending) this.fetchUsers(pending);
       }
-      this._searchTimer = null
-    }, 200)
-  },
-
-  /**
-   * 清除搜索
-   */
-  clearSearch() {
-    this.setData({
-      searchText: '',
-      filteredUsers: this.data.users
-    })
-    const pageSize = this.data.showAllRankings ? 100 : 30
-    this.setData({ page: 1, pageSize, hasMore: true })
-    this.fetchUsers({ page: 1, pageSize, append: false })
-  },
-
-  /**
-   * 过滤用户
-   */
-  filterUsers(text) {
-    if (!text) {
-      this.setData({ filteredUsers: this.data.users })
-      return
     }
-    
-    const filtered = this.data.users.filter(user => {
-      return (
-        (user.nickName && user.nickName.includes(text)) ||
-        (user.ewaUserName && user.ewaUserName.includes(text))
-      )
-    })
-    
-    // 保持按工作量排序
-    filtered.sort((a, b) => (b.totalEW || 0) - (a.totalEW || 0))
-    
-    this.setData({ filteredUsers: filtered })
   },
 
   /**
@@ -290,7 +225,7 @@ Page({
         editOriginal: { ...user },
         editUser: {
           ewaUserId: user.ewaUserId,
-          ewaUserName: user.ewaUserName,
+          ewaUserName: user.nickName || user.ewaUserName || '未命名成员',
           maintenanceEW: user.maintenanceEW === null || user.maintenanceEW === undefined ? '' : user.maintenanceEW,
           dutyEW: user.dutyEW === null || user.dutyEW === undefined ? '' : user.dutyEW,
           volunteerEW: user.volunteerEW === null || user.volunteerEW === undefined ? '' : user.volunteerEW,
@@ -389,7 +324,7 @@ Page({
     const confirmation = await wx.showModal({ title: '核对工作量调整',
       content: `${this.data.editUser.ewaUserName}\n维修 ${format(old.maintenanceEW)} → ${maintenanceEW}\n志愿 ${format(old.volunteerEW)} → ${volunteerEW}\n值班 ${format(old.dutyEW)} → ${dutyEW}\n总分保存后由服务端重新计算。`, confirmText: '保存调整', cancelText: '返回修改' });
     if (!confirmation.confirm) return;
-    wx.showLoading({ title: '保存中...' });
+    loadingFeedback.show({ title: '保存中...' });
     
     try {
       const res = await api.call('equivalentWorkloadAssessment', {
@@ -409,7 +344,7 @@ Page({
         });
         // 保存成功后，重新从后端获取最新的计算结果
         this.setData({ showEditModal: false });
-        await this.fetchUsers();
+        await this.fetchUsers({ page: 1, pageSize: this.data.pageSize });
       } else {
         wx.showToast({ title: res.message || '保存失败', icon: 'none' });
       }
@@ -417,7 +352,7 @@ Page({
       console.error('保存失败', err);
       wx.showToast({ title: '保存失败', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -432,7 +367,7 @@ Page({
         if (res.confirm) {
           if (this.data.updatingEW) return;
           this.setData({ updatingEW: true });
-          wx.showLoading({ title: '更新中...' });
+          loadingFeedback.show({ title: '更新中...' });
           
           try {
             // 更新工作量数据
@@ -449,8 +384,8 @@ Page({
               title: '更新成功',
               icon: 'success'
             });
-            this.fetchUsers();
-            
+            this.fetchUsers({ page: 1, pageSize: this.data.pageSize });
+            this.setData({ unifiedScrollTop: 1 }, () => this.setData({ unifiedScrollTop: 0 }));
           } catch (err) {
             console.error('更新失败', err);
             wx.showToast({
@@ -459,7 +394,7 @@ Page({
             });
           } finally {
             this.setData({ updatingEW: false });
-            wx.hideLoading();
+            loadingFeedback.hide();
           }
         }
       }
@@ -472,7 +407,7 @@ Page({
   exportEWData: async function() {
     if (this.data.exporting) return;
     this.setData({ exporting: true });
-    wx.showLoading({ title: '准备导出...' });
+    loadingFeedback.show({ title: '准备导出...' });
     
     try {
       const res = await api.call('equivalentWorkloadAssessment', {
@@ -484,13 +419,13 @@ Page({
         const { fileUrl, fileName } = res.data || {};
         if (!fileUrl) throw new Error('导出结果缺少文件链接');
         
-        wx.showLoading({ title: '正在下载...' });
+        loadingFeedback.show({ title: '正在下载...' });
         
         wx.downloadFile({
           url: fileUrl,
           complete: () => this.setData({ exporting: false }),
           success: (downloadRes) => {
-            wx.hideLoading();
+            loadingFeedback.hide();
             
             wx.openDocument({
               filePath: downloadRes.tempFilePath,
@@ -515,7 +450,7 @@ Page({
             });
           },
           fail: (downloadErr) => {
-            wx.hideLoading();
+            loadingFeedback.hide();
             console.error('下载文件失败', downloadErr);
             wx.showModal({
               title: '下载失败',
@@ -533,7 +468,7 @@ Page({
         });
       } else {
         this.setData({ exporting: false });
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showToast({
           title: res.message || '导出失败',
           icon: 'none'
@@ -542,7 +477,7 @@ Page({
     } catch (err) {
       this.setData({ exporting: false });
       console.error('导出失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: '导出失败',
         icon: 'none'
@@ -551,36 +486,20 @@ Page({
   },
 
   /**
-   * 跳转到数据汇总页
-   */
-  goToSummary() {
-    wx.navigateTo({ url: '/pages/team/ewa/summary/index' })
-  },
-
-  /**
    * 切换排名展开/收起
    */
   toggleRankings() {
     const target = !this.data.showAllRankings
     this.setData({ showAllRankings: target })
-    // 展开时尽量加载更多数据
-    if (target) {
-      const pageSize = 100
-      this.setData({ page: 1, pageSize, hasMore: true })
-      this.fetchUsers({ page: 1, pageSize, search: this.data.searchText, append: false })
-    } else {
-      const pageSize = 30
-      this.setData({ page: 1, pageSize, hasMore: true })
-      this.fetchUsers({ page: 1, pageSize, search: this.data.searchText, append: false })
-    }
   },
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
   onPullDownRefresh() {
-    if (!this.data.hasPermission) { wx.stopPullDownRefresh(); return; }
-    return this.fetchUsers({ page: 1, pageSize: this.data.pageSize, search: this.data.searchText, append: false });
+    this.closeDataMenu();
+    if (!this.data.hasPermission) { this.setData({ unifiedRefreshing: false }); return; }
+    return this.fetchUsers({ page: 1, pageSize: this.data.pageSize, append: false });
   },
 
   /**
@@ -588,6 +507,7 @@ Page({
    */
   onReachBottom() {
     if (!this.data.hasPermission) return
+    if (!this.data.showAllRankings) return
     if (!this.data.hasMore) return
     if (this.data._isFetching || this.data.loadingMore) return
     const nextPage = (this.data.page || 1) + 1
@@ -599,7 +519,6 @@ Page({
     this.fetchUsers({
       page: nextPage,
       pageSize: this.data.pageSize,
-      search: this.data.searchText,
       append: true
     })
   },

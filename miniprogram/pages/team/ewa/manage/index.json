@@ -1,12 +1,15 @@
 {
   "navigationBarTitleText": "等效工作量",
-  "enablePullDownRefresh": true,
+  "enablePullDownRefresh": false,
   "backgroundTextStyle": "dark",
   "backgroundColor": "#F5F7FA",
   "backgroundColorTop": "#F5F7FA",
   "backgroundColorBottom": "#F5F7FA",
   "usingComponents": {
     "avatar-display": "../../../../components/avatar-display/index",
-    "loading-animation": "/components/loading-animation/index"
-  }
+    "loading-animation": "/components/loading-animation/index",
+    "section-header": "/components/section-header/index",
+    "action-modal": "/components/action-modal/index"
+  },
+  "disableScroll": true
 }

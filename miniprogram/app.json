@@ -27,7 +27,6 @@
     "pages/team/volunteer/create/index",
     "pages/team/volunteer/manage/index",
     "pages/team/ewa/manage/index",
-    "pages/team/ewa/summary/index",
     "pages/team/duty/roster/index",
     "pages/team/duty/manage/index",
     "pages/repair/index",
