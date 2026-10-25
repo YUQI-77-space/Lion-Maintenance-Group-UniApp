@@ -1,7 +1,10 @@
-<view class="tabbar-wrapper mg-theme" style="padding-bottom: {{safeBottom}}px;">
+<view class="tabbar-wrapper mg-theme" style="bottom: {{safeBottom + 16}}px;">
   <view class="tabs-container">
-    <button class="tab-item {{selected === index ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="pagePath" data-index="{{index}}" data-url="/{{item.pagePath}}" bindtap="onTap" disabled="{{interactionLocked}}" hover-class="tab-pressed" aria-label="{{item.text}}{{selected === index ? '，当前页面' : ''}}">
-      <image class="tab-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit" />
+    <button class="tab-item {{selected === index ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="pagePath" data-url="/{{item.pagePath}}" bindtap="onTap" disabled="{{interactionLocked}}" hover-class="none" aria-label="{{item.text}}{{selected === index ? '，当前页面' : ''}}">
+      <view class="tab-icon">
+        <image class="tab-icon-image tab-icon-default" src="{{item.iconPath}}" mode="aspectFit" />
+        <image class="tab-icon-image tab-icon-selected" src="{{item.selectedIconPath}}" mode="aspectFit" />
+      </view>
       <text class="tab-text">{{item.text}}</text>
     </button>
   </view>

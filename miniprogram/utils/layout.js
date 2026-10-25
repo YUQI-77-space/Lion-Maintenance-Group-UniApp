@@ -14,7 +14,8 @@ function getLayout() {
     statusBarHeight, navbarContentHeight,
     navBarHeight: statusBarHeight + navbarContentHeight,
     navbarRight: menu.left > 0 ? Math.max(0, info.windowWidth - menu.left + 8) : 96,
-    safeBottom, tabbarHeight: 56 + safeBottom,
+    // Tab 页占位包含栏体、悬浮间距和安全区，页面再另留内容间距。
+    safeBottom, tabbarHeight: 60 + 16 + safeBottom,
     windowWidth: info.windowWidth || 375
   };
 }

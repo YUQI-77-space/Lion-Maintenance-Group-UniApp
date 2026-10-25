@@ -47,14 +47,35 @@ function isTabPage(url) {
   return TAB_PAGES.has(pure);
 }
 
-function switchTab(url) {
-  wx.switchTab({
-    url,
-    fail: (err) => {
-      console.error('切换Tab失败:', err, 'URL:', url);
-      wx.showToast({ title: '页面跳转失败', icon: 'none' });
-    }
-  });
+// 经此工具切换的页面与 TabBar 实例共享导航锁，避免跨实例并发切换。
+let tabSwitching = null;
+
+function isTabSwitching() {
+  return !!tabSwitching;
+}
+
+function switchTab(url, callbacks = {}) {
+  if (tabSwitching || typeof url !== 'string' || !isTabPage(url)) return false;
+  url = url.split('?')[0];
+  const pages = getCurrentPages();
+  if (pages.length && '/' + pages[pages.length - 1].route === url) return false;
+  const request = {};
+  tabSwitching = request;
+  const release = () => { if (tabSwitching === request) tabSwitching = null; };
+  const fail = (err) => {
+    release();
+    console.error('切换Tab失败:', err, 'URL:', url);
+    wx.showToast({ title: '页面跳转失败', icon: 'none' });
+    if (callbacks.fail) callbacks.fail(err);
+  };
+  try {
+    wx.switchTab({
+      url,
+      fail,
+      complete: release
+    });
+  } catch (err) { fail(err); }
+  return true;
 }
 
 // 计算角色对应的 Tab 配置（对象数组），供 app.updateUserRole 使用
@@ -384,6 +405,7 @@ module.exports = {
   teamRouter,
   repairRouter,
   switchTab,
+  isTabSwitching,
   getTabOrder,
   computeTabsByRole
 };
