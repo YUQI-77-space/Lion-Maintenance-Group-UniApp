@@ -1,5 +1,7 @@
+<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!--pages/home/index.wxml-->
-<!-- 白色自定义导航栏，按胶囊位置避让 -->
+<!-- 乳白毛玻璃导航栏，按胶囊位置避让 -->
 <view class="custom-navbar {{navScrolled ? 'is-scrolled' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
@@ -11,33 +13,31 @@
      不会被顶部毛玻璃吞掉 -->
 <view class="home-container" style="padding-top: {{navBarHeight}}px; padding-bottom: {{tabbarHeight + 16}}px;">
 
-  <!-- ========== 快捷入口（动作条：描边图标） ========== -->
+  <!-- 顶部照片轮播：保留团队展示的首页识别度 -->
+  <view class="team-photo-section" wx:if="{{swiperImages.length}}">
+    <swiper class="team-photo-swiper" autoplay="{{pageVisible}}" interval="{{swiperInterval}}" duration="{{swiperDuration}}" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#FFFFFF" circular="{{true}}" indicator-dots="{{true}}" current="{{swiperCurrent}}" bindchange="onSwiperChange">
+      <swiper-item wx:for="{{swiperImages}}" wx:key="id">
+        <image wx:if="{{!swiperImageErrors[index]}}" class="team-photo" src="{{item.url}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}" />
+        <view class="photo-unavailable" wx:else>团队图片暂时无法显示</view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- ========== 快捷入口：独立圆角区域，不使用共用卡片底面 ========== -->
   <view class="quick-actions entrance" style="animation-delay: 140ms;">
     <block wx:for="{{functionEntries}}" wx:key="id">
     <view class="quick-item {{item.primary ? 'primary' : ''}}"
           wx:if="{{!item.requireAuth || userRole !== 'user'}}"
+          hover-class="quick-item-pressed"
           data-index="{{index}}"
           bindtap="onFunctionEntryTap">
-      <view class="quick-icon-wrap">
-        <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
-      </view>
+      <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
       <text class="quick-title">{{item.title}}</text>
     </view>
     </block>
   </view>
 
-  <!-- ========== 首屏：问候头（原轮播降级为背景） ========== -->
-  <view class="swiper-section hero-section">
-    <view class="hero-content entrance" style="animation-delay: 0ms;">
-      <view class="hero-greeting">{{greeting}}</view>
-      <view class="hero-meta">
-        <text>{{todayText}}</text>
-        <text wx:if="{{roleText}}"> · {{roleText}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- ========== 今日状态卡：压在问候头下缘 ========== -->
+  <!-- ========== 今日值班状态 ========== -->
   <view class="today-card entrance" wx:if="{{userRole !== 'user'}}" style="animation-delay: 60ms;">
 
     <!-- 值班：只呈现当前状态，不提供跳转入口（值班表在维修组 Tab 内） -->
@@ -67,8 +67,7 @@
       </block>
 
       <block wx:else>
-        <view class="skeleton-block skeleton-line w70"></view>
-        <view class="skeleton-block skeleton-line w45"></view>
+        <loading-animation size="small" />
       </block>
 
       <!-- 一周值班条（仅呈现，不可点击） -->
@@ -86,8 +85,8 @@
   <view class="todo-card entrance" style="animation-delay: 100ms;">
     <view class="todo-title">
       <text>我的报修进度</text>
-      <button class="progress-link" bindtap="openTodoList">查看全部</button>
       <view class="todo-count" wx:if="{{myTodosTotal}}">{{myTodosTotal}}</view>
+      <button size="mini" class="progress-link" bindtap="openTodoList">查看全部</button>
     </view>
 
     <block wx:if="{{myTodos.length}}">
@@ -143,15 +142,6 @@
     </view>
   </view>
 
-  <view class="team-photo-section" wx:if="{{swiperImages.length}}">
-    <swiper class="team-photo-swiper" autoplay="{{false}}" circular="{{true}}" indicator-dots="{{true}}" current="{{swiperCurrent}}" bindchange="onSwiperChange">
-      <swiper-item wx:for="{{swiperImages}}" wx:key="id">
-        <image wx:if="{{!swiperImageErrors[index]}}" class="team-photo" src="{{item.url}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}" />
-        <view class="photo-unavailable" wx:else>团队图片暂时无法显示</view>
-      </swiper-item>
-    </swiper>
-  </view>
-
   <!-- ========== 特色活动：1 大 + 2 小 ========== -->
   <view class="section">
     <section-header
@@ -162,23 +152,22 @@
       bind:more="onSpecialEventsMore">
     </section-header>
 
-    <block wx:if="{{specialEvents.length === 0}}">
-      <view class="feature-hero skeleton-block"></view>
-      <view class="feature-pair">
-        <view class="feature-small skeleton-block"></view>
-        <view class="feature-small skeleton-block"></view>
-      </view>
+    <block wx:if="{{isLoadingSpecialEvents && specialEvents.length === 0}}">
+      <view class="feature-hero unified-media-wait" aria-label="图片加载中"></view>
+      <view class="feature-pair" aria-hidden="true"><view class="feature-small"></view><view class="feature-small"></view></view>
+
     </block>
-    <block wx:else>
+    <block wx:elif="{{specialEvents.length}}">
       <view class="feature-hero" wx:if="{{specialEvents[0]}}" bindtap="onSpecialEventsMore">
-        <image class="feature-hero-img" src="{{specialEvents[0].url}}" mode="aspectFill" lazy-load="{{true}}"></image>
+        <skeleton-image class="feature-hero-img" src="{{specialEvents[0].url}}" mode="aspectFill" lazy-load="{{true}}" />
       </view>
       <view class="feature-pair" wx:if="{{specialSmall.length}}">
         <view class="feature-small" wx:for="{{specialSmall}}" wx:key="id" bindtap="onSpecialEventsMore">
-          <image class="feature-small-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}"></image>
+          <skeleton-image class="feature-small-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}" />
         </view>
       </view>
     </block>
+    <view class="media-empty" wx:else>暂无特色活动照片</view>
   </view>
 
   <!-- ========== 团队风采：横向滑动流 ========== -->
@@ -191,23 +180,24 @@
       bind:more="onTeamSpiritMore">
     </section-header>
 
-    <block wx:if="{{teamSpirit.length === 0}}">
-      <view class="feature-strip">
-        <view class="strip-card-item skeleton-block" wx:for="{{[1,2]}}" wx:key="*this"></view>
+    <block wx:if="{{isLoadingTeamSpirit && teamSpirit.length === 0}}">
+      <view class="feature-strip strip-track">
+        <view class="strip-card-item unified-media-wait" aria-label="图片加载中"></view>
       </view>
     </block>
-    <block wx:else>
+    <block wx:elif="{{teamSpirit.length}}">
       <scroll-view class="feature-strip" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
         <view class="strip-track">
           <view class="strip-card-item" wx:for="{{teamSpirit}}" wx:key="id">
-            <image class="strip-card-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}"></image>
+            <skeleton-image class="strip-card-img" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}" />
           </view>
         </view>
       </scroll-view>
     </block>
+    <view class="media-empty" wx:else>暂无团队风采照片</view>
   </view>
 
-  <!-- ========== 团队荣誉：自动履带（轻触暂停） ========== -->
+  <!-- ========== 团队荣誉：自动履带 ========== -->
   <view class="section team-honors-section">
     <section-header
       title="团队荣誉"
@@ -215,9 +205,9 @@
     </section-header>
 
     <block wx:if="{{teamHonors.length}}">
-      <scroll-view class="honors-conveyor" scroll-x="{{true}}">
-        <view class="conveyor-track">
-          <view class="conveyor-content {{honorsPaused ? 'paused' : ''}}" style="animation-duration: {{conveyorDuration}}ms;">
+      <view class="honors-conveyor">
+        <view class="conveyor-track {{!pageVisible ? 'paused' : ''}}" style="width: {{conveyorWidth * 2}}rpx; animation-duration: {{conveyorDuration}}ms;">
+          <view class="conveyor-content" style="width: {{conveyorWidth}}rpx;">
             <!-- 第一组图片 -->
             <view
               class="honor-card"
@@ -225,33 +215,31 @@
               wx:key="id"
               style="width: {{item.displayWidth}}rpx;"
               data-honor="{{item}}">
-              <image
+              <skeleton-image
                 class="honor-card-image"
                 src="{{item.url}}"
                 mode="aspectFit"
-                lazy-load="{{true}}"
-                binderror="onHonorImageError"
-                bindload="onHonorImageLoad"
+
+                bindimageloadcomplete="onHonorImageComplete"
                 data-id="{{item.id}}">
-              </image>
+              </skeleton-image>
             </view>
 
           </view>
-        </view>
-      </scroll-view>
-    </block>
-
-    <block wx:else>
-      <view class="honors-conveyor">
-        <view class="conveyor-track">
-          <view class="conveyor-content">
-            <view class="honor-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" style="width: 200rpx;">
-              <view class="skeleton-block honor-card-skeleton"></view>
+          <!-- 等宽副本：平移一组后无缝接回首张；不重复处理图片加载事件。 -->
+          <view class="conveyor-content" style="width: {{conveyorWidth}}rpx;" aria-hidden="true">
+            <view class="honor-card" wx:for="{{teamHonors}}" wx:key="id" style="width: {{item.displayWidth}}rpx;">
+              <skeleton-image class="honor-card-image" src="{{item.url}}" mode="aspectFit" />
             </view>
           </view>
         </view>
       </view>
     </block>
+
+    <view class="unified-media-wait honor-card-skeleton" wx:elif="{{isLoadingTeamHonors}}" aria-label="图片加载中"></view>
+    <view class="media-empty" wx:else>暂无团队荣誉图片</view>
   </view>
 
 </view>
+</scroll-view>
+<loading-overlay id="global-loading" />

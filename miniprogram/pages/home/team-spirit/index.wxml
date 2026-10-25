@@ -1,3 +1,5 @@
+<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <view class="gallery-page mg-theme mg-page">
   <view class="gallery-header">
     <view class="eyebrow">物科院维修组 · 团队相册</view>
@@ -5,6 +7,9 @@
     <view class="page-description">记录团队的日常与共同成长的瞬间。</view>
   </view>
   <view class="gallery-grid">
+    <block wx:if="{{loading && !teamSpirit.length && !unifiedRefreshing}}">
+      <view class="photo-card mg-surface mg-surface--flush" wx:for="{{[1, 2, 3, 4]}}" wx:key="*this" aria-hidden="true"><view class="photo-frame"></view></view>
+    </block>
     <view class="photo-card mg-surface mg-surface--flush" wx:for="{{teamSpirit}}" wx:key="id">
       <view class="photo-frame">
         <skeleton-image id="photo-{{index}}" data-index="{{index}}" class="skeleton-image" src="{{item.url}}" mode="aspectFill" lazy-load="{{false}}" placeholder-color="#EEF1F5" bindimageloadcomplete="onImageLoadComplete" />
@@ -12,14 +17,8 @@
       <view class="photo-caption"><text>团队风采</text><text class="photo-number">{{index + 1}}</text></view>
       <view class="photo-error" wx:if="{{imageErrors[index]}}">可下拉刷新重试</view>
     </view>
-    <block wx:if="{{loading && teamSpirit.length === 0}}">
-      <view class="photo-card mg-surface mg-surface--flush" wx:for="{{skeletonCount}}" wx:key="*this">
-        <view class="photo-frame skeleton-frame"></view>
-        <view class="photo-caption"><text class="skeleton-line"></text></view>
-      </view>
-    </block>
   </view>
-  <view class="gallery-status" wx:if="{{loading}}">正在加载照片…</view>
+  <view class="gallery-status" wx:if="{{loading && teamSpirit.length > 0 && !unifiedRefreshing}}"><loading-animation size="default" /></view>
   <view class="gallery-status" wx:if="{{!hasMore && teamSpirit.length > 0}}">已展示全部照片</view>
   <view class="empty-state mg-surface" wx:if="{{!loading && teamSpirit.length === 0 && isInitialized}}">
     <view class="empty-mark"></view>
@@ -28,3 +27,5 @@
   </view>
   <view class="gallery-help" wx:if="{{teamSpirit.length > 0}}">图片未能显示？可下拉刷新后重试。</view>
 </view>
+</scroll-view>
+<loading-overlay id="global-loading" />

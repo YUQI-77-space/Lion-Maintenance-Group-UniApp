@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../utils/loading');
 const { getLayout } = require('../../utils/layout');
 const cloudImageManager = require('../../utils/cloudImageManager');
 const iconManager = require('../../utils/iconManager');
@@ -39,6 +40,7 @@ const INITIAL_SPECIAL_EVENTS = cloudImageManager.resolveCachedTempUrls(cloudImag
 const INITIAL_TEAM_SPIRIT = cloudImageManager.resolveCachedTempUrls(cloudImageManager.getHomeTeamSpirit());
 
 Page({
+  behaviors: [require('../../utils/pageRefresh')],
   data: {
     // 状态栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
@@ -55,6 +57,7 @@ Page({
     // 轮播图
     swiperImages: INITIAL_SWIPER_IMAGES,
     swiperCurrent: 0,
+    pageVisible: false,
     swiperImageErrors: {},
     swiperInterval: 3500,
     swiperDuration: 300,
@@ -69,9 +72,6 @@ Page({
 
     // ===== 今日工作台（仅呈现普通用户可见的信息） =====
     userRole: 'user',
-    greeting: '你好',
-    todayText: '',
-    roleText: '',
 
     // 值班（此刻谁在值班 + 一周值班条）
     duty: null,
@@ -83,9 +83,6 @@ Page({
     myTodosTotal: 0,
     todoConfirming: false,
 
-    // 荣誉履带：轻触暂停
-    honorsPaused: false,
-
     // 导航栏是否已滚离顶部（决定毛玻璃的透明度档位）
     navScrolled: false,
 
@@ -95,11 +92,12 @@ Page({
     teamSpirit: INITIAL_TEAM_SPIRIT,
     teamHonors: [],
     conveyorDuration: 12000,
+    conveyorWidth: 0,
     
     // 加载状态管理
-    isLoadingSpecialEvents: false,
-    isLoadingTeamSpirit: false,
-    isLoadingTeamHonors: false,
+    isLoadingSpecialEvents: true,
+    isLoadingTeamSpirit: true,
+    isLoadingTeamHonors: true,
     honorsLoadingProgress: 0, // 荣誉图片加载进度 (0-100)
     honorsAllLoaded: false, // 标记所有荣誉图片是否已加载
     
@@ -125,7 +123,8 @@ Page({
     
     // 数据加载标记：使用 App 级缓存，Tab 切换时不丢失
     const app = getApp();
-    if (!app._homeDataLoaded) {
+    // 页面重建时 data 会重置，App 标记不能替代当前页实际持有的图片数据。
+    if (!app._homeDataLoaded || !this.data.teamHonors.length) {
       app._homeDataLoaded = true;
       app._homeDataLoadTime = Date.now();
       this.initSwiperImages();
@@ -182,8 +181,9 @@ Page({
   },
 
   onShow: function () {
+    this.setData({ pageVisible: true });
     const tab = this.getTabBar && this.getTabBar();
-    tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+    tab && tab.setSelectedByRoute && tab.setSelectedByRoute(this.route);
 
     // 回到首页时刷新工作台（超过 60s 才重新请求），并恢复「此刻值班」的时间刷新
     this.initHomeWidgets();
@@ -191,14 +191,10 @@ Page({
   },
 
   onHide: function () {
+    this.setData({ pageVisible: false });
     this.stopDutyTicker();
   },
 
-  onReady: function () {
-    // 页面渲染完成
-  },
-
-  
   // 页面滚动监听
   onPageScroll: function(e) {
     const scrollTop = (e && e.scrollTop) || 0;
@@ -217,7 +213,7 @@ Page({
     }, 100);
   },
 
-  // 滚过一点就切到「更实的玻璃底」，回顶时再透回头图。
+  // 保留导航栏滚动状态，首页滚动前后使用相同的乳白毛玻璃底。
   // 阈值留了回滞（8 / 2），防止在临界点来回抖动。
   applyNavbarScroll: function (scrollTop) {
     const scrolled = this._navScrolled ? scrollTop > 2 : scrollTop > 8;
@@ -417,34 +413,6 @@ Page({
 
   // ==================== 今日工作台（值班 / 我的 / 招募 / 数据） ====================
 
-  // 问候语、日期、角色文案
-  buildHeadText: function () {
-    const now = new Date();
-    const h = now.getHours();
-    let base = '你好';
-    if (h < 5) base = '夜深了';
-    else if (h < 11) base = '上午好';
-    else if (h < 14) base = '中午好';
-    else if (h < 18) base = '下午好';
-    else base = '晚上好';
-
-    let nickName = '';
-    try {
-      const app = getApp();
-      const info = (app && app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
-      nickName = String(info.nickName || '').trim();
-    } catch (e) {}
-
-    const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const roleTextMap = { user: '同学', member: '组员', leader: '组长', admin: '管理员' };
-
-    return {
-      greeting: nickName ? `${base}，${nickName}` : base,
-      todayText: `${now.getMonth() + 1}月${now.getDate()}日 ${weekNames[now.getDay()]}`,
-      roleText: roleTextMap[this._role || 'user'] || '同学'
-    };
-  },
-
   getOpenid: function () {
     try {
       const app = getApp();
@@ -467,7 +435,6 @@ Page({
     this._role = role;
 
     this.setData({ userRole: role });
-    this.setData(this.buildHeadText());
 
     // 缓存只负责首帧不空白，数据新鲜度交给下面的补拉
     this.renderWidgetsFromCache();
@@ -487,10 +454,10 @@ Page({
   // 下拉刷新：手动路径，必须绕开间隔限制，否则用户拉一下却什么都没发生
   onPullDownRefresh: function () {
     this.refreshWidgets(true).then(() => {
-      wx.stopPullDownRefresh();
+      this.setData({ unifiedRefreshing: false });
       wx.showToast({ title: '已刷新', icon: 'none', duration: 1200 });
     }).catch(() => {
-      wx.stopPullDownRefresh();
+      this.setData({ unifiedRefreshing: false });
     });
   },
 
@@ -619,7 +586,7 @@ Page({
     if (!modalRes || !modalRes.confirm) return;
 
     this.setData({ todoConfirming: true });
-    wx.showLoading({ title: '处理中...' });
+    loadingFeedback.show({ title: '处理中...' });
     try {
       const res = await api.call('maintenanceTasks', {
         action: 'completeMaintenanceTask', config: { retries: 0 },
@@ -628,7 +595,7 @@ Page({
           completeTime: new Date().toISOString()
         }
       });
-      wx.hideLoading();
+      loadingFeedback.hide();
       if (res && res.success) {
         wx.showToast({ title: '任务已完成', icon: 'success', duration: 1600 });
         swr.clear(`home:todos:${this.getOpenid()}`);
@@ -639,16 +606,11 @@ Page({
         wx.showToast({ title: (res && res.message) || '操作失败', icon: 'none' });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
     } finally {
       this.setData({ todoConfirming: false });
     }
-  },
-
-  // 荣誉履带：轻触暂停 / 继续
-  toggleHonorsPause: function () {
-    this.setData({ honorsPaused: !this.data.honorsPaused });
   },
 
 
@@ -705,6 +667,7 @@ Page({
       
       this.setData({ 
         teamHonors: withTempUrls,
+        conveyorWidth: this.getConveyorWidth(withTempUrls),
         honorsLoadingProgress: Math.round((INITIAL_LOAD_COUNT / honorsConfig.total) * 100),
         isLoadingTeamHonors: false
       });
@@ -715,6 +678,7 @@ Page({
     }).catch(() => {
       this.setData({ 
         teamHonors: initialHonors,
+        conveyorWidth: this.getConveyorWidth(initialHonors),
         honorsLoadingProgress: Math.round((INITIAL_LOAD_COUNT / honorsConfig.total) * 100),
         isLoadingTeamHonors: false
       });
@@ -766,6 +730,7 @@ Page({
       
       this.setData({ 
         teamHonors: allHonors,
+        conveyorWidth: this.getConveyorWidth(allHonors),
         conveyorDuration: duration,
         honorsLoadingProgress: 100,
         honorsAllLoaded: true,
@@ -777,6 +742,7 @@ Page({
       
       this.setData({ 
         teamHonors: allHonors,
+        conveyorWidth: this.getConveyorWidth(allHonors),
         conveyorDuration: duration,
         honorsAllLoaded: true,
         isLoadingTeamHonors: false
@@ -805,12 +771,26 @@ Page({
     return landscapeIndexes.includes(index) ? 'landscape' : 'portrait';
   },
 
+  // 每组含末尾间隔，双组平移 50% 后与首张严格重合。
+  getConveyorWidth: function(items) {
+    return items.reduce((sum, item) => sum + item.displayWidth + 16, 0);
+  },
+
   // 计算履带动画时长
   getConveyorDurationByTotalWidth: function(items) {
-    const gap = 16;
-    const totalWidth = items.reduce((sum, it) => sum + it.displayWidth + gap, 0);
+    const totalWidth = this.getConveyorWidth(items);
     const duration = Math.max(15000, Math.min(50000, totalWidth * 25));
     return duration;
+  },
+
+  // 组件自行结束骨架，父页继续处理荣誉尺寸与原有失败重载。
+  onHonorImageComplete: function(e) {
+    if (this.data.isPageUnloaded) return;
+    if (e.detail.error) {
+      this.onHonorImageError(e);
+    } else {
+      this.onHonorImageLoad(e);
+    }
   },
 
   // 荣誉图片加载完成
@@ -822,7 +802,7 @@ Page({
     
     if (!width || !height) return;
 
-    const FIXED_HEIGHT = 280;
+    const FIXED_HEIGHT = 240;
     const actualRatio = width / height;
     const displayWidth = Math.round(FIXED_HEIGHT * actualRatio);
     const isLandscape = actualRatio >= 1;
@@ -843,6 +823,7 @@ Page({
     
     this.setData({ 
       teamHonors: updated, 
+      conveyorWidth: this.getConveyorWidth(updated),
       conveyorDuration: duration 
     });
   },

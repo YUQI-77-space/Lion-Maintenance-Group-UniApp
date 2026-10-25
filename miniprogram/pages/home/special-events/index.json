@@ -1,10 +1,11 @@
 {
   "navigationBarTitleText": "特色活动",
-  "enablePullDownRefresh": true,
+  "enablePullDownRefresh": false,
   "backgroundTextStyle": "dark",
   "onReachBottomDistance": 50,
   "usingComponents": {
     "loading-animation": "/components/loading-animation/index",
     "skeleton-image": "/components/skeleton-image/index"
-  }
+  },
+  "disableScroll": true
 }

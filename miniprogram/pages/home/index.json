@@ -2,9 +2,12 @@
   "navigationStyle": "custom",
   "backgroundColor": "#F5F7FA",
   "backgroundTextStyle": "dark",
-  "enablePullDownRefresh": true,
+  "enablePullDownRefresh": false,
   "usingComponents": {
+    "skeleton-image": "/components/skeleton-image/index",
     "section-header": "/components/section-header/index",
-    "entry-item": "/components/entry-item/index"
-  }
+    "entry-item": "/components/entry-item/index",
+    "loading-animation": "/components/loading-animation/index"
+  },
+  "disableScroll": true
 }

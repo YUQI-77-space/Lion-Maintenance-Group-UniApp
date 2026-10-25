@@ -36,14 +36,21 @@ function loadPage(route, role = 'member', images = {}) {
 for (const slug of ['team-spirit', 'special-events']) {
   test(`${slug}：慢图不拦截其他图片，失败结束骨架并显示说明`, () => {
     const { page } = loadPage(`pages/home/${slug}/index`);
-    const shown = [];
-    page.selectComponent = id => ({ showImage: () => shown.push(id) });
+    let definition;
+    vm.runInNewContext(fs.readFileSync('miniprogram/components/skeleton-image/index.js', 'utf8'), {
+      Component: value => { definition = value; }
+    });
+    const image = { ...definition.methods, data: structuredClone(definition.data),
+      setData(value) { Object.assign(this.data, value); },
+      triggerEvent(name, detail) {
+        page.onImageLoadComplete({ currentTarget: { dataset: { index: 0 } }, detail });
+      } };
     page.data.totalCount = 12;
-    page.onImageLoadComplete({ currentTarget: { id: 'photo-0', dataset: { index: 0 } }, detail: {} });
-    assert.deepEqual(shown, ['#photo-0']);
+    image.onImageLoad({ detail: {} });
+    assert.equal(image.data.showRealImage, true);
     assert.equal(page.data.imageErrors[0], false);
     page.onImageLoadComplete({ currentTarget: { id: 'photo-1', dataset: { index: 1 } }, detail: { error: true } });
-    assert.deepEqual(shown, ['#photo-0', '#photo-1']);
+    assert.equal(image.data.showRealImage, true);
     assert.equal(page.data.imageErrors[1], true);
     page.onImageLoadComplete({ currentTarget: { id: 'photo-1', dataset: { index: 1 } }, detail: {} });
     assert.equal(page.data.imageErrors[1], false);

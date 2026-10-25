@@ -10,8 +10,7 @@
 .gallery-page .skeleton-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 .gallery-page .photo-caption { display: flex; align-items: flex-start; justify-content: space-between; gap: 8rpx; padding: 16rpx; color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
 .gallery-page .photo-number { flex-shrink: 0; color: var(--mg-color-text-muted); }
-.gallery-page .skeleton-line { display: block; width: 64%; height: 24rpx; margin: 8rpx 0; border-radius: 8rpx; background: var(--mg-color-bg-subtle); }
-.gallery-page .gallery-status { margin-top: 32rpx; text-align: center; color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
+.gallery-page .gallery-page .gallery-status { margin-top: 32rpx; text-align: center; color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
 .gallery-page .gallery-help { margin-top: 16rpx; text-align: center; color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); }
 .gallery-page .empty-state { padding: 64rpx 32rpx; text-align: center;  }
 .gallery-page .empty-mark { width: 48rpx; height: 4rpx; background: var(--mg-color-brand); margin: 0 auto 24rpx; }

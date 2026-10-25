@@ -1,36 +1,22 @@
 // pages/home/team-spirit/index.js
-const app = getApp();
 const cloudImageManager = require('../../../utils/cloudImageManager');
 
-// 页面级数据缓存键
-const CACHE_KEY = 'teamSpiritCache';
-
 Page({
+  behaviors: [require('../../../utils/pageRefresh')],
   data: {
     teamSpirit: [],
     loading: false,
     hasMore: true,
     pageSize: 12,
     currentPage: 1,
-    skeletonCount: 12,
     isInitialized: false,
-    // 页面级图片失败状态，不改变公共组件契约
-    imageErrors: {},
-    loadedCount: 0,
-    totalCount: 0
+    // 页面级图片失败状态，用于展示刷新提示
+    imageErrors: {}
   },
 
   onLoad: function (options) {
     this.loadTeamSpirit();
   },
-
-  onShow: function () {},
-
-  onReady: function () {},
-
-  onHide: function () {},
-
-  onUnload: function () {},
 
   // 加载团队风采图片
   loadTeamSpirit: function(forceRefresh = false) {
@@ -56,7 +42,7 @@ Page({
       return;
     }
 
-    cloudImageManager.convertCloudFileIdsToTempUrls(pageResult.images).then((withTempUrls) => {
+    return cloudImageManager.convertCloudFileIdsToTempUrls(pageResult.images).then((withTempUrls) => {
       const newSpirit = this.data.currentPage === 1 ? withTempUrls : [...this.data.teamSpirit, ...withTempUrls];
 
       this.setData({
@@ -64,12 +50,8 @@ Page({
         loading: false,
         hasMore: pageResult.hasMore,
         currentPage: this.data.currentPage + 1,
-        isInitialized: true,
-        loadedCount: 0,
-        totalCount: withTempUrls.length
+        isInitialized: true
       });
-
-      this.saveToCache();
     }).catch((err) => {
       console.warn('转换临时链接失败，回退直接使用原始地址:', err);
       const newSpirit = this.data.currentPage === 1 ? pageResult.images : [...this.data.teamSpirit, ...pageResult.images];
@@ -79,9 +61,7 @@ Page({
         loading: false,
         hasMore: pageResult.hasMore,
         currentPage: this.data.currentPage + 1,
-        isInitialized: true,
-        loadedCount: 0,
-        totalCount: pageResult.images.length
+        isInitialized: true
       });
     });
   },
@@ -91,42 +71,22 @@ Page({
     this.setData({
       imageErrors: { ...this.data.imageErrors, [e.currentTarget.dataset.index]: !!e.detail.error }
     });
-    const image = this.selectComponent('#' + e.currentTarget.id);
-    if (image && image.showImage) {
-      image.showImage();
-    }
-  },
-
-  // 保存数据到全局缓存
-  saveToCache: function() {
-    try {
-      const cacheData = {
-        teamSpirit: this.data.teamSpirit,
-        hasMore: this.data.hasMore,
-        currentPage: this.data.currentPage,
-        timestamp: Date.now()
-      };
-      if (app.globalData) {
-        app.globalData[CACHE_KEY] = cacheData;
-      }
-    } catch (e) {
-      console.warn('保存缓存失败:', e);
-    }
   },
 
   // 下拉刷新
   onPullDownRefresh: function() {
+    if (this.data.loading) {
+      this.setData({ unifiedRefreshing: false });
+      return;
+    }
     this.setData({
       teamSpirit: [],
       imageErrors: {},
       hasMore: true,
       currentPage: 1,
-      isInitialized: false,
-      loadedCount: 0,
-      totalCount: 0
+      isInitialized: false
     });
-    this.loadTeamSpirit(true);
-    wx.stopPullDownRefresh();
+    return this.loadTeamSpirit(true);
   },
 
   // 上拉加载更多
