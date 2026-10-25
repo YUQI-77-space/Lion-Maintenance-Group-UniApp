@@ -1,5 +1,9 @@
 {
   "navigationStyle": "custom",
   "backgroundColor": "#F5F7FA",
-  "navigationBarTitleText": "报修"
+  "navigationBarTitleText": "报修",
+  "usingComponents": {
+    "search-field": "/components/search-field/index",
+    "loading-animation": "/components/loading-animation/index"
+  }
 }

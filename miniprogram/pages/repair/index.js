@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../utils/loading');
 const { getLayout } = require('../../utils/layout');
 const api = require('../../utils/apiAdapter');
 const SubscriptionAuth = require('../../utils/subscriptionAuth');
@@ -85,9 +86,7 @@ Page({
 
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
-    iconSearch: iconManager.get('common_search'),
     iconArrowRight: iconManager.get('common_arrow_right'),
-    iconCheck: iconManager.get('common_check'),
 
     submitting: false, submitUnknown: false, submitMessage: '', submittedTaskId: '',
     currentStep: 0,
@@ -169,7 +168,7 @@ Page({
     this._draftOwner = owner;
     this.setData({ userInfo: currentUser });
     const tab = this.getTabBar && this.getTabBar();
-    tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+    tab && tab.setSelectedByRoute && tab.setSelectedByRoute(this.route);
 
     // 若此前加载失败导致列表为空，重新尝试获取紧急联系人
     if (!this.data.emergencyContacts.length) {
@@ -194,8 +193,6 @@ Page({
       // 任何异常不影响正常流程
     }
   },
-
-  onUnload() {},
 
   /**
    * 步骤对应的进度阶段：0 选择类别 / 1 填写信息 / 2 确认提交
@@ -672,43 +669,10 @@ Page({
     this.setData({ otherDescription: e.detail.value });
   },
   
-  // 特殊输入字段的处理方法
-  onLaptopModelInput(e) {
-    this.setData({ laptopModel: e.detail.value });
-  },
-  
-  onPhoneModelInput(e) {
-    this.setData({ phoneModel: e.detail.value });
-  },
-  
-  onLaptopSystemInput(e) {
-    this.setData({ laptopSystem: e.detail.value });
-  },
-  
-  onSoftwareInfoInput(e) {
-    this.setData({ softwareInfo: e.detail.value });
-  },
-  
   onSystemVersionChange(e) {
     const systemOptions = ['WIN7', 'WIN10', 'WIN11', 'MAC'];
     const selectedIndex = e.detail.value;
     this.applyFieldValue('systemVersion', systemOptions[selectedIndex]);
-  },
-  
-  onDeviceModelInput(e) {
-    this.setData({ deviceModel: e.detail.value });
-  },
-
-  onMouseModelInput(e) {
-    this.setData({ mouseModel: e.detail.value });
-  },
-
-  onKeyboardModelInput(e) {
-    this.setData({ keyboardModel: e.detail.value });
-  },
-
-  onFanModelInput(e) {
-    this.setData({ fanModel: e.detail.value });
   },
   
   // 通用的字段输入处理函数
@@ -880,7 +844,7 @@ Page({
       // 校验异常不阻断，但实际未注册仍会被后端拒绝
     }
 
-    wx.showLoading({ title: '正在提交...' });
+    loadingFeedback.show({ title: '正在提交...' });
 
     try {
       const { 
@@ -894,7 +858,7 @@ Page({
       const selectedType = tempState.selectedType;
 
       if (!selectedType) {
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showToast({
           title: '类型数据丢失,请重试',
           icon: 'none'
@@ -931,7 +895,7 @@ Page({
         }
       });
 
-      wx.hideLoading();
+      loadingFeedback.hide();
 
       if (res.success) {
         // 首页「我的待办」是缓存直出，新建成功后必须作废，否则切回首页看到的还是旧列表
@@ -958,7 +922,7 @@ Page({
         });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.setData({ submitUnknown: true, submitMessage: '暂时无法确认提交结果，请先到待办核实，输入已保留。' });
       console.error('submitRepair error:', err);
     }
@@ -988,9 +952,7 @@ Page({
   },
 
   goToHome() {
-    wx.switchTab({
-      url: '/pages/user/profile/index' // 跳转到"我的"页面
-    });
+    require('../../utils/router').userRouter.toProfile();
   },
 
   goToCategoryMap() {

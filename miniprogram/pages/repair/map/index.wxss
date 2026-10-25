@@ -28,7 +28,7 @@ page {
 .tip-text {
   flex: 1;
   min-width: 0;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.5;
   color: var(--text-secondary);
 }
@@ -36,7 +36,7 @@ page {
 .tip-action {
   flex-shrink: 0;
   margin-left: 20rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--primary);
 }
 
@@ -65,7 +65,7 @@ page {
 }
 
 .cat-name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -91,7 +91,7 @@ page {
 }
 
 .sub-name {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-primary);
 }
 
@@ -108,7 +108,7 @@ page {
   border-radius: 999rpx;
   background: rgba(0, 0, 205, 0.05);
   color: var(--primary);
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.3;
 }
 
@@ -139,7 +139,7 @@ page {
 }
 
 .primary-btn, .btn-primary, .submit-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); border-color: var(--mg-color-brand); border-radius: 16rpx; }
-.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: 15px; }
+.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: var(--mg-font-body); }
 .step-bar { z-index: 100; }
 .step-card { border: 0; border-radius: 24rpx; padding: 32rpx; }
 .button-group { gap: 8px; }

@@ -40,3 +40,4 @@
     </block>
   </view>
 </view>
+<loading-overlay id="global-loading" />

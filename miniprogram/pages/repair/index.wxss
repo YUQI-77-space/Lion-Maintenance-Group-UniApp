@@ -72,7 +72,7 @@ page {
   border-radius: 50%;
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 20rpx;
+  font-size: var(--mg-font-caption);
   line-height: 30rpx;
   text-align: center;
   box-sizing: border-box;
@@ -94,7 +94,7 @@ page {
 
 .node-text {
   margin-top: 8rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.3;
   color: var(--text-muted);
   transition: color 0.25s ease;
@@ -117,9 +117,9 @@ page {
 }
 
 .step-title {
-  font-size: 34rpx;
+  font-size: var(--mg-font-section);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: var(--mg-line-section);
   color: var(--text-primary);
 }
 
@@ -130,7 +130,7 @@ page {
 .step-subtitle {
   margin-top: 10rpx;
   margin-bottom: 30rpx;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   line-height: 1.5;
   color: var(--text-secondary);
 }
@@ -141,7 +141,7 @@ page {
   padding: 0 36rpx;
   height: 84rpx;
   line-height: 80rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   text-align: center;
   border-radius: 999rpx;
@@ -216,7 +216,7 @@ page {
 }
 
 .category-name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -245,7 +245,7 @@ page {
   border-radius: 16rpx;
   background: #f7f8fa;
   color: var(--text-primary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.4;
   text-align: center;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -271,7 +271,7 @@ page {
   display: flex;
   align-items: center;
   margin-bottom: 14rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-primary);
 }
 
@@ -284,7 +284,7 @@ page {
   margin-left: 10rpx;
   padding: 2rpx 12rpx;
   border-radius: 999rpx;
-  font-size: 20rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
   background: #f2f3f6;
 }
@@ -295,7 +295,7 @@ page {
   padding: 0 22rpx;
   border: 2rpx solid var(--border);
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-primary);
   background: var(--bg-card);
   box-sizing: border-box;
@@ -314,13 +314,13 @@ page {
 
 .field-error {
   margin-top: 10rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--danger);
 }
 
 .field-hint {
   margin-top: 12rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.5;
   color: var(--text-muted);
 }
@@ -340,6 +340,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 48px;
   padding: 26rpx 22rpx;
   border: 2rpx solid var(--border);
   border-radius: 12rpx;
@@ -350,31 +351,42 @@ page {
 .appointment-container .picker-item {
   margin-bottom: 0;
   border: none;
-  border-bottom: 1rpx solid #f0f1f5;
   border-radius: 0;
-  padding: 26rpx 4rpx;
+  padding: 16rpx 4rpx;
 }
 
-.appointment-container .picker-item:last-child {
-  border-bottom: none;
+.appointment-container picker + picker .picker-item {
+  border-top: 1px solid var(--mg-color-border);
 }
 
 .picker-label {
-  font-size: 28rpx;
+  flex-shrink: 0;
+  font-size: var(--mg-font-label);
+  line-height: var(--mg-line-label);
   color: var(--text-primary);
 }
 
 .picker-right {
   display: flex;
   align-items: center;
+  min-width: 0;
+  margin-left: 16rpx;
 }
 
-.picker-value {
-  font-size: 28rpx;
+/* 这里只展示选择值，避免命中公共 .picker-value 的输入框尺寸和边框。 */
+.repair-picker-text {
+  min-width: 0;
+  font-size: var(--mg-font-body);
+  line-height: var(--mg-line-body);
   color: var(--text-primary);
+  overflow-wrap: break-word;
 }
 
-.picker-value.placeholder {
+.picker-right .repair-picker-text {
+  white-space: nowrap;
+}
+
+.repair-picker-text.placeholder {
   color: var(--text-muted);
 }
 
@@ -388,7 +400,7 @@ page {
   padding: 20rpx 22rpx;
   border: 2rpx solid var(--border);
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.6;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -400,25 +412,33 @@ page {
 }
 
 /* ==================== 分类地图入口 ==================== */
-.map-entry {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 24rpx;
-  padding: 24rpx;
-  border-radius: 12rpx;
-  background: rgba(0, 0, 205, 0.05);
-  font-size: 26rpx;
-  color: var(--primary);
+/* 覆盖原生 button 非 mini 尺寸规则，避免被默认宽度收窄。 */
+.repair-container .map-entry {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: break-word;
+  font-weight: 400;
+  text-align: left;
+  min-height: 48px;
+  margin: 16rpx 0 0;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--mg-font-label);
+  line-height: 1.5;
+  color: var(--mg-color-brand);
+}
+
+.map-entry::after {
+  border: 0;
 }
 
 .map-entry:active {
-  opacity: 0.8;
-}
-
-.map-entry-icon {
-  width: 26rpx;
-  height: 26rpx;
+  opacity: 0.7;
 }
 
 /* ==================== 确认页 ==================== */
@@ -443,7 +463,7 @@ page {
 
 .confirm-label {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--mg-font-label);
   line-height: 1.4;
   color: var(--text-muted);
 }
@@ -451,7 +471,7 @@ page {
 .confirm-value {
   display: block;
   margin-top: 8rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.6;
   color: var(--text-primary);
   word-break: break-all;
@@ -463,7 +483,7 @@ page {
 
 .confirm-line {
   display: block;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.7;
   color: var(--text-primary);
 }
@@ -474,20 +494,9 @@ page {
   text-align: center;
 }
 
-.success-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 140rpx;
-  height: 140rpx;
-  margin: 0 auto 26rpx;
-  border-radius: 50%;
-  background: rgba(82, 196, 26, 0.1);
-}
-
 .success-icon {
-  width: 76rpx;
-  height: 76rpx;
+  display: block;
+  margin: 0 auto 26rpx;
 }
 
 .success-card .step-subtitle {
@@ -503,14 +512,14 @@ page {
 }
 
 .emergency-section-title {
-  font-size: 30rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .emergency-section-subtitle {
   margin-top: 10rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.6;
   color: var(--text-secondary);
 }
@@ -520,10 +529,8 @@ page {
   align-items: center;
   justify-content: space-between;
   margin-top: 20rpx;
-  padding: 22rpx 24rpx;
-  border: 1rpx solid #f0f1f5;
-  border-radius: 16rpx;
-  background: #f7f8fa;
+  padding: 16rpx 0;
+  border-bottom: 1px solid var(--mg-color-border);
 }
 
 .emergency-contact-name-col {
@@ -533,14 +540,14 @@ page {
 }
 
 .emergency-contact-label {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.4;
   color: var(--text-muted);
   margin-bottom: 6rpx;
 }
 
 .emergency-contact-name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-primary);
   overflow: hidden;
@@ -554,9 +561,11 @@ page {
   align-items: flex-end;
   flex-shrink: 0;
   max-width: 62%;
-  padding: 8rpx 16rpx;
-  border-radius: 12rpx;
-  background: rgba(0, 0, 205, 0.05);
+  min-width: 48px;
+  min-height: 48px;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
 }
 
 .emergency-contact-qq-col--hover {
@@ -566,11 +575,13 @@ page {
 .emergency-contact-qq-row {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .emergency-contact-qq {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--primary);
   word-break: break-all;
@@ -578,7 +589,7 @@ page {
 
 .emergency-contact-copy {
   flex-shrink: 0;
-  font-size: 20rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
 }
 
@@ -589,47 +600,11 @@ page {
   z-index: 120;
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
-  padding: 0 24rpx;
-  height: 84rpx;
-  border: 1rpx solid var(--border);
-  border-radius: 999rpx;
-  background: var(--bg-card);
-  box-sizing: border-box;
-}
-
-.search-icon {
-  width: 32rpx;
-  height: 32rpx;
-  margin-right: 12rpx;
-  opacity: 0.55;
-}
-
-.search-input {
-  flex: 1;
-  min-width: 0;
-  font-size: 26rpx;
-  color: var(--text-primary);
-}
-
-.search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.search-clear {
-  flex-shrink: 0;
-  padding-left: 16rpx;
-  font-size: 24rpx;
-  color: var(--text-secondary);
-}
-
 .search-panel {
   position: absolute;
   left: 0;
   right: 0;
-  top: 96rpx;
+  top: calc(100% + 12rpx);
   padding: 20rpx 16rpx;
   border: 1rpx solid #f0f1f5;
   border-radius: 20rpx;
@@ -640,13 +615,13 @@ page {
 
 .panel-title {
   padding: 0 8rpx 14rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   color: var(--text-muted);
 }
 
 .panel-empty {
   padding: 12rpx 8rpx;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   line-height: 1.6;
   color: var(--text-muted);
 }
@@ -662,7 +637,7 @@ page {
   border-radius: 999rpx;
   background: #f2f3f6;
   color: var(--text-secondary);
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
 }
 
 .chip:active {
@@ -688,19 +663,19 @@ page {
 }
 
 .result-main {
-  font-size: 26rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.5;
   color: var(--text-primary);
 }
 
 .result-sub {
   margin-top: 4rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
 }
 
 .primary-btn, .btn-primary, .submit-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); border-color: var(--mg-color-brand); border-radius: 16rpx; }
-.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: 15px; }
+.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: var(--mg-font-body); }
 .step-bar { z-index: 100; }
 .step-card { border: 0; border-radius: 24rpx; padding: 32rpx; }
 .button-group { gap: 8px; }

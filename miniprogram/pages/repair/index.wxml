@@ -31,20 +31,7 @@
   <view wx:if="{{currentStep === 0}}">
     <!-- 搜索栏 -->
     <view class="search-wrapper">
-      <view class="search-bar">
-        <image class="search-icon" src="{{iconSearch}}" mode="aspectFit"></image>
-        <input
-          class="search-input"
-          placeholder="搜索问题，如：清灰、电风扇、手机屏幕"
-          confirm-type="search"
-          value="{{searchKeyword}}"
-          bindinput="onSearchInput"
-          bindconfirm="onSearchConfirm"
-          bindfocus="onSearchFocus"
-          bindblur="onSearchBlur"
-        />
-        <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="onSearchClear">清空</view>
-      </view>
+      <search-field value="{{searchKeyword}}" placeholder="搜索问题，如：清灰、电风扇、手机屏幕" bindinput="onSearchInput" bindconfirm="onSearchConfirm" bindclear="onSearchClear" bindfocus="onSearchFocus" bindblur="onSearchBlur" />
 
       <!-- 快捷关键词 -->
       <view wx:if="{{showQuickKeywords && !searchKeyword}}" class="search-panel">
@@ -101,10 +88,7 @@
         </view>
       </view>
 
-      <view class="map-entry" bindtap="goToCategoryMap">
-        <text>不确定属于哪一类？查看分类地图</text>
-        <image class="map-entry-icon" src="{{iconArrowRight}}" mode="aspectFit"></image>
-      </view>
+      <button class="map-entry" bindtap="goToCategoryMap">不确定属于哪一类？查看分类地图</button>
     </view>
   </view>
 
@@ -190,7 +174,7 @@
           bindchange="onSystemVersionChange"
         >
           <view class="picker-item">
-            <view class="picker-value {{systemVersion ? '' : 'placeholder'}}">{{systemVersion || '请选择'}}</view>
+            <view class="repair-picker-text {{systemVersion ? '' : 'placeholder'}}">{{systemVersion || '请选择'}}</view>
             <view class="row-arrow"></view>
           </view>
         </picker>
@@ -205,7 +189,7 @@
           <view class="picker-item">
             <view class="picker-label">预约日期</view>
             <view class="picker-right">
-              <view class="picker-value">{{appointmentDate}}</view>
+              <view class="repair-picker-text">{{appointmentDate}}</view>
               <view class="row-arrow"></view>
             </view>
           </view>
@@ -214,7 +198,7 @@
           <view class="picker-item">
             <view class="picker-label">预约时间</view>
             <view class="picker-right">
-              <view class="picker-value">{{appointmentTime}}</view>
+              <view class="repair-picker-text">{{appointmentTime}}</view>
               <view class="row-arrow"></view>
             </view>
           </view>
@@ -282,11 +266,10 @@
         </view>
       </view>
 
-      <view class="mg-page-notice">联系方式：{{userInfo.nickName}} · QQ {{userInfo.qqId || '请核对个人资料'}}<view wx:if="{{selectedTypeId === 111}}">笔记本清灰需收费30元人工费，请携带充电器。</view><view>订阅通知用于接收受理和进度提醒，拒绝通知仍可报修。</view></view>
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{submitMessage}}">{{submitMessage}}<button wx:if="{{submitUnknown}}" class="mg-button mg-button--secondary" bindtap="goToTodo">到待办核实结果</button></view>
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep" disabled="{{submitting || submitUnknown}}">返回修改</button>
-        <button class="btn btn-primary" bindtap="submitRepair" loading="{{submitting}}" disabled="{{submitting || submitUnknown}}">{{submitting ? '正在提交' : '提交报修'}}</button>
+        <button class="btn btn-primary" bindtap="submitRepair" disabled="{{submitting || submitUnknown}}"><loading-animation wx:if="{{submitting}}" size="small" /><text wx:else>{{'提交报修'}}</text></button>
       </view>
     </view>
   </view>
@@ -294,9 +277,7 @@
   <!-- ==================== 步骤 5：提交成功 ==================== -->
   <view wx:if="{{currentStep === 5}}">
     <view class="step-card success-card">
-      <view class="success-badge">
-        <image class="success-icon" src="{{iconCheck}}" mode="aspectFit"></image>
-      </view>
+      <icon class="success-icon" type="success_no_circle" size="64" color="#19734A" aria-hidden="true" />
       <view class="step-title success-title">提交成功</view>
       <view class="step-subtitle">您的报修已提交，请耐心等待维修人员联系</view>
 
@@ -315,6 +296,8 @@
             bindtap="onCopyEmergencyQQ"
             data-qq="{{item.qqId}}"
             data-name="{{item.nickName}}"
+            role="button"
+            aria-label="复制{{item.nickName}}的QQ号{{item.qqId}}"
           >
             <view class="emergency-contact-label">QQ号</view>
             <view class="emergency-contact-qq-row">
@@ -332,3 +315,4 @@
     </view>
   </view>
 </view>
+<loading-overlay id="global-loading" />
