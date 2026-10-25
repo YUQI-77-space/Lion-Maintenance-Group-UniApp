@@ -1,9 +1,11 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/duty/roster/index.js
 const api = require('../../../../utils/apiAdapter');
 const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
 
 Page({
+  behaviors: [require('../../../../utils/pageRefresh')],
   data: {
     // 加载状态
     confirming: false, confirmationMessage: '',
@@ -69,10 +71,10 @@ Page({
   // 下拉刷新
   onPullDownRefresh: function () {
     
-    this.loadDutyData(true)
+    return this.loadDutyData(true)
       .then(() => this.loadUserDutySlots({ weekNumber: this.data.currentWeek, year: this.data.currentYear }))
       .finally(() => {
-        wx.stopPullDownRefresh()
+        this.setData({ unifiedRefreshing: false })
       })
   },
 
@@ -432,15 +434,18 @@ Page({
             // 当前预选的
             newStatus = 'selected'
             newStatusClass = 'selected'
+            newStatusText = '已预选'
           } else if (userSlots.confirmedSlots.find(slot => slot.dutySlotId === slotId)) {
             // 已确认的
             newStatus = 'confirmed'
             newStatusClass = 'assigned'
+            newStatusText = '已确认'
             canSelect = false  // 已确认的不能再次选择
           } else if (userSlots.preSelectedSlots.find(slot => slot.dutySlotId === slotId)) {
             // 已预选但未确认的
             newStatus = 'preSelected'
             newStatusClass = 'selected'
+            newStatusText = '待确认'
           }
           
           return {
@@ -508,7 +513,7 @@ Page({
     try {
       await SubscriptionAuth.requestSubscribeMessage([SubscriptionAuth.TEMPLATES.DUTY_REMINDER], SubscriptionAuth.SCENES.DUTY_SELECTION, { showTip: true, allowPartialSuccess: true });
     } catch (_) { /* 拒绝通知不阻断值班确认。 */ }
-    wx.showLoading({ title: '核对当前周...' });
+    loadingFeedback.show({ title: '核对当前周...' });
     try {
       const latest = await api.call('dutySchedule', { action: 'getDutySlots', timeout: 10000 });
       if (!latest.success || !latest.data) throw new Error(latest.message || '无法核对当前周，请重新加载');
@@ -537,7 +542,7 @@ Page({
       this.reconcileLocalSelection();
     } catch (error) {
       this.setData({ confirmationMessage: error.message || '结果暂时无法核实，请刷新排班后检查' });
-    } finally { wx.hideLoading(); }
+    } finally { loadingFeedback.hide(); }
   },
 
   reconcileLocalSelection() {

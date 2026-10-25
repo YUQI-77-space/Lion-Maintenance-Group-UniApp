@@ -12,7 +12,6 @@ Page({
     tempDate: '',
 
     // 图标资源
-    iconLoading: iconManager.get('common_loading'),
     iconEmpty: iconManager.get('common_empty'),
     iconCheck: iconManager.get('common_check'),
     iconDelete: iconManager.get('common_delete'),
@@ -113,10 +112,6 @@ Page({
     this.setData({
       showDangerZone: !this.data.showDangerZone
     })
-  },
-
-  onShow: function () {
-    
   },
 
   // 初始化周次选项
@@ -430,36 +425,6 @@ Page({
         showCancel: false
       });
     }
-  },
-
-  // 清除现有数据
-  clearExistingData: function () {
-    this.setData({ setupProgress: '正在清除现有数据...' });
-    return api.call('dutySchedule', {
-      action: 'clearAllDutySlots',
-      params: { forceDelete: true, batchSize: 50, maxRetries: 3 },
-      timeout: 30000, config: { retries: 0 }
-    });
-  },
-
-  // 更新开始日期
-  updateStartDate: function (selectedDate) {
-    this.setData({ setupProgress: '正在设置学期开始日期...' });
-    return api.call('dutySchedule', {
-      action: 'updateDutyConfig',
-      params: { configType: 'startDate', value: selectedDate },
-      timeout: 10000, config: { retries: 0 }
-    });
-  },
-
-  // 重新生成值班表
-  regenerateSchedule: function () {
-    this.setData({ setupProgress: '正在生成第一周值班表...' });
-    return api.call('dutySchedule', {
-      action: 'regenerateDutySlots',
-      params: { weekNumber: 1, year: new Date().getFullYear() },
-      timeout: 15000, config: { retries: 0 }
-    });
   },
 
   // ============ 简化的周次切换功能 ============

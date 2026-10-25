@@ -89,10 +89,14 @@
 
           <!-- 值班表格显示 -->
           <view class="duty-table-section">
+            <view class="table-guide" wx:if="{{dutyTableData && !tableLoading && !tableError}}">
+              <text>本周排班</text>
+              <text class="table-scroll-hint">左右滑动查看日期 →</text>
+            </view>
             <!-- 表格加载状态（全局 loading 时不再重复显示） -->
             <view class="table-loading-container" wx:if="{{tableLoading && !isLoading}}">
-              <image class="loading-icon" src="{{iconLoading}}" mode="aspectFit"></image>
-              <text class="loading-text">正在加载值班数据...</text>
+              <loading-animation size="default" />
+
             </view>
 
             <!-- 表格错误状态 -->
@@ -115,7 +119,7 @@
                   <!-- 固定时间列 -->
                   <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
                     <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
-                    <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
+                    <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}–{{timeSlotData.timeSlotInfo.endTime}}</text>
                   </view>
                 </view>
 
@@ -170,6 +174,7 @@
 
     <!-- 页 2：值班设置 -->
     <swiper-item>
+      <scroll-view class="page-scroll" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
       <view class="page-section page-settings">
         <!-- 学期与当前周设置卡片 -->
         <view class="settings-card settings-card-primary">
@@ -261,10 +266,12 @@
           </view>
         </view>
       </view>
+      </scroll-view>
     </swiper-item>
 
     <!-- 页 3：当前配置 -->
     <swiper-item>
+      <scroll-view class="page-scroll" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
       <view class="page-section page-config" wx:if="{{configData}}">
         <!-- 总览卡 -->
         <view class="config-summary-card">
@@ -340,6 +347,7 @@
           </view>
         </view>
       </view>
+      </scroll-view>
     </swiper-item>
   </swiper>
 
@@ -358,8 +366,8 @@
   <!-- 设置进度显示 -->
   <view class="progress-section" wx:if="{{setupProgress}}">
     <view class="progress-card">
-      <image class="progress-icon" src="{{iconLoading}}" mode="aspectFit"></image>
-      <text class="progress-text">{{setupProgress}}</text>
+      <loading-animation size="default" />
+
     </view>
   </view>
 
@@ -371,7 +379,7 @@
         <text class="modal-title">选择学期开始日期</text>
         <text class="modal-subtitle">请选择周一作为学期开始日期</text>
       </view>
-      
+
       <view class="picker-container">
         <picker mode="date" value="{{tempDate}}" bindchange="onTempDateChange">
           <view class="picker-display">
@@ -380,7 +388,7 @@
           </view>
         </picker>
       </view>
-      
+
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelDateSelection">取消</button>
         <button class="modal-button confirm" bindtap="confirmDateSelection">确定</button>
@@ -396,7 +404,7 @@
         <text class="modal-title">切换当前周</text>
         <text class="modal-subtitle">选择要切换到的周次 (1-20)</text>
       </view>
-      
+
       <view class="week-picker-section">
         <picker mode="selector" range="{{weekOptions}}" value="{{selectedWeekIndex}}" bindchange="onWeekPickerChange">
           <view class="picker-display">
@@ -405,7 +413,7 @@
           </view>
         </picker>
       </view>
-      
+
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelWeekSwitcher">取消</button>
         <button class="modal-button confirm" bindtap="confirmSimpleWeekSwitch" disabled="{{!selectedWeek}}">确定</button>
@@ -421,12 +429,12 @@
         <text class="modal-title">确认重置</text>
         <text class="modal-subtitle">将清空第{{configData.currentWeek}}周的所有值班选择</text>
       </view>
-      
+
       <view class="warning-section">
         <image class="warning-icon" src="{{iconTools}}" mode="aspectFit"></image>
         <text class="warning-text">此操作不可撤销，确定继续吗？</text>
       </view>
-      
+
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelReset">取消</button>
         <button class="modal-button confirm danger" bindtap="confirmReset">确定重置</button>
@@ -442,7 +450,7 @@
         <text class="modal-title">{{permissionActionText}}编辑权限</text>
         <text class="modal-subtitle">第{{configData.currentWeek}}周的值班编辑权限</text>
       </view>
-      
+
       <view class="permission-preview">
         <view class="status-change">
           <view class="status-item current-status {{configData.isEditingEnabled ? 'enabled' : 'disabled'}}">
@@ -456,7 +464,7 @@
           </view>
         </view>
       </view>
-      
+
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelEditPermissionToggle">取消</button>
         <button class="modal-button confirm" bindtap="confirmEditPermissionToggle">确定{{permissionActionText}}</button>
@@ -472,7 +480,7 @@
         <text class="modal-title">确认删除值班分配</text>
         <text class="modal-subtitle">将删除所选的 {{selectedSlots.length}} 个值班时段</text>
       </view>
-      
+
       <!-- 删除详情预览 -->
       <view class="delete-preview">
         <view class="preview-header">
@@ -493,12 +501,12 @@
           </view>
         </scroll-view>
       </view>
-      
+
       <view class="warning-section">
         <image class="warning-icon" src="{{iconTools}}" mode="aspectFit"></image>
         <text class="warning-text">此操作将清除选中时段的值班分配，且不可撤销！</text>
       </view>
-      
+
       <view class="modal-buttons">
         <button class="modal-button cancel" bindtap="cancelDeleteConfirm">取消</button>
         <button class="modal-button confirm danger" bindtap="confirmDeleteAssignment" disabled="{{confirmDeleteDisabled}}">确定删除</button>
@@ -545,4 +553,5 @@
       </view>
     </view>
   </view>
-</view> 
+</view>
+<loading-overlay id="global-loading" />

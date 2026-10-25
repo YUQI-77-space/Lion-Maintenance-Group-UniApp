@@ -1,16 +1,18 @@
+<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!--pages/team/duty/roster/index.wxml-->
-<view class="mg-theme mg-data-page container">
-  <!-- 页面头部 -->
+<view class="mg-theme mg-data-page roster-page">
   <view class="header">
-    <view class="title-section">
-      <text class="main-title">第{{currentWeek}}周 值班表</text>
-      <text class="date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
+    <view class="week-heading">
+      <text class="main-title">第 {{currentWeek}} 周</text>
+      <text wx:if="{{isDataReady}}" class="edit-status {{configData.isEditingEnabled ? '' : 'edit-status--closed'}}">{{configData.isEditingEnabled ? '开放预选' : '仅供查看'}}</text>
     </view>
-    
-    <!-- 统计信息 -->
+    <text class="date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
     <view class="stats-info" wx:if="{{isDataReady}}">
-      <text class="stat-item">可选 {{availableSlots}}</text>
-      <text class="stat-item">已排 {{assignedSlots}}</text>
+      <text>可选 <text class="stat-value">{{availableSlots}}</text> 段</text>
+      <text class="meta-divider">·</text>
+      <text>已排 <text class="stat-value">{{assignedSlots}}</text> 段</text>
+      <text class="week-rule">每人每周最多 3 段</text>
     </view>
   </view>
 
@@ -26,10 +28,12 @@
     <button class="retry-btn" bindtap="retryLoadData">重新加载</button>
   </view>
 
-  <view class="mg-page-notice" wx:if="{{isDataReady}}">第{{currentWeek}}周 · {{weekDateRange}}<view>{{configData.isEditingEnabled ? '当前可预选，最终确认前可修改' : '当前编辑已关闭，仅可查看排班'}}</view><view>表格可左右滑动，时间列固定；已确认与待确认时段也列在表格下方。</view></view>
   <view class="mg-page-notice" wx:if="{{confirmationMessage}}">{{confirmationMessage}}</view>
   <!-- 值班表格 -->
-  <view class="duty-table-container" wx:if="{{isDataReady && !isLoading}}">
+  <view class="schedule-panel" wx:if="{{isDataReady && !isLoading}}">
+    <view class="panel-heading"><text class="section-title">本周排班</text><text class="scroll-hint">左右滑动查看日期 →</text></view>
+    <text class="panel-description">{{configData.isEditingEnabled ? '点击可选时段预选，再到下方核对确认。' : '本周预选已关闭，可查看排班与个人时段。'}}</text>
+    <view class="duty-table-container">
     <view class="duty-table">
       <!-- 左侧固定列 -->
       <view class="fixed-column">
@@ -37,14 +41,14 @@
         <view class="fixed-header-cell">
           <text class="header-text">时间段</text>
         </view>
-        
+
         <!-- 固定时间列 -->
         <view class="fixed-time-cell" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData">
           <text class="time-slot-name">{{timeSlotData.timeSlotInfo.name}}</text>
           <text class="time-range">{{timeSlotData.timeSlotInfo.startTime}}-{{timeSlotData.timeSlotInfo.endTime}}</text>
         </view>
       </view>
-      
+
       <!-- 右侧滚动区域 -->
       <scroll-view class="scrollable-area" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
         <view class="scrollable-content">
@@ -55,112 +59,96 @@
               <text class="day-date">{{item.dateDisplay}}</text>
             </view>
           </view>
-          
+
           <!-- 滚动内容行 -->
           <view class="scrollable-content-row" wx:for="{{tableData}}" wx:key="index" wx:for-item="timeSlotData" wx:for-index="rowIndex">
-            <view class="duty-cell {{slotData.statusClass}}" 
+            <view class="duty-cell {{slotData.statusClass}} {{slotData.status === 'confirmed' ? 'my-confirmed' : ''}}"
                   wx:for="{{timeSlotData.dailySlots}}" wx:key="dayOfWeek" wx:for-item="slotData" wx:for-index="colIndex"
-                  data-row-index="{{rowIndex}}" data-col-index="{{colIndex}}" 
-                  bindtap="onSlotTap">
+                  data-row-index="{{rowIndex}}" data-col-index="{{colIndex}}"
+                  bindtap="onSlotTap" hover-class="{{slotData.canSelect ? 'duty-cell--pressed' : 'none'}}"
+                  aria-role="{{slotData.canSelect ? 'button' : 'text'}}"
+                  aria-label="{{weekDates[colIndex].dayName}} {{weekDates[colIndex].dateDisplay}} {{timeSlotData.timeSlotInfo.name}} {{timeSlotData.timeSlotInfo.startTime}}至{{timeSlotData.timeSlotInfo.endTime}} {{slotData.statusText}}">
+              <text class="slot-check" wx:if="{{slotData.status === 'selected' || slotData.status === 'preSelected' || slotData.status === 'confirmed'}}">✓</text>
               <text class="slot-text">{{slotData.statusText}}</text>
             </view>
           </view>
         </view>
       </scroll-view>
     </view>
+    </view>
+    <view class="legend-items">
+      <view class="legend-item"><view class="legend-dot can-duty"></view><text>可选</text></view>
+      <view class="legend-item"><view class="legend-dot selected"></view><text>预选</text></view>
+      <view class="legend-item"><view class="legend-dot my-confirmed"></view><text>已确认</text></view>
+      <view class="legend-item"><view class="legend-dot assigned"></view><text>他人占用</text></view>
+      <view class="legend-item"><view class="legend-dot no-duty"></view><text>休假</text></view>
+      <view class="legend-item"><view class="legend-dot locked"></view><text>操作中</text></view>
+    </view>
   </view>
 
   <!-- 预选区域 -->
   <view class="selection-container" wx:if="{{isDataReady && !isLoading && userSlots}}">
-    <view class="selection-header">
-      <text class="selection-title">您本周已选择的值班时间段</text>
-      <text class="selection-hint">每周最多3段，已确认与待确认合计计入上限</text>
+    <view class="panel-heading">
+      <text class="section-title">我的值班</text>
+      <text class="selection-count">{{selectedSlots.length + userSlots.confirmedSlots.length + userSlots.preSelectedSlots.length}} / 3 段</text>
     </view>
-    
+    <text class="panel-description">已确认与待确认时段合计计入每周上限。</text>
+
     <!-- 当前预选项 -->
     <view class="pre-selection-area" wx:if="{{selectedSlots.length > 0}}">
       <view class="section-label">
-        <text class="label-text">当前预选 ({{selectedSlots.length}}/3)</text>
-        <text class="clear-btn" wx:if="{{configData.isEditingEnabled}}" bindtap="clearSelection">清空</text>
+        <text class="label-text">当前预选 · {{selectedSlots.length}} 段</text>
+        <button class="clear-btn" wx:if="{{configData.isEditingEnabled}}" bindtap="clearSelection" disabled="{{confirming}}">清空预选</button>
       </view>
              <view class="selection-list">
          <view class="selection-item pre-selected" wx:for="{{selectedSlotsDisplay}}" wx:key="dutySlotId">
-           <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
-           <text class="remove-btn" wx:if="{{configData.isEditingEnabled}}" data-slot-id="{{item.dutySlotId}}" data-slot-type="preSelected" bindtap="removeUserSlot">×</text>
+           <view class="slot-info"><text class="slot-date">{{item.date}}<text class="slot-period">{{item.timeSlot}}</text></text><text class="slot-time">{{item.startTime}}–{{item.endTime}}</text></view>
+           <button class="remove-btn" wx:if="{{configData.isEditingEnabled}}" data-slot-id="{{item.dutySlotId}}" data-slot-type="preSelected" bindtap="removeUserSlot" disabled="{{confirming}}" aria-label="移除{{item.date}} {{item.timeSlot}} {{item.startTime}}至{{item.endTime}}预选">移除</button>
          </view>
        </view>
-      
-      <!-- 确认按钮 -->
-      <view class="action-buttons" wx:if="{{configData.isEditingEnabled}}">
-        <button class="confirm-btn" bindtap="confirmSelection" loading="{{confirming}}" disabled="{{confirming}}">核对并确认时段</button>
-      </view>
+
     </view>
-    
+
     <!-- 已确认的时间段 -->
     <view class="confirmed-area" wx:if="{{userSlots.confirmedSlots.length > 0}}">
       <view class="section-label">
-        <text class="label-text">已确认 ({{userSlots.confirmedSlots.length}}个)</text>
-        <text class="confirmed-hint">已确认的时间段不可取消</text>
+        <text class="label-text">已确认 · {{userSlots.confirmedSlots.length}} 段</text>
+        <text class="confirmed-hint">不可自行取消</text>
       </view>
       <view class="selection-list">
         <view class="selection-item confirmed" wx:for="{{userSlots.confirmedSlots}}" wx:key="dutySlotId">
-          <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
-          <!-- 已确认的时间段不显示移除按钮 -->
+          <view class="slot-info"><text class="slot-date">{{item.date}}<text class="slot-period">{{item.timeSlot}}</text></text><text class="slot-time">{{item.startTime}}–{{item.endTime}}</text></view>
+          <text class="item-status">✓ 已确认</text>
         </view>
       </view>
     </view>
-    
+
     <!-- 之前预选但未确认的时间段 -->
     <view class="pre-selected-area" wx:if="{{userSlots.preSelectedSlots.length > 0}}">
       <view class="section-label">
-        <text class="label-text">待确认 ({{userSlots.preSelectedSlots.length}}个)</text>
+        <text class="label-text">待确认 · {{userSlots.preSelectedSlots.length}} 段</text>
       </view>
       <view class="selection-list">
         <view class="selection-item pre-selected" wx:for="{{userSlots.preSelectedSlots}}" wx:key="dutySlotId">
-          <text class="slot-info">{{item.date}} {{item.timeSlot}} {{item.startTime}}-{{item.endTime}}</text>
-          <text class="remove-btn" wx:if="{{configData.isEditingEnabled}}" data-slot-id="{{item.dutySlotId}}" data-slot-type="preSelected" bindtap="removeUserSlot">×</text>
+          <view class="slot-info"><text class="slot-date">{{item.date}}<text class="slot-period">{{item.timeSlot}}</text></text><text class="slot-time">{{item.startTime}}–{{item.endTime}}</text></view>
+          <text class="item-status">待确认</text>
         </view>
       </view>
-      
-      <!-- 确认之前预选的按钮 -->
-      <view class="action-buttons" wx:if="{{configData.isEditingEnabled}}">
-        <button class="confirm-btn" bindtap="confirmSelection" loading="{{confirming}}" disabled="{{confirming}}">确认全部待确认项</button>
-      </view>
+
     </view>
-    
+    <view class="action-buttons" wx:if="{{configData.isEditingEnabled && (selectedSlots.length > 0 || userSlots.preSelectedSlots.length > 0)}}">
+      <text class="confirm-hint">确认后不可自行取消，请核对日期与时间。</text>
+      <button class="confirm-btn" bindtap="confirmSelection" disabled="{{confirming}}"><loading-animation wx:if="{{confirming}}" size="small" /><text wx:else>{{'核对并确认时段'}}</text></button>
+    </view>
+
     <!-- 空状态 -->
     <view class="empty-selection" wx:if="{{selectedSlots.length === 0 && userSlots.confirmedSlots.length === 0 && userSlots.preSelectedSlots.length === 0}}">
-      <image class="empty-icon" src="{{iconEmpty}}" mode="aspectFit"></image>
-      <text class="empty-text">暂未选择值班时间段</text>
-      <text class="empty-hint" wx:if="{{configData.isEditingEnabled}}">点击表格中的"可选"时间段来预选值班</text>
+      <text class="empty-text">本周还没有选择时段</text>
+      <text class="empty-hint" wx:if="{{configData.isEditingEnabled}}">从上方表格选择，预选会显示在这里。</text>
       <text class="empty-hint" wx:if="{{!configData.isEditingEnabled}}">当前周编辑权限已关闭，无法进行值班选择</text>
     </view>
   </view>
 
-  <!-- 底部说明 -->
-  <view class="legend-container" wx:if="{{isDataReady && !isLoading}}">
-    <view class="legend-title">状态说明</view>
-    <view class="legend-items">
-      <view class="legend-item">
-        <view class="legend-dot can-duty"></view>
-        <text class="legend-text">可选</text>
-      </view>
-      <view class="legend-item">
-        <view class="legend-dot selected"></view>
-        <text class="legend-text">预选</text>
-      </view>
-      <view class="legend-item">
-        <view class="legend-dot assigned"></view>
-        <text class="legend-text">已确认／他人占用</text>
-      </view>
-      <view class="legend-item">
-        <view class="legend-dot no-duty"></view>
-        <text class="legend-text">休假</text>
-      </view>
-      <view class="legend-item">
-        <view class="legend-dot locked"></view>
-        <text class="legend-text">操作中</text>
-      </view>
-    </view>
-  </view>
-</view> 
+</view>
+</scroll-view>
+<loading-overlay id="global-loading" />
