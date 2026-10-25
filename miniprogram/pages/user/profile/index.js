@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../utils/loading');
 const { getLayout } = require('../../../utils/layout');
 const router = require('../../../utils/router');
 const avatarManager = require('../../../utils/avatarManager');
@@ -67,6 +68,7 @@ Page({
     // 图标资源
     iconLogo: iconManager.get('common_logo'),
     iconArrowRight: iconManager.get('common_arrow_right'),
+    iconLogout: iconManager.get('common_logout'),
 
     userInfo: INITIAL_USER_INFO,
     role: INITIAL_ROLE,
@@ -107,24 +109,13 @@ Page({
   },
 
   onLoad: function (options) {
-    this.getUserInfo();
     // 初始化计数回调
     const app = getApp();
-    const initialUnread = (app.globalData && typeof app.globalData.unreadMessageCount === 'number') ? app.globalData.unreadMessageCount : 0;
-    this.setData({ unreadMessageCount: initialUnread });
     app.globalData.messageUpdateCallback = (count) => {
       if (typeof count === 'number') {
         this.setData({ unreadMessageCount: count });
       }
     };
-    try {
-      const cachedTodo = wx.getStorageSync('todoTotalCount');
-      if (typeof cachedTodo === 'number') {
-        this.setData({ todoCount: cachedTodo });
-      } else if (typeof app.globalData.todoTotalCount === 'number') {
-        this.setData({ todoCount: app.globalData.todoTotalCount });
-      }
-    } catch (e) {}
     app.globalData.todoCountUpdateCallback = (total) => {
       if (typeof total === 'number') {
         this.setData({ todoCount: total });
@@ -135,8 +126,6 @@ Page({
       console.log('收到个人资料刷新通知');
       this.getUserInfo();
     };
-
-    this.checkPendingFeedbackMessages();
 
     // 监听部门信息更新
     if (typeof app.subscribe === 'function') {
@@ -151,6 +140,8 @@ Page({
   },
 
   onShow: function () {
+    const tab = this.getTabBar && this.getTabBar();
+    tab && tab.setSelectedByRoute && tab.setSelectedByRoute(this.route);
     const app = getApp();
     if (app.globalData && app.globalData.needRefreshProfile) {
       console.log('检测到需要刷新个人资料');
@@ -162,16 +153,15 @@ Page({
 
     // 刷新计数（使用全局方法避免重复调用）
     app.getUnreadMessageCount && app.getUnreadMessageCount();
-    if (typeof app.globalData.unreadMessageCount === 'number') {
-      this.setData({ unreadMessageCount: app.globalData.unreadMessageCount });
+    const counts = {};
+    if (typeof app.globalData.unreadMessageCount === 'number' && app.globalData.unreadMessageCount !== this.data.unreadMessageCount) {
+      counts.unreadMessageCount = app.globalData.unreadMessageCount;
     }
     app.getTodoTotalCount && app.getTodoTotalCount();
-    if (typeof app.globalData.todoTotalCount === 'number') {
-      this.setData({ todoCount: app.globalData.todoTotalCount });
+    if (typeof app.globalData.todoTotalCount === 'number' && app.globalData.todoTotalCount !== this.data.todoCount) {
+      counts.todoCount = app.globalData.todoTotalCount;
     }
-
-    const tab = this.getTabBar && this.getTabBar();
-    tab && tab.setSelectedByRoute && tab.setSelectedByRoute();
+    if (Object.keys(counts).length) this.setData(counts);
 
     this.checkPendingFeedbackMessages();
   },
@@ -524,7 +514,7 @@ Page({
       return; // 没有变化
     }
     
-    wx.showLoading({ title: '切换中...', mask: true });
+    loadingFeedback.show({ title: '切换中...', mask: true });
     
     try {
       const result = await api.call('users', { 
@@ -532,7 +522,7 @@ Page({
         params: { department: selectedDepartment } 
       });
       
-      wx.hideLoading();
+      loadingFeedback.hide();
       
       if (result.success) {
         wx.showToast({
@@ -571,7 +561,7 @@ Page({
         });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       console.error('切换部门失败', err);
       wx.showToast({
         title: '切换失败，请重试',

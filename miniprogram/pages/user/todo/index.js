@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../utils/loading');
 const app = getApp();
 const api = require('../../../utils/apiAdapter');
 const SubscriptionAuth = require('../../../utils/subscriptionAuth');
@@ -98,11 +99,6 @@ Page({
       this.setData({ volunteerTasks: [], dutyTasks: [] });
     }
   },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {},
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
@@ -330,7 +326,7 @@ Page({
     });
 
     if (modalRes.confirm) {
-      wx.showLoading({ title: '处理中...' });
+      loadingFeedback.show({ title: '处理中...' });
       try {
         const res = await api.call('maintenanceTasks', {
           action: 'completeMaintenanceTask', config: { retries: 0 },
@@ -340,7 +336,7 @@ Page({
           }
         });
 
-        wx.hideLoading();
+        loadingFeedback.hide();
 
         if (res.success) {
           const tasks = [...this.data.maintenanceTasks];
@@ -359,7 +355,7 @@ Page({
           wx.showToast({ title: res.message || '操作失败', icon: 'none', duration: 2000 });
         }
       } catch (err) {
-        wx.hideLoading();
+        loadingFeedback.hide();
         console.error('[confirmCompleteTask] 调用失败', err);
         wx.showToast({ title: '网络错误', icon: 'none', duration: 2000 });
       }
@@ -411,7 +407,7 @@ Page({
 
     if (modalRes.confirm) {
       try {
-        wx.showLoading({ title: '请求消息授权...' });
+        loadingFeedback.show({ title: '请求消息授权...' });
 
         const authResult = await SubscriptionAuth.requestSubscribeMessage(
           [SubscriptionAuth.TEMPLATES.TASK_CANCELLED],
@@ -419,11 +415,11 @@ Page({
           { showTip: true, allowPartialSuccess: true }
         );
 
-        wx.showLoading({ title: '处理中...' });
+        loadingFeedback.show({ title: '处理中...' });
 
       } catch (authError) {
         console.error('订阅消息授权失败:', authError);
-        wx.showLoading({ title: '处理中...' });
+        loadingFeedback.show({ title: '处理中...' });
       }
       try {
         const res = await api.call('maintenanceTasks', {
@@ -431,7 +427,7 @@ Page({
           params: { maintenanceTaskId: taskId, cancelReason }
         });
 
-        wx.hideLoading();
+        loadingFeedback.hide();
         if (res.success) {
           const tasks = [...this.data.maintenanceTasks];
           const index = tasks.findIndex(task => task && task.taskId === taskId);
@@ -449,7 +445,7 @@ Page({
           wx.showToast({ title: res.message || '撤销失败', icon: 'none', duration: 2000 });
         }
       } catch (err) {
-        wx.hideLoading();
+        loadingFeedback.hide();
         console.error('[confirmCancelTaskFromList] 调用失败', err);
         wx.showToast({ title: '网络错误', icon: 'none', duration: 2000 });
       }

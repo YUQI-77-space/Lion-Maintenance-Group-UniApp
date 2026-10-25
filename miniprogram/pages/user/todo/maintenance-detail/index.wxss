@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 22rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -71,15 +71,7 @@
   width: 88rpx;
   height: 88rpx;
   margin-right: 20rpx;
-  border-radius: 20rpx;
-  background: rgba(145, 158, 171, 0.14);
 }
-
-/* 图标底色跟随任务状态，作为最轻量的状态提示 */
-.status-pending .hero-tile { background: rgba(250, 140, 22, 0.12); }
-.status-inProgress .hero-tile { background: rgba(24, 144, 255, 0.12); }
-.status-completed .hero-tile { background: rgba(82, 196, 26, 0.12); }
-.status-cancelled .hero-tile { background: rgba(145, 158, 171, 0.14); }
 
 .hero-icon {
   width: 44rpx;
@@ -93,7 +85,7 @@
 
 .hero-title {
   display: block;
-  font-size: 34rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-primary);
@@ -108,7 +100,7 @@
 }
 
 .hero-sub-text {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.4;
   color: var(--text-secondary);
 }
@@ -117,7 +109,7 @@
   margin-left: 12rpx;
   padding: 2rpx 12rpx;
   border-radius: 999rpx;
-  font-size: 20rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.6;
   color: var(--text-secondary);
   background: rgba(145, 158, 171, 0.16);
@@ -129,7 +121,7 @@
   margin-left: 16rpx;
   padding: 8rpx 18rpx;
   border-radius: 999rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-secondary);
@@ -183,7 +175,7 @@
 
 .meta-label {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--mg-font-label);
   line-height: 1.4;
   color: var(--text-muted);
 }
@@ -191,7 +183,7 @@
 .meta-value {
   display: block;
   margin-top: 8rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.5;
   color: var(--text-primary);
   word-break: break-all;
@@ -208,7 +200,7 @@
 
 .copy-hint {
   margin-left: 10rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
 }
 
@@ -216,7 +208,7 @@
 .note {
   padding: 22rpx;
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.7;
   color: var(--text-secondary);
   background: var(--mg-color-bg-page);
@@ -235,24 +227,9 @@
   align-items: center;
 }
 
-.avatar-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.person-avatar {
   flex-shrink: 0;
-  width: 72rpx;
-  height: 72rpx;
   margin-right: 20rpx;
-  border-radius: 50%;
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--primary);
-  background: rgba(0, 0, 205, 0.06);
-}
-
-.avatar-badge.muted {
-  color: var(--text-secondary);
-  background: rgba(145, 158, 171, 0.14);
 }
 
 .person-main {
@@ -262,7 +239,7 @@
 
 .person-name {
   display: block;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   line-height: 1.4;
   color: var(--text-primary);
@@ -271,7 +248,7 @@
 .person-meta {
   display: block;
   margin-top: 6rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   line-height: 1.4;
   color: var(--text-secondary);
   word-break: break-all;
@@ -280,11 +257,13 @@
 .role-tag {
   flex-shrink: 0;
   margin-left: 16rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 999rpx;
-  font-size: 22rpx;
-  color: var(--primary);
-  background: rgba(0, 0, 205, 0.06);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--mg-font-caption);
+  line-height: var(--mg-line-caption);
+  color: var(--mg-color-text-muted);
+  background: transparent;
 }
 
 .sub-divider {
@@ -295,7 +274,7 @@
 
 .sub-title {
   margin-bottom: 22rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-muted);
 }
 
@@ -325,7 +304,7 @@
   line-height: 80rpx;
   text-align: center;
   border-radius: 999rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   box-sizing: border-box;
 }
@@ -398,7 +377,7 @@
 }
 
 .modal-title {
-  font-size: 32rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -422,7 +401,7 @@
 
 .modal-label {
   margin-bottom: 16rpx;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
 }
 
@@ -432,7 +411,7 @@
   padding: 20rpx;
   border: 1rpx solid var(--border);
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.6;
   color: var(--text-primary);
   background: var(--mg-color-bg-page);
@@ -441,7 +420,7 @@
 
 .modal-count {
   margin-top: 10rpx;
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   text-align: right;
   color: var(--text-muted);
 }

@@ -9,36 +9,30 @@
         <text class="hero-name">物科院维修组</text>
       </view>
     </view>
-    <view class="hero-slogan">提供更好的服务，<text class="slogan-line">遇见更好的自己！</text></view>
     <view class="hero-note"><text class="brand-rule"></text><text>始于 1978 年 · 用技术传递温暖</text></view>
   </view>
 
   <!-- 关于维修组 -->
   <view class="card mg-surface">
-    <view class="section-caption">我们的故事</view>
     <view class="card-title">热爱动手，也热心助人</view>
-    <view class="para">
-      物科院维修组成立于 1978 年南京师范学院物理系，现为南京师范大学物理科学与技术学院的特色学生组织。
-    </view>
-    <view class="para">
-      这里汇聚着一群对发明创造充满热忱、沉迷动手实践的学子——他们总爱拆解电器零件探究原理，也擅长把杂乱的废旧零件重新设计，变成充满巧思的创新实物。
-    </view>
-    <view class="para">
-      依托物科院的学科特色，维修组还会定期发挥所学技能，面向全校师生及校外社区开展义务维修服务，用技术传递温暖。同时我们也期待更多志同道合的同学加入我们的团队，一起建设更加美好的维修组大家族。
-    </view>
+    <view class="para">从南京师范学院物理系出发，我们把课堂所学带进维修实践，为全校师生与校外社区提供义务维修服务。</view>
   </view>
 
   <!-- 相关维修业务 -->
   <view class="card mg-surface">
     <view class="card-title">我们能帮你做什么</view>
-    <view class="para">同学们可以在这里获得免费义务维修服务，包括：</view>
     <view class="service-list">
-      <view class="service-item" wx:for="{{services}}" wx:key="*this">
-        <text class="service-index">{{index + 1}}</text>
-        <text class="service-text">{{item}}</text>
+      <view class="service-item" wx:for="{{services}}" wx:key="title">
+        <text class="service-title">{{item.title}}</text>
+        <text class="service-text">{{item.description}}</text>
       </view>
     </view>
-    <view class="hint-line">具体可在报修中选择需要的服务，也可在维修服务群中获取相关文件。</view>
+
+  </view>
+
+  <!-- 联系方式集中呈现，整行可复制 -->
+  <view class="card mg-surface">
+    <view class="card-title">联系我们</view>
     <button class="copy-row" hover-class="row-pressed" bindtap="copyText" data-text="966514978">
       <view class="copy-row-main">
         <text class="copy-label">维修服务 QQ 群</text>
@@ -46,11 +40,6 @@
       </view>
       <view class="copy-btn">复制</view>
     </button>
-  </view>
-
-  <!-- 联系我们 -->
-  <view class="card mg-surface">
-    <view class="card-title">联系我们</view>
     <button class="info-row" hover-class="row-pressed" bindtap="copyText" data-text="南师大仙林校区格物楼北楼5楼玻璃房">
       <view class="info-main">
         <text class="info-label">维修地点</text>
@@ -80,3 +69,4 @@
     <text class="footer-line">© {{currentYear}} 南京师范大学物科院维修组 版权所有</text>
   </view>
 </view>
+<loading-overlay id="global-loading" />

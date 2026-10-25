@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/user/todo/volunteer-detail/index.js
 const app = getApp();
 const api = require('../../../../utils/apiAdapter');
@@ -82,7 +83,7 @@ Page({
    * 加载任务详情
    */
   async loadTaskDetail() {
-    wx.showLoading({ title: '加载中...' });
+    loadingFeedback.show({ title: '加载中...' });
     this.setData({ loading: true, detailError: '' });
     
     try {
@@ -161,7 +162,7 @@ Page({
       this.setData({ loading: false, refreshing: false });
     } finally {
       this.measureActionBar();
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -187,12 +188,12 @@ Page({
     });
 
     if (modalRes.confirm) {
-      wx.showLoading({ title: '取消报名中...', mask: true });
+      loadingFeedback.show({ title: '取消报名中...', mask: true });
       try {
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
 
-          wx.hideLoading();
+          loadingFeedback.hide();
           wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
@@ -238,7 +239,7 @@ Page({
         console.error('取消报名失败', err);
         wx.showToast({ title: '网络错误，请重试', icon: 'none', duration: 2000 });
       } finally {
-        wx.hideLoading();
+        loadingFeedback.hide();
       }
     }
   },
@@ -290,7 +291,7 @@ Page({
       return;
     }
 
-    wx.showLoading({ title: '提交中...', mask: true });
+    loadingFeedback.show({ title: '提交中...', mask: true });
 
     try {
       const res = await api.call('volunteerActivities', {
@@ -311,7 +312,7 @@ Page({
       console.error('[submitFeedback] 调用云函数失败:', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none', duration: 2000 });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -331,30 +332,6 @@ Page({
       refreshing: true
     });
     this.loadTaskDetail();
-    wx.stopPullDownRefresh();
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady: function() {
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow: function() {
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide: function() {
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload: function() {
-  }
 }); 

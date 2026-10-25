@@ -86,7 +86,7 @@
       </view>
       
       <view class="action-section">
-        <button class="primary-btn" bindtap="saveUserInfo" disabled="{{!privacyAgree || submitting}}" loading="{{submitting}}">保存并登录</button>
+        <button class="primary-btn" bindtap="saveUserInfo" disabled="{{!privacyAgree || submitting}}"><loading-animation wx:if="{{submitting}}" size="small" /><text wx:else>保存并登录</text></button>
       </view>
       
       <!-- 网络提示信息 -->
@@ -97,4 +97,5 @@
   </block>
 
 
-</view> 
+</view>
+<loading-overlay id="global-loading" />

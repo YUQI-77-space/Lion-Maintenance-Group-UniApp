@@ -35,5 +35,5 @@ page {
 }
 
 
-.startup-status, .startup-retry { position: absolute; left: 32rpx; right: 32rpx; bottom: calc(48rpx + env(safe-area-inset-bottom)); padding: 24rpx; color: var(--mg-color-text-primary); background: var(--mg-color-bg-surface); text-align: center; }
+.startup-retry { position: absolute; left: 32rpx; right: 32rpx; bottom: calc(48rpx + env(safe-area-inset-bottom)); padding: 24rpx; color: var(--mg-color-text-primary); background: var(--mg-color-bg-surface); text-align: center; }
 .startup-retry { min-height: 48px; }

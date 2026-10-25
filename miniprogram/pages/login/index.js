@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../utils/loading');
 const router = require('../../utils/router');
 const avatarManager = require('../../utils/avatarManager');
 const api = require('../../utils/apiAdapter');
@@ -163,7 +164,7 @@ Page({
       return;
     }
 
-    wx.showLoading({ title: '正在保存', mask: true });
+    loadingFeedback.show({ title: '正在保存', mask: true });
     await this.loginAndSaveUserInfo(userInfo);
   },
 
@@ -181,7 +182,7 @@ Page({
         wx.setStorageSync('openid', res.data.openid);
         await this.saveUserInfoToCloud(userInfo, res.data.openid);
       } else {
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showToast({
           title: '登录失败，请重试',
           icon: 'none'
@@ -189,7 +190,7 @@ Page({
       }
     } catch (err) {
       console.error('获取openid失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: '登录失败，请重试',
         icon: 'none'
@@ -207,7 +208,7 @@ Page({
       // 头像上传失败的处理
       if (!uploadResult.success) {
         console.warn('头像上传失败', uploadResult.error);
-        wx.hideLoading();
+        loadingFeedback.hide();
         
         // 弹出选择框让用户决定
         const modalRes = await new Promise((resolve) => {
@@ -247,7 +248,7 @@ Page({
         useDefaultAvatar: !uploadResult.success // 标记是否使用默认头像
       };
       
-      wx.showLoading({ title: '正在保存', mask: true });
+      loadingFeedback.show({ title: '正在保存', mask: true });
       
       const saveRes = await api.call('users', {
         action: 'saveUserInfo',
@@ -275,7 +276,7 @@ Page({
       
     } catch (error) {
       console.error('处理用户信息保存失败', error);
-      wx.hideLoading();
+      loadingFeedback.hide();
       wx.showToast({
         title: '保存失败，请重试',
         icon: 'none'
@@ -293,7 +294,7 @@ Page({
         params: { authCode: this.data.userInfo.authCode }
       });
       
-      wx.hideLoading();
+      loadingFeedback.hide();
       
       const role = (res.success && res.data && res.data.role) ? res.data.role : 'user';
       
@@ -314,7 +315,7 @@ Page({
       }
     } catch (err) {
       console.error('获取用户权限失败', err);
-      wx.hideLoading();
+      loadingFeedback.hide();
       
       const app = getApp();
       app.updateUserRole && app.updateUserRole('user');

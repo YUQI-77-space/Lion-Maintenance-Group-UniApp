@@ -9,5 +9,6 @@
     binderror="onImageError"
     bindload="onImageLoad">
   </image>
-<view class="startup-status">正在恢复身份…</view><button wx:if="{{startupError}}" class="startup-retry" bindtap="retryStartup">{{startupError}}</button></view>
-
+  <button wx:if="{{startupError}}" class="startup-retry" bindtap="retryStartup">{{startupError}}</button>
+</view>
+<loading-overlay id="global-loading" />

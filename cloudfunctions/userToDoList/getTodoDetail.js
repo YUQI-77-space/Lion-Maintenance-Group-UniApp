@@ -100,6 +100,36 @@ exports.getTodoDetail = async (params, OPENID) => {
             additionalAssignees: []
           };
         }
+        // 仅在确认调用者拥有该待办后读取相关人员头像，不返回其他用户资料。
+        const participantIds = [...new Set([
+          todoDetail.applicantId,
+          todoDetail.assigneeId,
+          ...(todoDetail.additionalAssignees || []).map(person => person.assigneeId)
+        ].filter(id => typeof id === 'string' && id))];
+        const avatarProfiles = {};
+        try {
+          for (let offset = 0; offset < participantIds.length; offset += 100) {
+            const profiles = await db.collection('users')
+              .where({ openid: db.command.in(participantIds.slice(offset, offset + 100)) })
+              .field({ _id: false, openid: true, avatarUrl: true, cloudAvatarFileID: true })
+              .limit(100)
+              .get();
+            profiles.data.forEach(profile => {
+              avatarProfiles[profile.openid] = {
+                avatarUrl: profile.avatarUrl || '',
+                cloudAvatarFileID: profile.cloudAvatarFileID || ''
+              };
+            });
+          }
+        } catch (error) {
+          console.warn('[getTodoDetail] - 头像资料读取失败，详情使用默认头像');
+        }
+        todoDetail.applicantAvatar = avatarProfiles[todoDetail.applicantId] || {};
+        todoDetail.assigneeAvatar = avatarProfiles[todoDetail.assigneeId] || {};
+        todoDetail.additionalAssignees = (todoDetail.additionalAssignees || []).map(person => ({
+          ...person,
+          avatarProfile: avatarProfiles[person.assigneeId] || {}
+        }));
         break;
         
       case 'volunteer':
@@ -135,7 +165,7 @@ exports.getTodoDetail = async (params, OPENID) => {
         return { code: 400, message: '不支持的待办事项类型' };
     }
     
-    console.log('[getTodoDetail] - 成功返回待办详情:', JSON.stringify(todoDetail));
+    console.log('[getTodoDetail] - 成功返回待办详情');
     
     if (params.type === 'maintenance') {
       const { isUrgent, ...todoWithoutUrgency } = todoDetail;

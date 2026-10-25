@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../utils/loading');
 // pages/user/message/index.js
 const app = getApp();
 const api = require('../../../utils/apiAdapter');
@@ -6,6 +7,7 @@ const time = require('../../../utils/time');
 // const theme = require('../../../utils/theme');
 
 Page({
+  behaviors: [require('../../../utils/pageRefresh')],
   /**
    * 页面的初始数据
    */
@@ -34,58 +36,12 @@ Page({
   },
 
   /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
    * 生命周期函数--监听页面显示
    * 每次显示页面时重新加载消息，确保时间显示是最新的
    */
   onShow() {
     this.loadMessages();
   },
-
-  /**
-   * 格式化消息时间显示
-   * 根据当前时间动态计算相对时间
-   * @param {String|Date} timeStr - 消息发送时间
-   * @returns {String} 格式化后的时间字符串
-   */
-  formatMessageTime: function(timeStr) {
-    if (!timeStr) return '';
-    
-    const now = new Date();
-    // iOS 兼容：使用 time.toDate
-    const msgTime = time.toDate(timeStr);
-    if (!msgTime) return '';
-    
-    const diffMs = now.getTime() - msgTime.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffMinutes < 1) {
-      return '刚刚';
-    } else if (diffMinutes < 60) {
-      return `${diffMinutes}分钟前`;
-    } else if (diffHours < 24) {
-      return `${diffHours}小时前`;
-    } else if (diffDays < 7) {
-      return `${diffDays}天前`;
-    } else {
-      // 超过7天显示具体日期
-      const month = msgTime.getMonth() + 1;
-      const day = msgTime.getDate();
-      return `${month}月${day}日`;
-    }
-  },
-
-
-
-
 
   /**
    * 打开消息详情浮窗
@@ -114,7 +70,7 @@ Page({
   },
 
   /**
-   * 关闭消息详情浮窗（点击遮罩或底部“关闭”按钮）
+   * 关闭消息详情浮窗（点击遮罩或右上角叉号）
    */
   closeMessageDetail: function() {
     this.setData({
@@ -136,12 +92,6 @@ Page({
     if (this.data.showDetail) {
       this.closeMessageDetail();
     }
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
   },
 
   /**
@@ -266,7 +216,7 @@ Page({
       content: '确定要清空所有消息吗？',
       success: async (res) => {
         if (res.confirm) {
-          wx.showLoading({ title: '处理中...' });
+          loadingFeedback.show({ title: '处理中...' });
           
           try {
             const result = await api.call('messages', {
@@ -274,7 +224,7 @@ Page({
               params: { messageUserId: this.data.userOpenid, deleteAllMessages: true }
             });
 
-            wx.hideLoading();
+            loadingFeedback.hide();
             
             if (result.success) {
               this.setData({ 
@@ -289,7 +239,7 @@ Page({
               wx.showToast({ title: result.message || '操作失败', icon: 'none' });
             }
           } catch (err) {
-            wx.hideLoading();
+            loadingFeedback.hide();
             console.error('清空消息失败', err);
             wx.showToast({ title: '网络错误，请重试', icon: 'none' });
           }
@@ -310,14 +260,14 @@ Page({
       return;
     }
     
-    wx.showLoading({ title: '处理中...' });
+    loadingFeedback.show({ title: '处理中...' });
     
     try {
       const res = await api.call('messages', {
         action: 'markTheMessageAsRead', config: { retries: 0 },
         params: { messageUserId: this.data.userOpenid, markAllAsRead: true }
       });
-      wx.hideLoading();
+      loadingFeedback.hide();
       
       if (res.success) {
         const updatedMessages = this.data.messages.map(msg => ({ ...msg, isRead: true }));
@@ -332,7 +282,7 @@ Page({
         wx.showToast({ title: res.message || '操作失败', icon: 'none' });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       console.error('标记全部已读失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
     }
@@ -343,14 +293,7 @@ Page({
    */
   async onPullDownRefresh() {
     await this.loadMessages();
-    wx.stopPullDownRefresh();
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
+    this.setData({ unifiedRefreshing: false });
   },
 
   /**

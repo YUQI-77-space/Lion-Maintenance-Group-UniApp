@@ -28,9 +28,10 @@
   width: 160rpx; 
   height: 160rpx; 
   border-radius: 50%; 
+  overflow: hidden;
   background: var(--card-background); 
   border: 2rpx solid var(--border-light); 
-  padding: 16rpx; 
+  padding: 0;
 }
 
 .logo-pulse { 
@@ -38,21 +39,9 @@
 }
 
 .loading-text { 
-  font-size: 30rpx; 
+  font-size: var(--mg-font-body);
   color: var(--text-regular); 
   margin-bottom: 24rpx; 
-}
-
-.loading-animation { 
-  display: flex; 
-  gap: 10rpx; 
-}
-
-.loading-dot { 
-  width: 16rpx; 
-  height: 16rpx; 
-  border-radius: 50%; 
-  background: var(--border-light); 
 }
 
 /* 主内容容器 */
@@ -84,7 +73,7 @@
   display: flex; 
   align-items: center; 
   justify-content: center; 
-  font-size: 26rpx; 
+  font-size: var(--mg-font-label);
   font-weight: 600;
 }
 
@@ -94,7 +83,7 @@
 }
 
 .step-name { 
-  font-size: 24rpx; 
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary); 
   margin-top: 6rpx; 
 }
@@ -124,13 +113,13 @@
 }
 
 .section-title { 
-  font-size: 34rpx; 
-  font-weight: 700; 
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main); 
 }
 
 .section-subtitle {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   margin-top: 8rpx;
 }
@@ -169,7 +158,7 @@
 
 .avatar-tips { 
   margin-top: 10rpx; 
-  font-size: 24rpx; 
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary); 
 }
 
@@ -178,17 +167,17 @@
 }
 
 .form-label { 
-  font-size: 26rpx; 
+  font-size: var(--mg-font-label);
   color: var(--text-main); 
   margin-bottom: 10rpx; 
-  font-weight: 600; 
+  font-weight: 600;
   display: flex; 
   align-items: center; 
   gap: 10rpx; 
 }
 
 .label-icon { 
-  font-size: 28rpx; 
+  font-size: 28rpx;
 }
 
 .label-text { 
@@ -202,7 +191,7 @@
 }
 
 .label-subtitle {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-disabled);
   font-weight: normal;
 }
@@ -216,7 +205,7 @@
   right: 18rpx;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-disabled);
   pointer-events: none;
   z-index: 1;
@@ -228,7 +217,7 @@
   border: 2rpx solid var(--border-light); 
   border-radius: 12rpx;
   padding: 0 18rpx; 
-  font-size: 28rpx; 
+  font-size: var(--mg-font-body);
   color: var(--text-main); 
   background: var(--card-background);
 }
@@ -259,7 +248,7 @@
 
 .privacy-text { 
   margin-left: 12rpx; 
-  font-size: 24rpx; 
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary); 
 }
 
@@ -278,7 +267,7 @@
   width: 100%; 
   height: 86rpx; 
   border-radius: 12rpx; 
-  font-size: 30rpx; 
+  font-size: var(--mg-font-body);
   font-weight: 600;
   border: 2rpx solid var(--primary-color); 
   background: transparent; 
@@ -302,7 +291,7 @@
   width: 100%;
   height: 86rpx;
   border-radius: 12rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   border: 2rpx dashed var(--primary-color);
   background: rgba(0,0,0,0.02);
@@ -326,7 +315,7 @@
 }
 
 .warning-text {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: #e74c3c;
   line-height: 1.4;
   font-weight: 500;
@@ -334,7 +323,7 @@
 
 
 .primary-btn, .btn-primary, .submit-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); border-color: var(--mg-color-brand); border-radius: 16rpx; }
-.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: 15px; }
+.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: var(--mg-font-body); }
 .step-bar { z-index: 100; }
 .step-card { border: 0; border-radius: 24rpx; padding: 32rpx; }
 .button-group { gap: 8px; }

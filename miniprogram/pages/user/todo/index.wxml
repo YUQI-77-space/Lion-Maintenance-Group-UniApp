@@ -21,7 +21,8 @@
     refresher-enabled 
     bindrefresherrefresh="onRefresherRefresh" 
     refresher-triggered="{{refresherTriggered}}"
-  >
+   refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
     <view class="container">
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadErrors[activeCategory]}}">{{loadErrors[activeCategory]}}<button class="mg-button mg-button--secondary" bindtap="retryActiveCategory">重新加载</button></view>
       <!-- 加载动画 -->
@@ -162,3 +163,4 @@
     </view>
   </view>
 </view>
+<loading-overlay id="global-loading" />

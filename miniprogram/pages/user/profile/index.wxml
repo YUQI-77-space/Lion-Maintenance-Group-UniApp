@@ -26,25 +26,22 @@
       </view>
       <view class="user-meta">
         <view class="nickname">{{userInfo.nickName || '未登录'}}</view>
-        <view class="role-tag">{{roleName}}</view>
+        <picker wx:if="{{role === 'member' || role === 'leader'}}"
+                class="role-picker" mode="selector" range="{{departmentList}}"
+                value="{{departmentIndex}}" bindchange="onDepartmentChange"
+                disabled="{{changingDepartment}}"
+                aria-label="{{roleName}}，当前部门{{currentDepartment || '未选择'}}，点击切换部门">
+          <view class="role-tag">{{roleName}}</view>
+        </picker>
+        <view class="role-tag" wx:else>{{roleName}}</view>
       </view>
+      <button class="logout-button" size="mini" hover-class="logout-pressed" bindtap="logout" aria-label="退出登录">
+        <image class="logout-icon" src="{{iconLogout}}" mode="aspectFit" aria-hidden="true" />
+        <text>退出登录</text>
+      </button>
     </view>
     
-    <!-- 部门选择器（仅维修组成员显示） -->
-    <view class="header-department" wx:if="{{role === 'member' || role === 'leader'}}">
-      <picker 
-        mode="selector" 
-        range="{{departmentList}}" 
-        value="{{departmentIndex}}"
-        bindchange="onDepartmentChange"
-        class="department-picker" disabled="{{changingDepartment}}"
-      >
-        <view class="picker-content">
-          <text class="picker-text">{{currentDepartment || '点击选择部门'}}</text>
-          <image class="picker-arrow" src="{{iconArrowRight}}" mode="aspectFit" />
-        </view>
-      </picker>
-    </view>
+
   </view>
 
   <view class="department-feedback" wx:if="{{departmentFeedback}}">{{departmentFeedback}}</view>
@@ -67,8 +64,6 @@
     </view>
   </view>
 
-  <button class="logout-button" bindtap="logout">退出登录</button>
-
   <!-- 待反馈消息弹窗 -->
   <feedback-modal 
     id="feedbackModal"
@@ -82,3 +77,4 @@
     bind:confirm="onFeedbackConfirm"
   />
 </view>
+<loading-overlay id="global-loading" />

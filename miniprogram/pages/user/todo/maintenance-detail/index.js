@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/user/todo/maintenance-detail/index.js
 const app = getApp();
 const api = require('../../../../utils/apiAdapter');
@@ -50,23 +51,11 @@ Page({
     showActionBar: false,
     statusText: '',
     deviceFields: [],
-    applicantInitial: '',
-    assigneeInitial: '',
     showCancelModal: false,
     cancelReason: '',
     completionInProgress: false,
     // 图标资源
     iconRepair: iconManager.get('biz_repair')
-  },
-
-  /**
-   * 取姓名首字作为头像占位
-   * @param {string} name
-   * @returns {string}
-   */
-  getInitial: function(name) {
-    const text = String(name || '').trim();
-    return text ? text.charAt(0) : '?';
   },
 
   /**
@@ -97,7 +86,7 @@ Page({
    */
   async loadTaskDetail() {
     const { taskId } = this.data;
-    wx.showLoading({ title: '加载中...' });
+    loadingFeedback.show({ title: '加载中...' });
     this.setData({ loading: true, detailError: '' });
 
     try {
@@ -128,7 +117,6 @@ Page({
             if (assignee.assigneeTime) {
               assignee.assigneeTime = this.formatTime(assignee.assigneeTime);
             }
-            assignee.initial = this.getInitial(assignee.assigneeName);
           });
         }
 
@@ -147,9 +135,7 @@ Page({
           canCancel,
           showActionBar: canCancel,
           statusText: STATUS_TEXT[taskDetail.taskStatus] || '未知',
-          deviceFields,
-          applicantInitial: this.getInitial(taskDetail.applicantName),
-          assigneeInitial: this.getInitial(taskDetail.assigneeName)
+          deviceFields
         });
       } else {
         this.setData({ loading: false });
@@ -161,7 +147,7 @@ Page({
       this.setData({ detailError: '网络异常，请重新加载' });
     } finally {
       this.measureActionBar();
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -193,13 +179,13 @@ Page({
     });
     
     if (modalRes.confirm) {
-      wx.showLoading({ title: '处理中...' });
+      loadingFeedback.show({ title: '处理中...' });
       try {
         // 离线处理
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
 
-          wx.hideLoading();
+          loadingFeedback.hide();
           wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
@@ -233,7 +219,7 @@ Page({
         console.error('确认完成失败:', err);
         wx.showToast({ title: '网络错误，请重试', icon: 'none' });
       } finally {
-        wx.hideLoading();
+        loadingFeedback.hide();
       }
     }
   },
@@ -296,7 +282,7 @@ Page({
     if (confirmRes.confirm) {
       // 先请求订阅消息授权（保持功能完整性）
       try {
-        wx.showLoading({ title: '请求消息授权...' });
+        loadingFeedback.show({ title: '请求消息授权...' });
         
         // 请求任务取消相关的订阅消息授权
         const authResult = await SubscriptionAuth.requestSubscribeMessage(
@@ -310,18 +296,18 @@ Page({
 
         
         // 优化：快速切换到撤销操作，减少加载状态切换的视觉延迟
-        wx.showLoading({ title: '处理中...' });
+        loadingFeedback.show({ title: '处理中...' });
         
       } catch (authError) {
         console.error('订阅消息授权失败:', authError);
         // 授权失败也继续执行撤销操作
-        wx.showLoading({ title: '处理中...' });
+        loadingFeedback.show({ title: '处理中...' });
       }
       try {
         const network = require('../../../../utils/network');
         if (!network.isOnline()) {
 
-          wx.hideLoading();
+          loadingFeedback.hide();
           wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
           return;
         }
@@ -380,7 +366,7 @@ Page({
         console.error('撤销任务失败:', err);
         wx.showToast({ title: '网络错误，请重试', icon: 'none' });
       } finally {
-        wx.hideLoading();
+        loadingFeedback.hide();
       }
     }
   },
@@ -470,4 +456,4 @@ Page({
     app.getUnreadMessageCount && app.getUnreadMessageCount();
     app.getTodoTotalCount && app.getTodoTotalCount();
   }
-}); 
+});

@@ -4,6 +4,7 @@
   },
   "navigationBarTitleText": "我的消息",
   "backgroundColor": "#F5F7FA",
-  "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "enablePullDownRefresh": false,
+  "backgroundTextStyle": "dark",
+  "disableScroll": true
 }

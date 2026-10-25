@@ -3,23 +3,28 @@
 page { background: var(--mg-color-bg-page); }
 .profile-page { min-height: 100vh; }
 .profile-header { margin: 32rpx; padding: 32rpx; background: var(--mg-color-bg-surface); border-radius: var(--mg-radius-card); }
-.header-user { display: flex; align-items: center; gap: 24rpx; }
+.header-user { display: flex; align-items: flex-start; gap: 16rpx; }
+.avatar-container { width: var(--mg-size-avatar-lg); flex-shrink: 0; }
 .user-meta { flex: 1; min-width: 0; }
-.nickname { font-size: var(--mg-font-title); font-weight: 600; overflow-wrap: break-word; }
-.role-tag { display: inline-block; margin-top: 12rpx; padding: 8rpx 16rpx; color: var(--mg-color-info); background: var(--mg-color-info-soft); border-radius: 8rpx; font-size: 24rpx; }
-.header-department { margin-top: 24rpx; }
-.picker-content { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 16rpx; border: 1px solid var(--mg-color-control-border); border-radius: 16rpx; }
-.picker-arrow, .item-arrow { width: 32rpx; height: 32rpx; flex-shrink: 0; }
+.nickname { font-size: var(--mg-font-title); line-height: var(--mg-line-title); font-weight: 600; overflow-wrap: break-word; }
+.role-tag { display: inline-block; max-width: 100%; box-sizing: border-box; margin-top: 12rpx; padding: 8rpx 16rpx; color: var(--mg-color-info); background: var(--mg-color-info-soft); border-radius: 8rpx; font-size: var(--mg-font-caption); overflow-wrap: break-word; }
+.item-arrow { width: 32rpx; height: 32rpx; flex-shrink: 0; }
 .profile-content { padding: 0 32rpx; }
 .function-list { background: var(--mg-color-bg-surface); border-radius: 24rpx; overflow: hidden; }
 .function-item { display: flex; align-items: center; gap: 24rpx; padding: 32rpx 24rpx; min-height: 48px; border-bottom: 1px solid var(--mg-color-border); }
 .function-item:last-child { border-bottom: 0; }
 .item-icon { width: 48rpx; height: 48rpx; flex-shrink: 0; }
 .item-content { flex: 1; min-width: 0; }
-.item-title { font-size: 15px; font-size: max(15px, 30rpx); font-weight: 500; }
-.item-desc { color: var(--mg-color-text-muted); font-size: 24rpx; margin-top: 8rpx; }
-.item-badge { padding: 4rpx 12rpx; border-radius: 999rpx; color: var(--mg-color-danger); background: var(--mg-color-danger-soft); font-size: 24rpx; flex-shrink: 0; }
-.logout-button { margin: 32rpx; width: auto; min-height: 48px; font-size: 15px; color: var(--mg-color-text-secondary); background: var(--mg-color-bg-surface); border: 1px solid var(--mg-color-control-border); border-radius: 16rpx; }
-.department-feedback { margin-top: 16rpx; color: var(--mg-color-text-secondary); font-size: 24rpx; }
+.item-title { font-size: var(--mg-font-body); font-weight: 500; }
+.item-desc { color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); margin-top: 8rpx; }
+.item-badge { padding: 4rpx 12rpx; border-radius: 999rpx; color: var(--mg-color-danger); background: var(--mg-color-danger-soft); font-size: var(--mg-font-caption); flex-shrink: 0; }
+/* 原生普通按钮有默认宽度；迷你按钮配合局部宽度，避免挤压姓名和角色。 */
+.header-user .logout-button { display: flex; box-sizing: border-box; align-items: center; justify-content: center; align-self: flex-start; flex: 0 0 88px; gap: 8rpx; width: 88px; min-width: 88px; min-height: 48px; margin: -8rpx -8rpx 0 0; padding: 8rpx; font-family: var(--mg-font-family); font-size: var(--mg-font-caption); font-weight: 400; line-height: 1.5; color: var(--mg-color-danger); background: transparent; border: 0; border-radius: var(--mg-radius-control); }
+.logout-button::after { border: 0; }
+.logout-icon { width: 28rpx; height: 28rpx; flex-shrink: 0; }
+.logout-button.logout-pressed { background: var(--mg-color-danger-soft); }
+.department-feedback { margin-top: 16rpx; color: var(--mg-color-text-secondary); font-size: var(--mg-font-caption); }
 
-.logout-button { display: block; width: calc(100% - 64rpx); }
+/* 保留角色标签外观，由原生 picker 提供部门选择与点击区域。 */
+.role-picker { display: flex; align-items: flex-start; min-height: 48px; min-width: 48px; }
+.role-picker:active { opacity: 0.7; }

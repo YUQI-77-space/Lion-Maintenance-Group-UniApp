@@ -84,20 +84,20 @@
     <view class="card">
       <view class="card-title">申请人信息</view>
       <view class="person">
-        <view class="avatar-badge">{{applicantInitial}}</view>
+        <avatar-display class="person-avatar" userInfo="{{taskDetail.applicantAvatar}}" openid="{{taskDetail.applicantId}}" size="small" showBorder="{{false}}" />
         <view class="person-main">
           <text class="person-name">{{taskDetail.applicantName || '未填'}}</text>
           <text class="person-meta">学号 {{taskDetail.applicantStudentId || '未填'}}</text>
         </view>
       </view>
       <view class="meta-grid">
-        <view class="meta-item" wx:if="{{taskDetail.applicantQqId}}">
-          <text class="meta-label">QQ号</text>
-          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">{{taskDetail.applicantQqId}}<text class="copy-hint">长按复制</text></text>
-        </view>
         <view class="meta-item">
           <text class="meta-label">申请时间</text>
           <text class="meta-value">{{taskDetail.applicantTime || '未填'}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{taskDetail.applicantQqId}}">
+          <text class="meta-label">QQ号</text>
+          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.applicantQqId}}" data-type="申请人">{{taskDetail.applicantQqId}}<text class="copy-hint">长按复制</text></text>
         </view>
       </view>
     </view>
@@ -106,7 +106,7 @@
     <view class="card" wx:if="{{taskDetail.assigneeName}}">
       <view class="card-title">受理人信息</view>
       <view class="person">
-        <view class="avatar-badge">{{assigneeInitial}}</view>
+        <avatar-display class="person-avatar" userInfo="{{taskDetail.assigneeAvatar}}" openid="{{taskDetail.assigneeId}}" size="small" showBorder="{{false}}" />
         <view class="person-main">
           <text class="person-name">{{taskDetail.assigneeName}}</text>
           <text class="person-meta">学号 {{taskDetail.assigneeStudentId || '未填'}}</text>
@@ -114,13 +114,13 @@
         <text class="role-tag">主受理</text>
       </view>
       <view class="meta-grid">
-        <view class="meta-item" wx:if="{{taskDetail.assigneeQqId}}">
-          <text class="meta-label">QQ号</text>
-          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="主受理人">{{taskDetail.assigneeQqId}}<text class="copy-hint">长按复制</text></text>
-        </view>
         <view class="meta-item">
           <text class="meta-label">受理时间</text>
           <text class="meta-value">{{taskDetail.assigneeTime || '未填'}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{taskDetail.assigneeQqId}}">
+          <text class="meta-label">QQ号</text>
+          <text class="meta-value link" bindlongpress="copyQQ" data-qq="{{taskDetail.assigneeQqId}}" data-type="主受理人">{{taskDetail.assigneeQqId}}<text class="copy-hint">长按复制</text></text>
         </view>
       </view>
 
@@ -129,7 +129,7 @@
         <view class="sub-divider"></view>
         <view class="sub-title">协助受理人</view>
         <view class="person sub-person" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
-          <view class="avatar-badge muted">{{item.initial}}</view>
+          <avatar-display class="person-avatar" userInfo="{{item.avatarProfile}}" openid="{{item.assigneeId}}" size="small" showBorder="{{false}}" />
           <view class="person-main">
             <text class="person-name">{{item.assigneeName || '未填'}}</text>
             <text class="person-meta">学号 {{item.assigneeStudentId || '未填'}} · 受理 {{item.assigneeTime || '未填'}}</text>
@@ -172,3 +172,4 @@
     </view>
   </view>
 </view>
+<loading-overlay id="global-loading" />

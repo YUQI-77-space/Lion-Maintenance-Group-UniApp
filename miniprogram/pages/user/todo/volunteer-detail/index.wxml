@@ -7,7 +7,8 @@
     refresher-enabled="{{true}}"
     refresher-triggered="{{refreshing}}"
     bindrefresherrefresh="onPullDownRefresh"
-  >
+   refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refreshing}}" size="small" /></view>
     <view class="mg-page-notice">活动状态描述整体安排；个人参与、反馈及结算以待办记录为准。</view>
   <!-- 加载中 -->
     <view class="loading-wrap" wx:if="{{loading}}">
@@ -104,3 +105,4 @@
     </view>
   </view>
 </view>
+<loading-overlay id="global-loading" />
