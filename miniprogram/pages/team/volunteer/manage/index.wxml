@@ -13,19 +13,12 @@
   <view class="content-wrapper">
     <!-- 粘性头部：搜索框固定在页面上方 -->
     <view class="sticky-header">
-      <!-- 搜索框毛玻璃效果 -->
-      <view class="search-box">
-        <input class="search-input"
-               placeholder="搜索活动标题"
-               value="{{searchKeyword}}"
-               bindinput="handleSearchInput"
-               bindconfirm="handleSearchConfirm"/>
-        <view class="search-icon" bindtap="handleSearchConfirm">🔍</view>
-      </view>
+      <search-field value="{{searchKeyword}}" placeholder="搜索活动标题" bindinput="handleSearchInput" bindconfirm="handleSearchConfirm" bindclear="handleSearchConfirm" />
     </view>
 
     <!-- 列表滚动区域 -->
-    <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+    <scroll-view class="content" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}" refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
     <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryActivities">重试加载</button></view>
       <!-- 初始加载提示 -->
       <view class="initial-loading" wx:if="{{initialLoading}}">
@@ -70,7 +63,7 @@
           </view>
         </view>
 
-        <view class="card-footer">
+        <view class="card-footer" wx:if="{{item.activityStatus !== 'ended'}}">
           <!-- 招募状态切换 -->
           <view class="recruitment-toggle" wx:if="{{item.activityStatus !== 'pending' && item.activityStatus !== 'ended'}}" catchtap="stopEvent">
               <text class="toggle-label {{item.recruitmentOpen ? 'open' : 'closed'}}">{{item.recruitmentOpen ? '招募已开启' : '招募已关闭'}}</text>
@@ -116,4 +109,4 @@
     <image class="add-icon" src="{{iconAdd}}"></image>
   </view>
 </view>
-
+<loading-overlay id="global-loading" />

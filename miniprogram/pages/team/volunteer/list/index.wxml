@@ -9,7 +9,8 @@
   </view>
 
   <!-- 右侧内容区域 -->
-  <scroll-view class="content" bindscrolltolower="onReachBottom" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}">
+  <scroll-view class="content" bindscrolltolower="onReachBottom" scroll-y refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}" refresher-default-style="none">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
     <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryActivities">重试加载</button></view>
     <!-- 加载动画 -->
     <view class="loading-container" wx:if="{{initialLoading}}">
@@ -47,8 +48,8 @@
             <text>{{item.numberOfVolunteers}}/{{item.volunteerCount}}人</text>
           </view>
         </view>
-        <view class="activity-footer">
-          <view class="activity-register" wx:if="{{item.activityStatus !== 'ended'}}">
+        <view class="activity-footer" wx:if="{{item.activityStatus !== 'ended'}}">
+          <view class="activity-register">
             <button class="register-btn {{item.isRegistered ? 'registered' : ''}} {{(!item.isRegistered && item.recruitmentOpen === false) ? 'recruitment-closed' : ''}} {{(!item.isRegistered && item.isFull) ? 'full' : ''}}"
                     catchtap="handleRegister"
                     data-id="{{item.activityId}}"
@@ -60,9 +61,6 @@
                     disabled="{{!item.isRegistered && (item.recruitmentOpen === false || item.isFull)}}">
               {{item.isRegistered ? '已报名' : (!item.recruitmentOpen ? '招募暂时关闭' : (item.isFull ? '已满员' : '立即报名'))}}
             </button>
-          </view>
-          <view class="inspirational-quote" wx:if="{{item.activityStatus === 'ended'}}">
-            {{item.inspirationalQuote}} — {{item.quoteAuthor}}
           </view>
         </view>
       </view>
@@ -84,3 +82,4 @@
     </view>
   </scroll-view>
 </view>
+<loading-overlay id="global-loading" />

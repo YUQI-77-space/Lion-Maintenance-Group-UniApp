@@ -1,3 +1,5 @@
+<scroll-view class="unified-page-scroll" scroll-y enhanced enable-back-to-top scroll-top="{{unifiedScrollTop}}" scroll-with-animation refresher-enabled refresher-default-style="none" refresher-triggered="{{unifiedRefreshing}}" bindrefresherrefresh="onUnifiedRefresh" bindscroll="onUnifiedScroll" bindscrolltolower="onUnifiedBottom" lower-threshold="50">
+<view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!-- pages/team/volunteer/detail/index.wxml -->
 <view class="mg-theme mg-data-page container">
   <view class="mg-page-notice mg-page-notice--error" wx:if="{{detailError}}">{{detailError}}<button class="mg-button mg-button--secondary" bindtap="getActivityDetail">重新加载</button><button class="mg-button mg-button--text" bindtap="returnToList">返回列表</button></view>
@@ -122,7 +124,7 @@
     <view class="action-area management-action-area" wx:if="{{isFromManagePage && userRole === 'leader'}}">
       <view class="btn btn-edit" catchtap="goToEdit">编辑</view>
       <view class="btn btn-delete {{deleting ? 'btn-disabled' : ''}}" catchtap="deleteActivity">
-        {{deleting ? '删除中...' : '删除'}}
+        <loading-animation wx:if="{{deleting}}" size="small" /><text wx:else>删除</text>
       </view>
     </view>
 
@@ -281,7 +283,7 @@
       </view>
       <view class="selected-confirm-area {{importLoading || !hasPendingSelections ? 'disabled' : ''}}"
             catchtap="handleSelectedConfirm">
-        {{importLoading ? '导入中...' : '确认'}}
+        <loading-animation wx:if="{{importLoading}}" size="small" /><text wx:else>{{'确认'}}</text>
       </view>
     </view>
   </view>
@@ -310,3 +312,5 @@
     </view>
   </view>
 </view>
+</scroll-view>
+<loading-overlay id="global-loading" />

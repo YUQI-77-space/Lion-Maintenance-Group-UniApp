@@ -33,7 +33,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   position: relative;
   background: transparent;
   transition: background-color 0.2s ease;
@@ -46,7 +46,7 @@
 .sidebar view.active {
   color: var(--primary-color);
   background: var(--card-background);
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
 }
 
 .sidebar view.active::before {
@@ -124,8 +124,8 @@
 }
 
 .card-title {
-  font-size: 34rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-body);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   flex: 1;
   margin-right: 20rpx;
@@ -136,7 +136,7 @@
   align-items: center;
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   flex-shrink: 0;
   background-color: transparent; /* 无底色填充 */
   border: 1rpx solid; /* 边框 */
@@ -184,13 +184,13 @@
 }
 
 .activity-id {
-  font-size: 24rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-placeholder);
   margin-bottom: 20rpx;
 }
 
 .card-content {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-regular);
 }
 
@@ -225,7 +225,7 @@
 
 .register-btn {
   width: 80%; /* 宽度缩减到80% */
-  font-size: 26rpx;
+  font-size: var(--mg-font-body);
   padding: 8rpx 24rpx;
   border-radius: 30rpx;
   line-height: 1.5;
@@ -258,15 +258,6 @@
   cursor: not-allowed;
 }
 
-/* 励志名言样式 */
-.inspirational-quote {
-  margin-top: 24rpx;
-  text-align: left;
-  color: #666;
-  font-size: 28rpx;
-  line-height: 1.4;
-}
-
 /* 空状态样式 */
 .empty-state {
   display: flex;
@@ -283,7 +274,7 @@
 }
 
 .empty-text {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-secondary);
 }
 
@@ -291,24 +282,15 @@
 .loading-more, .no-more {
   text-align: center;
   padding: 30rpx 0;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.loading-spinner {
-  width: 40rpx;
-  height: 40rpx;
-  border: 4rpx solid var(--border-light);
-  border-top: 4rpx solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 10rpx;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* 列表采用蓝灰底与白色卡片，细边界强化内容层次。 */
+.mg-data-page .content { background: var(--mg-color-bg-subtle); }
+.mg-data-page .activity-card {
+  border: var(--mg-border-width) solid var(--mg-color-border);
 }

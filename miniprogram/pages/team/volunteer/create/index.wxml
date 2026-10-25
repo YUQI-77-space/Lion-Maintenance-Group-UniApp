@@ -81,7 +81,7 @@
     <!-- 活动描述 -->
     <view class="form-group">
       <view class="form-label">活动详细描述<text class="required">*</text></view>
-      <textarea class="form-textarea" name="description" value="{{formData.description}}" placeholder="请输入活动详细描述" maxlength="1000" auto-height/>
+      <textarea class="form-textarea" name="description" bindinput="onDescriptionInput" value="{{formData.description}}" placeholder="请输入活动详细描述" maxlength="1000" auto-height/>
       <view class="textarea-counter">{{descriptionLength}}/1000</view>
     </view>
     
@@ -111,7 +111,7 @@
         <text>取消</text>
       </view>
       <button class="btn-submit btn-hover" form-type="submit" hover-class="btn-submit-active" hover-stay-time="150" disabled="{{loading || submitting || submitUnknown}}">
-        <text>{{loading ? '处理中...' : (isEdit ? '保存修改' : '创建活动')}}</text>
+        <loading-animation wx:if="{{loading || submitting}}" size="small" /><text wx:else>{{isEdit ? '保存修改' : '创建活动'}}</text>
       </button>
     </view>
   </form>
@@ -121,3 +121,4 @@
 <view class="loading-mask" wx:if="{{loading}}">
   <loading-animation size="large"></loading-animation>
 </view>
+<loading-overlay id="global-loading" />

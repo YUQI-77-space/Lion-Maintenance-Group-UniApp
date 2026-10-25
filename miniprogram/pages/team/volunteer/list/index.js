@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/volunteer/list/index.js
 const app = getApp()
 const api = require('../../../../utils/apiAdapter')
@@ -29,23 +30,7 @@ Page({
     iconCalendar: iconManager.get('team_calendar'),
     iconLocation: iconManager.get('status_location'),
     iconPeople: iconManager.get('status_people'),
-    iconEmpty: iconManager.get('common_empty'),
-
-    // 励志名言数据库
-    inspirationalQuotes: [
-      { text: "志愿服务是一种生活态度，不是一种工作。", author: "玛丽·麦卡锡" },
-      { text: "帮助别人解决困难和痛苦是人生最大的幸福和快乐。", author: "爱因斯坦" },
-      { text: "人生的价值，并不是用时间，而是用深度量去衡量的。", author: "列夫·托尔斯泰" },
-      { text: "一个人的价值，应该看他贡献什么，而不应当看他取得什么。", author: "爱因斯坦" },
-      { text: "赠人玫瑰，手有余香。", author: "古语" },
-      { text: "只要人人都献出一点爱，世界将变成美好的人间。", author: "韦唯" },
-      { text: "善良是一种世界通用的语言。", author: "马克·吐温" },
-      { text: "真正的快乐来自于帮助他人。", author: "英国谚语" },
-      { text: "我们都是来去匆匆的过客，但总要为这个世界留下些什么。", author: "三毛" },
-      { text: "最美好的人生途径就是创造价值。", author: "池田大作" },
-      { text: "一个人做点好事并不难，难的是一辈子做好事。", author: "雷锋" },
-      { text: "要做的事情总找得出时间和机会，不要做的事情总找得出借口。", author: "张爱玲" }
-    ]
+    iconEmpty: iconManager.get('common_empty')
   },
 
   /**
@@ -83,13 +68,6 @@ Page({
   },
 
   /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
    * 生命周期函数--监听页面显示
    */
   onShow() {
@@ -101,15 +79,6 @@ Page({
     }
     this._isFirstLoad = false;
   },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-
 
   /**
    * 获取活动列表
@@ -225,7 +194,6 @@ Page({
    */
   processActivities(rawActivities = []) {
     const statusMap = { pending: '待发布', inPreparation: '筹备中', inProgress: '进行中', ended: '已结束' };
-    const quotes = this.data.inspirationalQuotes || [];
     return rawActivities.map((item) => {
       const cloned = { ...item };
       cloned.startTimeFormatted = this.formatDate(cloned.startTime);
@@ -236,12 +204,6 @@ Page({
       // 🔥 修复：右上角只显示活动状态（根据活动时间分类），不显示"已满员"或"招募暂时关闭"
       // "已满员"和"招募暂时关闭"只显示在按钮上
       cloned.statusText = statusMap[cloned.activityStatus] || '未知';
-      if (cloned.activityStatus === 'ended' && quotes.length > 0) {
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        const quote = quotes[randomIndex];
-        cloned.inspirationalQuote = quote.text;
-        cloned.quoteAuthor = quote.author;
-      }
       return cloned;
     });
   },
@@ -297,7 +259,7 @@ Page({
       }
     }
     
-    wx.showLoading({
+    loadingFeedback.show({
       title: isRegistered ? '取消报名中...' : '报名中...',
       mask: true
     });
@@ -308,7 +270,7 @@ Page({
       // 离线处理逻辑保持不变
       if (!network.isOnline()) {
         wx.showToast({ title: '当前离线，尚未提交，输入已保留', icon: 'none', duration: 2500 });
-        wx.hideLoading();
+        loadingFeedback.hide();
         return;
       }
       
@@ -355,7 +317,7 @@ Page({
         icon: 'none'
       });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -381,11 +343,6 @@ Page({
   formatDate(date) {
     return time.formatToMinute(date)
   },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {},
 
   // scroll-view 下拉刷新
   onRefresherRefresh: function() {

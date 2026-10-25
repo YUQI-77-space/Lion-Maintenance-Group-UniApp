@@ -1,3 +1,4 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/volunteer/create/index.js
 const app = getApp()
 const api = require('../../../../utils/apiAdapter')
@@ -67,8 +68,6 @@ Page({
       
     }
     
-    // 监听描述文本变化
-    this.watchDescription()
     
   },
 
@@ -628,23 +627,9 @@ Page({
     }
   },
 
-  /**
-   * 监听描述文本变化
-   */
-  watchDescription() {
-    // 创建一个观察者对象（保存引用，便于卸载时断开）
-    this.descriptionObserver = this.createIntersectionObserver()
-    
-    // 监听描述文本框
-    this.descriptionObserver.relativeTo().observe('.form-textarea', (res) => {
-      // 获取当前描述文本长度
-      const descriptionLength = this.data.formData.description.length
-      
-      // 更新描述文本长度
-      this.setData({
-        descriptionLength: descriptionLength
-      })
-    })
+  onDescriptionInput(e) {
+    const description = e.detail.value;
+    this.setData({ 'formData.description': description, descriptionLength: description.length });
   },
 
   /**
@@ -690,7 +675,7 @@ Page({
    * 获取活动详情（编辑模式）
    */
   getActivityDetail: async function(activityId) {
-    wx.showLoading({
+    loadingFeedback.show({
       title: '加载中...',
     });
     try {
@@ -737,7 +722,7 @@ Page({
     } catch (err) {
       wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -1021,21 +1006,5 @@ Page({
    */
   formatDate(date) {
     return time.formatToMinute(date)
-  },
-
-  /**
-   * EW 输入限制（最大50）
-   */
-
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-    // 清除描述文本监听器
-    if (this.descriptionObserver && this.descriptionObserver.disconnect) {
-      try { this.descriptionObserver.disconnect(); } catch (e) {}
-      this.descriptionObserver = null
-    }
   }
 })

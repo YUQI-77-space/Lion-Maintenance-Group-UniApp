@@ -36,16 +36,16 @@
 }
 
 .title {
-  font-size: 36rpx;
-  font-weight: bold;
-  line-height: 1.4;
+  font-size: var(--mg-font-title);
+  font-weight: var(--mg-weight-semibold);
+  line-height: var(--mg-line-title);
   color: var(--text-main);
   margin-bottom: 10rpx;
   word-break: break-all;
 }
 
 .activity-id {
-  font-size: 24rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-placeholder);
 }
 
@@ -54,7 +54,7 @@
   align-items: center;
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   font-weight: 500;
   flex-shrink: 0;
   margin-top: 5rpx;
@@ -109,21 +109,6 @@
   padding: 100rpx 0;
 }
 
-.loading-spinner {
-  width: 60rpx;
-  height: 60rpx;
-  border: 6rpx solid var(--border-light);
-  border-top: 6rpx solid var(--success-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20rpx;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 /* 活动头部 */
 .activity-header {
   padding: 30rpx;
@@ -132,15 +117,15 @@
 }
 
 .activity-title {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-body);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   margin-bottom: 15rpx;
 }
 
 .activity-status {
   display: inline-block;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
   color: #fff;
@@ -179,13 +164,13 @@
   width: 180rpx;
   flex-shrink: 0;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
 }
 
 .info-value {
   flex: 1;
   color: var(--text-main);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   /* 中文可自由断行，长英文/链接才强制断开，避免时间戳被截断 */
   overflow-wrap: break-word;
   word-break: normal;
@@ -210,7 +195,7 @@
 
 /* 报名人数：当前人数加重，总名额弱化 */
 .count-current {
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
 }
 
@@ -228,8 +213,8 @@
 }
 
 .section-title {
-  font-size: 30rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   margin-bottom: 15rpx;
   padding-bottom: 15rpx;
@@ -237,7 +222,7 @@
 }
 
 .description-content {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-regular);
   line-height: 1.6;
   white-space: pre-wrap;
@@ -246,8 +231,8 @@
 
 /* 参与者列表：标题区与信息区共用一条分隔线，整块由卡片统一承载 */
 .participants-section .section-title {
-  font-size: 30rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   padding-left: 0;
   border-bottom: none;
@@ -304,33 +289,33 @@
   text-overflow: ellipsis;
 }
 .info-text.name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-main);
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
   margin-bottom: 8rpx;
 }
 /* 学号属于次要信息，弱化处理避免与姓名抢视线 */
 .info-text.student-id {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-placeholder);
 }
 .info-text.detail {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
 }
 .info-text.feedback {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
 }
 
 .info-text.division-label {
-  font-size: 22rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-placeholder);
   margin-bottom: 6rpx;
 }
 
 .info-text.division {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-regular);
   max-width: 100%;
   white-space: normal;
@@ -341,7 +326,7 @@
   padding: 40rpx;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
 }
 
 /* 管理操作按钮 - 统一为描边按钮 */
@@ -357,7 +342,7 @@
   height: 76rpx;
   line-height: 76rpx;
   text-align: center;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-main);
   border: 2rpx solid var(--border-color);
   background: var(--card-background);
@@ -387,7 +372,7 @@
   width: 200rpx;
   height: 80rpx;
   line-height: 80rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   border-radius: 40rpx;
   padding: 0;
 }
@@ -429,7 +414,7 @@
   align-items: center;
   justify-content: center;
   padding: 100rpx 0;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-secondary);
 }
 
@@ -465,8 +450,8 @@
 
 .modal-header {
   padding: 30rpx;
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   text-align: center;
   border-bottom: 1rpx solid var(--border-light);
   color: var(--text-main);
@@ -482,7 +467,7 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 0 20rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   background-color: var(--card-background);
   color: var(--text-main);
 }
@@ -493,7 +478,7 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 0 20rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   margin-bottom: 20rpx;
   background-color: var(--card-background);
   color: var(--text-main);
@@ -505,14 +490,14 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 20rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   background-color: var(--card-background);
   color: var(--text-main);
 }
 
 .textarea-counter {
   text-align: right;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 10rpx;
 }
@@ -526,7 +511,7 @@
   flex: 1;
   padding: 20rpx 0;
   text-align: center;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   border-radius: 0;
   background-color: var(--card-background);
 }
@@ -560,8 +545,8 @@
   height: 88rpx;
   line-height: 88rpx;
   border-radius: 44rpx;
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-body);
+  font-weight: var(--mg-weight-semibold);
   border: none;
 }
 
@@ -577,7 +562,7 @@
 }
 
 .cancel-deadline {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 20rpx;
 }
@@ -613,7 +598,7 @@
   padding: 8rpx 22rpx;
   border-radius: 999rpx;
   border: 2rpx solid var(--border-color);
-  font-size: 24rpx;
+  font-size: var(--mg-font-label);
   font-weight: 500;
   color: var(--text-main);
   background: var(--card-background);
@@ -711,18 +696,18 @@
 }
 
 .sheet-title {
-  font-size: 36rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .sheet-subtitle {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
 }
 
 .sheet-count {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.08);
   padding: 8rpx 20rpx;
@@ -733,7 +718,7 @@
   padding: 0 40rpx 20rpx;
   display: flex;
   justify-content: space-between;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
 }
 
@@ -815,7 +800,7 @@
 }
 
 .member-card-name {
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-main);
   display: flex;
@@ -824,7 +809,7 @@
 }
 
 .member-role-tag {
-  font-size: 22rpx;
+  font-size: var(--mg-font-caption);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.12);
   border-radius: 999rpx;
@@ -832,7 +817,7 @@
 }
 
 .member-card-meta {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   display: flex;
   gap: 20rpx;
@@ -864,7 +849,7 @@
   border-radius: 50%;
   background: var(--primary-color);
   color: #fff;
-  font-size: 36rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -873,13 +858,13 @@
 
 .pill-button.selected {
   background: var(--success-color);
-  font-size: 32rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
 }
 
 .empty-members.modern {
   padding: 120rpx 0;
   text-align: center;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-secondary);
 }
 
@@ -937,13 +922,13 @@
 }
 
 .panel-title {
-  font-size: 32rpx;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .panel-clear {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--danger-color);
 }
 
@@ -1003,7 +988,7 @@
 }
 
 .selected-name {
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: var(--text-main);
   display: flex;
@@ -1012,7 +997,7 @@
 }
 
 .selected-meta {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 6rpx;
 }
@@ -1038,7 +1023,7 @@
   padding: 120rpx 0;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
 }
 
 .selected-bar {
@@ -1067,12 +1052,12 @@
 }
 
 .selected-bar-label {
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   font-weight: 600;
 }
 
 .selected-bar-count {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   opacity: 0.8;
   display: block;
   margin-top: 6rpx;
@@ -1117,7 +1102,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   font-weight: 600;
   color: #fff;
 }
@@ -1181,8 +1166,8 @@
   border-bottom: 1px solid var(--border-light);
 }
 .per-ew-left { display: flex; flex-direction: column; }
-.per-ew-name { font-size: 28rpx; color: var(--text-main); }
-.per-ew-id { font-size: 24rpx; color: var(--text-secondary); margin-top: 6rpx; }
+.per-ew-name { font-size: var(--mg-font-body); color: var(--text-main); }
+.per-ew-id { font-size: var(--mg-font-caption); color: var(--text-secondary); margin-top: 6rpx; }
 .per-ew-input {
   width: 180rpx;
   height: 64rpx;
@@ -1213,7 +1198,7 @@
 .per-ew-footer button {
   height: 58rpx;
   border-radius: 12rpx;
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
 }
 .per-ew-cancel { border: 2rpx solid var(--border-color); color: var(--text-main); background: var(--card-background); }
 .per-ew-confirm { border: 2rpx solid var(--primary-color); color: var(--primary-color); background: var(--card-background); }
@@ -1229,7 +1214,7 @@
 
 .action-area .btn {
   padding: 22rpx 80rpx;
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   border-radius: 999rpx;
   /* 只覆盖粗细与线型，边框色交给下面的按钮修饰类 */
   border-width: 2rpx;
@@ -1246,7 +1231,7 @@
 .management-action-area .btn {
   flex: 0 0 auto;
   padding: 20rpx 48rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
 }
 
 /* 编辑：实心深蓝 */

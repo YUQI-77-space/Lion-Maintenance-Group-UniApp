@@ -282,63 +282,6 @@ Page(Object.assign({
     })
   },
 
-  // 旧版管理列表操作（已迁移至管理详情页，页面不再调用）
-  /**
-   * 跳转到编辑页
-   */
-  goToEdit(e) {
-    // 阻止事件冒泡
-    e.stopPropagation && e.stopPropagation();
-    
-    const activityId = e.currentTarget.dataset.id;
-    const index = e.currentTarget.dataset.index;
-    
-    // 获取当前活动信息
-    const activity = this.data.activities.find(item => item.activityId === activityId);
-    if (!activity) {
-      wx.showToast({
-        title: '找不到活动信息',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    // 检查用户角色
-    const app = getApp();
-    const role = app.globalData.role || wx.getStorageSync('role') || 'user';
-    
-    if (role !== 'leader') {
-      wx.showToast({
-        title: '只有组长可以编辑活动',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    const lockTimeFields = activity.activityStatus === 'inProgress' || activity.activityStatus === 'ended';
-    
-    wx.navigateTo({
-      url: `/pages/team/volunteer/create/index?id=${activityId}${lockTimeFields ? '&lockTime=1' : ''}`,
-      events: {
-        activityUpdated: (payload = {}) => {
-          // 从编辑页回传的更新字段，按需路径更新
-          const updates = payload.updates || {};
-          const targetIndex = Number.isInteger(index) ? index : this.data.activities.findIndex(i => i.activityId === activityId);
-          if (targetIndex >= 0) {
-            const pathBase = `activities[${targetIndex}]`;
-            const setDataPayload = {};
-            Object.keys(updates).forEach((key) => {
-              setDataPayload[`${pathBase}.${key}`] = updates[key];
-            });
-            if (Object.keys(setDataPayload).length > 0) {
-              this.setData(setDataPayload);
-            }
-          }
-        }
-      }
-    });
-  },
-
   /**
    * 跳转到创建活动页面
    */
@@ -346,103 +289,6 @@ Page(Object.assign({
     wx.navigateTo({
       url: '/pages/team/volunteer/create/index'
     })
-  },
-
-  /**
-   * 检查数据库权限
-   */
-  checkDbPermission() {
-    // 检查是否已经初始化云环境
-    if (!wx.cloud) {
-      console.error('云开发未初始化')
-      return false
-    }
-    return true
-  },
-
-  /**
-   * 删除活动
-   * 旧版管理列表操作（已迁移至管理详情页，页面不再调用）
-   */
-  deleteActivity(e) {
-    // 阻止事件冒泡
-    e.stopPropagation && e.stopPropagation();
-    
-    // 检查用户角色
-    const app = getApp()
-    const role = app.globalData.role || wx.getStorageSync('role') || 'user'
-    
-    if (role !== 'leader') {
-      wx.showToast({
-        title: '只有组长可以删除活动',
-        icon: 'none'
-      })
-      return
-    }
-    
-    // 获取活动ID
-    const activityId = e.currentTarget.dataset.id
-    
-    // 获取当前活动信息
-    const activity = this.data.activities.find(item => item.activityId === activityId)
-    if (!activity) {
-      wx.showToast({
-        title: '找不到活动信息',
-        icon: 'none'
-      })
-      return
-    }
-    
-    // 显示确认对话框
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除该活动吗？此操作不可恢复。',
-      confirmColor: '#ff6b6b',
-      success: async (res) => {
-        if (res.confirm) {
-          wx.showLoading({
-            title: '删除中...',
-            mask: true
-          });
-          
-          try {
-            const requestId = api.generateRequestId();
-            const result = await api.call('volunteerActivities', {
-              action: 'deleteVolunteerActivity', config: { retries: 0 },
-              params: {
-                activityId: activityId,
-                requestId
-              }
-            });
-
-            wx.hideLoading();
-            
-                          if (result.success) {
-                wx.showToast({
-                  title: '删除成功',
-                  icon: 'success'
-                });
-                
-                // 刷新活动数据
-                await this.refreshActivityData();
-                
-            } else {
-              wx.showToast({
-                title: result.message || '删除失败',
-                icon: 'none'
-              });
-            }
-          } catch (err) {
-            wx.hideLoading();
-            console.error('删除活动失败:', err);
-            wx.showToast({
-              title: '删除失败',
-              icon: 'none'
-            });
-          }
-        }
-      }
-    });
   },
 
   /**
@@ -638,7 +484,7 @@ Page(Object.assign({
    * 搜索确认
    */
   handleSearchConfirm(e) {
-    const keyword = e.detail.value || this.data.searchKeyword
+    const keyword = e.detail.value
     this.setData({
       searchKeyword: keyword,
       page: 1,
@@ -649,11 +495,6 @@ Page(Object.assign({
     this.getActivitiesList();
     this.triggerCardAnimation(0);
   },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {},
 
   // scroll-view 下拉刷新
   onRefresherRefresh: function() {

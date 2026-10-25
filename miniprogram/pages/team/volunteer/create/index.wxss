@@ -9,8 +9,8 @@
 }
 
 .page-title {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-title); line-height: var(--mg-line-title);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   margin-bottom: 30rpx;
   text-align: center;
@@ -26,10 +26,10 @@
 }
 
 .form-label {
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
   margin-bottom: 20rpx;
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
 }
 
 .required {
@@ -43,7 +43,7 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 0 20rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   box-sizing: border-box;
   background-color: var(--card-background);
   color: var(--text-main);
@@ -62,15 +62,15 @@
 }
 
 .duration-label {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   font-weight: 500;
 }
 
 .duration-value {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--success-color);
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
 }
 
 .form-textarea {
@@ -79,7 +79,7 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 20rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   box-sizing: border-box;
   background-color: var(--card-background);
   color: var(--text-main);
@@ -87,13 +87,13 @@
 
 .textarea-counter {
   text-align: right;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 10rpx;
 }
 
 .form-tips {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
   margin-top: 10rpx;
 }
@@ -104,7 +104,7 @@
 }
 
 .time-lock-tip {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--danger-color);
   background-color: rgba(255, 107, 107, 0.08);
   border: 1rpx dashed var(--danger-color);
@@ -125,14 +125,14 @@
 }
 
 .picker-label {
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
   margin-right: 20rpx;
 }
 
 .picker-value {
   flex: 1;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-regular);
 }
 
@@ -157,7 +157,7 @@
   line-height: 90rpx;
   text-align: center;
   border-radius: 45rpx;
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   /* 🔥 去掉背景色，添加边框样式 */
   background-color: transparent;
   border: 2rpx solid;
@@ -202,7 +202,7 @@
 /* 🔥 按钮文字样式 */
 .btn-cancel text,
 .btn-submit text {
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   font-weight: 500;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .switch-label {
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
 }
 
@@ -253,7 +253,7 @@
 }
 
 .primary-btn, .btn-primary, .submit-btn { min-height: 48px; background: var(--mg-color-brand); color: var(--mg-color-on-brand); border-color: var(--mg-color-brand); border-radius: 16rpx; }
-.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: 15px; }
+.field-input, .description-textarea { min-height: 48px; border: 1px solid var(--mg-color-control-border); color: var(--mg-color-text-primary); font-size: var(--mg-font-body); }
 .step-bar { z-index: 100; }
 .step-card { border: 0; border-radius: 24rpx; padding: 32rpx; }
 .button-group { gap: 8px; }

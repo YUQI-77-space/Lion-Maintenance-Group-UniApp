@@ -4,6 +4,7 @@
   "backgroundColor": "#F5F7FA",
   "backgroundTextStyle": "dark",
   "usingComponents": {
-    "loading-animation": "/components/loading-animation/index"
+    "loading-animation": "/components/loading-animation/index",
+    "search-field": "/components/search-field/index"
   }
 }

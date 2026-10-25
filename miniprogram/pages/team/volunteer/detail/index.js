@@ -1,9 +1,11 @@
+const loadingFeedback = require('../../../../utils/loading');
 // pages/team/volunteer/detail/index.js
 const app = getApp()
 const api = require('../../../../utils/apiAdapter')
 const time = require('../../../../utils/time')
 
 Page({
+  behaviors: [require('../../../../utils/pageRefresh')],
   /**
    * 页面的初始数据
    */
@@ -78,13 +80,6 @@ Page({
   },
 
   /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
    * 生命周期函数--监听页面显示
    */
   onShow() {
@@ -97,18 +92,6 @@ Page({
         this.getParticipants()
       }
     }
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
   },
 
   /**
@@ -174,7 +157,7 @@ Page({
       wx.showToast({ title: '获取活动详情失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });
-      wx.stopPullDownRefresh();
+      this.setData({ unifiedRefreshing: false });
     }
   },
 
@@ -216,16 +199,16 @@ Page({
    */
   exportParticipants: async function() {
     if (this.data.userRole !== 'leader') return;
-    wx.showLoading({ title: '正在生成...', mask: true });
+    loadingFeedback.show({ title: '正在生成...', mask: true });
     try {
       const result = await api.call('volunteerActivities', { action: 'exportParticipants', params: { activityId: this.data.activityId } });
       if (result.success && result.data && result.data.fileID) {
         const fileID = result.data.fileID;
-        wx.hideLoading();
-        wx.showLoading({ title: '正在下载...', mask: true });
+        loadingFeedback.hide();
+        loadingFeedback.show({ title: '正在下载...', mask: true });
         try {
           const downloadRes = await wx.cloud.downloadFile({ fileID });
-          wx.hideLoading();
+          loadingFeedback.hide();
           const path = downloadRes.tempFilePath;
           wx.openDocument({
             filePath: path,
@@ -236,16 +219,16 @@ Page({
             }
           });
         } catch (downloadErr) {
-          wx.hideLoading();
+          loadingFeedback.hide();
           console.error('下载文件失败', downloadErr);
           wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' });
         }
       } else {
-        wx.hideLoading();
+        loadingFeedback.hide();
         wx.showToast({ title: result.message || '导出失败', icon: 'none' });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       console.error('导出参与者信息失败', err);
       wx.showToast({ title: '导出接口调用失败', icon: 'none' });
     }
@@ -376,7 +359,7 @@ Page({
    */
   getMembersList: async function(showLoading = false) {
     if (showLoading) {
-      wx.showLoading({
+      loadingFeedback.show({
         title: '加载中...',
         mask: true
       });
@@ -421,7 +404,7 @@ Page({
       throw err;
     } finally {
       if (showLoading) {
-        wx.hideLoading();
+        loadingFeedback.hide();
       }
     }
   },
@@ -606,7 +589,7 @@ Page({
     if (this.data.importLoading) return;
     this.setData({ importLoading: true });
     
-    wx.showLoading({
+    loadingFeedback.show({
       title: '导入中...',
       mask: true
     });
@@ -642,7 +625,7 @@ Page({
       });
 
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
       this.setData({ importLoading: false });
     }
   },
@@ -705,7 +688,7 @@ Page({
       ew: Number(this.data.perUserEWMap[p.openid] || 0)
     }));
 
-    wx.showLoading({ title: '提交中...', mask: true });
+    loadingFeedback.show({ title: '提交中...', mask: true });
     try {
       const res = await api.call('volunteerActivities', {
         action: 'setParticipantsEW', config: { retries: 0 },
@@ -725,7 +708,7 @@ Page({
       console.error('提交每人EW失败', err);
       wx.showToast({ title: '提交失败', icon: 'none' });
     } finally {
-      wx.hideLoading();
+      loadingFeedback.hide();
     }
   },
 
@@ -795,7 +778,7 @@ Page({
     if (this.data.deleting) return;
 
     this.setData({ deleting: true });
-    wx.showLoading({ title: '删除中...', mask: true });
+    loadingFeedback.show({ title: '删除中...', mask: true });
 
     try {
       const requestId = api.generateRequestId();
@@ -804,7 +787,7 @@ Page({
         params: { activityId, requestId }
       });
 
-      wx.hideLoading();
+      loadingFeedback.hide();
 
       if (result.success) {
         wx.showToast({ title: '删除成功', icon: 'success' });
@@ -815,7 +798,7 @@ Page({
         wx.showToast({ title: result.message || '删除失败', icon: 'none' });
       }
     } catch (err) {
-      wx.hideLoading();
+      loadingFeedback.hide();
       console.error('删除活动失败:', err);
       wx.showToast({ title: '删除失败', icon: 'none' });
     } finally {
@@ -850,13 +833,6 @@ Page({
     // if (this.data.userRole === 'leader') {
     //   this.getParticipants()
     // }
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
   },
 
   /**

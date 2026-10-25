@@ -34,7 +34,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  font-size: 28rpx;
+  font-size: var(--mg-font-label);
   position: relative;
   background: transparent;
   transition: background-color 0.2s ease;
@@ -47,7 +47,7 @@
 .sidebar view.active {
   color: var(--primary-color);
   background: var(--card-background);
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
 }
 
 .sidebar view.active::before {
@@ -80,35 +80,6 @@
   background: transparent;
 }
 
-/* 搜索框毛玻璃效果 - 使用阴影模拟半透明质感 */
-.search-box {
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.08);
-  border-radius: 30rpx;
-  padding: 10rpx 20rpx;
-  border: 1rpx solid rgba(0, 0, 0, 0.06);
-}
-
-.search-input {
-  flex: 1;
-  height: 60rpx;
-  font-size: 28rpx;
-  color: var(--text-main);
-  padding: 0 10rpx;
-  background: transparent;
-}
-
-.search-icon {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--text-regular);
-}
-
 /* 列表滚动区域 - 必须设置高度才能滚动 */
 .content {
   flex: 1;
@@ -132,14 +103,14 @@
 }
 
 .stats-value {
-  font-size: 36rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-display); line-height: var(--mg-line-display);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
   margin-bottom: 10rpx;
 }
 
 .stats-label {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-secondary);
 }
 
@@ -209,7 +180,7 @@
 .loading-more, .no-more {
   text-align: center;
   padding: 30rpx 0;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -233,14 +204,14 @@
 }
 
 .empty-text {
-  font-size: 32rpx;
+  font-size: var(--mg-font-body);
   color: var(--text-regular);
   font-weight: 500;
   margin-bottom: 10rpx;
 }
 
 .empty-desc {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.4;
@@ -290,7 +261,7 @@
   padding: 10rpx 32rpx;
   min-height: 56rpx;
   border-radius: 999rpx;
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   line-height: 1.2;
   border: 1rpx solid;
   margin: 0;
@@ -330,7 +301,7 @@
 }
 
 .toggle-label {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-main);
 }
 
@@ -348,7 +319,7 @@
 
 .pending-notice {
   flex: 1;
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--mg-color-warning);
   padding: 10rpx 20rpx;
   text-align: left;
@@ -366,15 +337,15 @@
 }
 
 .countdown-label {
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--mg-color-warning);
   font-weight: 500;
 }
 
 .countdown-time {
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   color: var(--mg-color-warning);
-  font-weight: bold;
+  font-weight: var(--mg-weight-semibold);
 }
 
 .card-header {
@@ -382,8 +353,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20rpx;
-  padding-bottom: 20rpx;
-  border-bottom: 1rpx solid var(--border-light);
+  padding-bottom: 0;
 }
 
 .header-left {
@@ -392,20 +362,20 @@
 }
 
 .card-title {
-  font-size: 34rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-body);
+  font-weight: var(--mg-weight-semibold);
   color: var(--text-main);
 }
 
 .activity-id {
-  font-size: 24rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-placeholder);
   margin-top: 10rpx;
 }
 
 .card-content {
-  margin-bottom: 20rpx;
-  font-size: 28rpx;
+  margin-bottom: 0;
+  font-size: var(--mg-font-body);
   color: var(--text-regular);
 }
 
@@ -434,8 +404,7 @@
   align-items: center;
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid var(--border-light);
-  font-size: 26rpx;
+  font-size: var(--mg-font-label);
   color: var(--text-secondary);
   width: 100%;
 }
@@ -446,7 +415,7 @@
   align-items: center;
   padding: 6rpx 12rpx;
   border-radius: 8rpx;
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   flex-shrink: 0;
   margin-top: 5rpx;
   background-color: transparent;
@@ -534,8 +503,8 @@
 
 .modal-header {
   padding: 30rpx;
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: var(--mg-font-section); line-height: var(--mg-line-section);
+  font-weight: var(--mg-weight-semibold);
   text-align: center;
   border-bottom: 1rpx solid var(--border-light);
   color: var(--text-main);
@@ -551,7 +520,7 @@
   border: 1rpx solid var(--border-color);
   border-radius: 8rpx;
   padding: 0 20rpx;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   background-color: var(--card-background);
   color: var(--text-main);
 }
@@ -565,7 +534,7 @@
   flex: 1;
   padding: 20rpx 0;
   text-align: center;
-  font-size: 30rpx;
+  font-size: var(--mg-font-body);
   border-radius: 0;
   background-color: var(--card-background);
 }
@@ -593,7 +562,7 @@
   justify-content: center;
   background-color: var(--danger-color);
   color: var(--text-white);
-  font-size: 28rpx;
+  font-size: var(--mg-font-body);
   padding: 10rpx 30rpx;
   border-radius: 30rpx;
   line-height: 1.5;
@@ -627,7 +596,7 @@
 }
 
 .delete-text {
-  font-size: 24rpx;
+  font-size: var(--mg-font-caption);
   color: var(--text-white);
 }
 
@@ -645,4 +614,10 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+/* 列表采用蓝灰底与白色卡片，细边界强化内容层次。 */
+.mg-data-page .content { background: var(--mg-color-bg-subtle); }
+.mg-data-page .activity-card {
+  border: var(--mg-border-width) solid var(--mg-color-border);
 }
