@@ -10,7 +10,7 @@ function page(name, call) {
   let definition
   const requests = []
   const member = { userId: 'member', openid: 'member', version: 1, role: 'member', nickName: '成员', studentId: '20260001', qqId: '123456',
-    department: '电子技术部', isEmergencyContact: false, permissions: { canEdit: true, canRemove: true, canChangeRole: false } }
+    department: '电子技术部', isEmergencyContact: false, permissions: { canEdit: true, canChangeEmploymentStatus: true, canChangeRole: false } }
   const members = { call: async (...args) => { requests.push(args); return call ? call(...args) : { success: true, data: structuredClone(member) } },
     checkPermission: () => true, generateRequestId: () => 'stable-request', roles: { member: '组员' }, departments: ['电子技术部', '机电维修部'] }
   const wx = { showToast() {}, showModal: async () => ({ confirm: false }), navigateBack() {} }
@@ -39,7 +39,7 @@ test('手动重试的请求标识通过 apiAdapter 保持不变', async () => {
       ...adapter, call: async (name, payload) => { captured.push(payload); return { success: true, data: {} } }
     } : {}, module: { set exports(value) { api = value } }
   })
-  await api.call('removeTeamMember', { _requestId: 'manual-retry', userId: 'member' })
+  await api.call('changeMemberEmploymentStatus', { _requestId: 'manual-retry', userId: 'member' })
   assert.equal(captured[0].config.requestId, 'manual-retry')
 })
 
@@ -83,46 +83,41 @@ test('网络失败保留表单和重试标识，不产生新的操作；权限�
   assert.equal(Object.keys(instance.data.form).length, 0)
 })
 
-test('移出原因与最终确认分两步，确认前不调用写接口', async () => {
+test('在职状态由原生选择保存；未改变状态不提交，取消不写入', async () => {
   const { instance, requests } = page('detail')
   await instance.load()
-  instance.openRemove()
-  await instance.remove()
-  assert.equal(instance.data.removeStep, 'reason')
-  instance.onReason({ detail: { value: '  毕业离组  ' } })
-  assert.equal(instance.data.reasonValid, true)
-  await instance.remove()
-  assert.equal(instance.data.removeStep, 'confirm')
+  instance.openEmployment()
+  await instance.saveEmployment()
   assert.equal(requests.length, 1)
-  instance.closeRemove()
-  assert.equal(instance.data.removeVisible, true)
-  assert.equal(instance.data.removeStep, 'reason')
-  assert.equal(instance.data.removeReason, '  毕业离组  ')
-  await instance.remove()
-  await instance.remove()
-  assert.equal(requests[1][0], 'removeTeamMember')
-  assert.equal(requests[1][1].reason, '毕业离组')
+  instance.onEmployment({ detail: { value: '1' } })
+  instance.closeEmployment()
+  assert.equal(instance.data.employmentVisible, false)
+  assert.equal(requests.length, 1)
+  instance.openEmployment()
+  instance.onEmployment({ detail: { value: '1' } })
+  await instance.saveEmployment()
+  assert.equal(requests[1][0], 'changeMemberEmploymentStatus')
+  assert.equal(requests[1][1].employmentStatus, 'retired')
 })
 
-test('移出遇到交接阻塞保留弹窗；提交期间不能重复提交或关闭', async () => {
+test('退休遇到未完成事项保留选择与弹窗；提交期间禁止重复或关闭', async () => {
   let resolve
   const { instance, requests } = page('detail', action => action === 'getManagedMemberDetail'
-    ? { success: true, data: { userId: 'member', version: 1, permissions: { canRemove: true } } }
+    ? { success: true, data: { userId: 'member', version: 1, permissions: { canChangeEmploymentStatus: true } } }
     : new Promise(done => { resolve = done }))
   await instance.load()
-  instance.openRemove()
-  instance.onReason({ detail: { value: '本人申请' } })
-  await instance.remove()
-  const pending = instance.remove()
-  instance.closeRemove()
-  await instance.remove()
-  assert.equal(instance.data.removeVisible, true)
+  instance.openEmployment()
+  instance.onEmployment({ detail: { value: '1' } })
+  const pending = instance.saveEmployment()
+  instance.closeEmployment()
+  await instance.saveEmployment()
+  assert.equal(instance.data.employmentVisible, true)
   assert.equal(requests.length, 2)
-  resolve({ success: false, code: 409, message: '尚有待交接事项', data: { blockers: [{ id: 'task', type: 'maintenance', title: '待交接任务' }] } })
+  resolve({ success: false, code: 409, message: '尚有未完成事项', data: { blockers: [{ id: 'task', type: 'maintenance', title: '维修任务' }] } })
   await pending
   assert.equal(instance.data.blockers.length, 1)
-  assert.equal(instance.data.removeReason, '本人申请')
-  assert.equal(instance.data.removeVisible, true)
+  assert.equal(instance.data.employmentIndex, 1)
+  assert.equal(instance.data.employmentVisible, true)
   assert.equal(instance.data.saving, false)
 })
 
@@ -145,24 +140,24 @@ test('编辑抽屉只提交变化字段，保存成功留在详情并刷新', as
   assert.equal(requests[2][0], 'getManagedMemberDetail')
 })
 
-test('本人降为组员或移出后刷新身份并离开详情，不再请求管理资料', async () => {
-  for (const action of ['changeMemberRole', 'removeTeamMember']) {
+test('本人降为组员或退休后刷新身份并离开详情，不再请求管理资料', async () => {
+  for (const action of ['changeMemberRole', 'changeMemberEmploymentStatus']) {
     const { instance, requests, member, wx, app } = page('detail', current => current === 'getManagedMemberDetail'
       ? { success: true, data: structuredClone(member) }
-      : { success: true, data: { version: 2, removed: action === 'removeTeamMember' } })
+      : { success: true, data: { version: 2, employmentStatus: 'retired' } })
     app.globalData.openid = member.openid
     let refreshed = false, returned = false
     app.refreshUserInfo = async options => { assert.equal(options.sync, false); refreshed = true }
     wx.navigateBack = () => { assert.equal(refreshed, true); returned = true }
     await instance.load()
-    await instance.submit(action, action === 'changeMemberRole' ? { role: 'member' } : { reason: '本人退出' })
+    await instance.submit(action, action === 'changeMemberRole' ? { role: 'member' } : { employmentStatus: 'retired' })
     assert.equal(returned, true)
     assert.equal(requests.length, 2)
   }
 })
 
-test('组长可通过角色入口调整组员、其他组长和管理员，确认文案显示真实角色', async () => {
-  for (const role of ['member', 'leader', 'admin']) {
+test('角色入口只调整组员与组长，确认文案显示真实角色', async () => {
+  for (const role of ['member', 'leader']) {
     const { instance, requests, member, wx } = page('detail')
     member.role = role
     member.permissions.canChangeRole = true
@@ -179,6 +174,25 @@ test('组长可通过角色入口调整组员、其他组长和管理员，确�
   }
 })
 
+test('本人降权成功后即采用返回身份，刷新无结果或本地存储失败也不保留组长角色', async () => {
+  const { instance, member, wx, app } = page('detail', action => action === 'getManagedMemberDetail'
+    ? { success: true, data: structuredClone(member) }
+    : { success: true, data: { version: 2, role: 'member', employmentStatus: 'active' } })
+  app.globalData.openid = member.openid
+  app.globalData.role = 'leader'
+  app.globalData.userInfo = { openid: member.openid, role: 'leader', version: 1 }
+  app.updateUserRole = role => { app.globalData.role = role }
+  app.refreshUserInfo = async () => {}
+  wx.setStorageSync = () => { throw new Error('本地存储不可用') }
+  let returned = false
+  wx.navigateBack = () => { returned = true }
+  await instance.load()
+  await instance.submit('changeMemberRole', { role: 'member' })
+  assert.equal(app.globalData.role, 'member')
+  assert.equal(app.globalData.userInfo.version, 2)
+  assert.equal(returned, true)
+})
+
 test('清空搜索和筛选会重新加载未筛选名单', async () => {
   const { instance, requests } = page('manage', () => ({ success: true, data: { items: [], total: 0, hasMore: false } }))
   Object.assign(instance.data, { keyword: '成员', departmentIndex: 1, roleIndex: 2 })
@@ -186,6 +200,7 @@ test('清空搜索和筛选会重新加载未筛选名单', async () => {
   assert.equal(requests[0][1].keyword, '')
   assert.equal(requests[0][1].department, '')
   assert.equal(requests[0][1].role, '')
+  assert.equal(requests[0][1].employmentStatus, 'active')
 })
 
 test('未保存编辑提示离开，恢复原值后解除提示', async () => {

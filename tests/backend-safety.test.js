@@ -41,7 +41,9 @@ function harness() {
       remove: async () => { write(); delete store[name][id] }
     })
     const base = { doc: id => { assert.equal(typeof id, 'string'); return ref(id) } }
-    if (tx) return base // SDK事务没有where/get查询，测试不能掩盖此限制。
+    if (tx) return Object.assign(base, {
+      add: async ({ data }) => { const id = data._id || 'new' + nextId++; await ref(id).set({ data }); return { _id: id } }
+    }) // 模拟事务文档读写；add 已有实际 SDK 序列化用例覆盖。
     let where = {}, cap = 100, sort = false
     const rows = () => Object.values(store[name]).filter(row => matches(row, where)).sort((a, b) => sort ? a._id.localeCompare(b._id) : 0)
     return Object.assign(base, {
@@ -49,7 +51,8 @@ function harness() {
       orderBy() { sort = true; return this }, field() { return this },
       get: async () => ({ data: clone(rows().slice(0, cap)) }), count: async () => ({ total: rows().length }),
       add: async ({ data }) => { const id = data._id || 'new' + nextId++; write(); store[name][id] = { ...clone(data), _id: id }; return { _id: id } },
-      update: async ({ data }) => { const selected = rows(); for (const row of selected) await ref(row._id).update({ data }); return { stats: { updated: selected.length } } }
+      update: async ({ data }) => { const selected = rows(); for (const row of selected) await ref(row._id).update({ data }); return { stats: { updated: selected.length } } },
+      remove: async () => { const selected = rows(); for (const row of selected) await ref(row._id).remove(); return { stats: { removed: selected.length } } }
     })
   }
   const db = {
@@ -92,6 +95,117 @@ function harness() {
 }
 const createParams = { level1: '示例分类', level2: '示例', level3: '示例', appointmentTime: '2026-10-27 10:00' }
 
+test('值班清空、生成、强制解锁均拒绝组员、退休或重复身份，forceDelete不能绕过', async () => {
+  for (const action of ['clearAllDutySlots', 'regenerateDutySlots', 'forceReleaseUserLocks']) {
+    for (const actor of ['member', 'user', '', 'retired', 'duplicate']) {
+      const h = harness()
+      h.state().users.retired = { _id: 'retired', openid: 'retired', role: 'leader', employmentStatus: 'retired' }
+      h.state().users.dupe1 = { _id: 'dupe1', openid: 'duplicate', role: 'leader' }
+      h.state().users.dupe2 = { _id: 'dupe2', openid: 'duplicate', role: 'leader' }
+      const before = structuredClone(h.state())
+      const file = action === 'forceReleaseUserLocks' ? 'cleanupExpiredLocks' : action
+      const result = await h.load(`dutySchedule/${file}.js`)[action]({ forceDelete: true, userId: 'other' }, actor)
+      assert.equal(result.code, 403, `${action}: ${actor}`)
+      assert.deepEqual(h.state(), before)
+    }
+  }
+  for (const actor of ['leader', 'admin']) {
+    const h = harness(); h.state().duty_slots = {}
+    assert.equal((await h.load('dutySchedule/clearAllDutySlots.js').clearAllDutySlots({}, actor)).code, 200)
+    assert.equal((await h.load('dutySchedule/regenerateDutySlots.js').regenerateDutySlots({ weekNumber: 1, totalWeeks: 1 }, actor)).code, 200)
+    assert.equal(Object.keys(h.state().duty_slots).length, 35)
+    assert.equal((await h.load('dutySchedule/cleanupExpiredLocks.js').forceReleaseUserLocks({ userId: 'other' }, actor)).code, 200)
+  }
+})
+
+test('维修通用更新只允许在职管理者设置有效EW，不可改状态、责任人或注入字段', async () => {
+  for (const fields of [{ taskStatus: 'completed' }, { assigneeId: 'other' }, { additionalAssignees: [] },
+    { ew: 2, taskStatus: 'completed' }, { ew: -1 }, { ew: Infinity }, { ew: '2' }, {}, []]) {
+    const h = harness()
+    h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'inProgress', assigneeId: 'member', ew: 1 }
+    const before = structuredClone(h.state())
+    const result = await h.load('maintenanceTasks/updateMaintenanceTasks.js').updateMaintenanceTasks({ maintenanceTaskId: 'task', updateData: fields }, 'member')
+    assert.notEqual(result.code, 200)
+    assert.deepEqual(h.state(), before)
+  }
+  for (const actor of ['member', 'leader', 'admin']) {
+    const h = harness()
+    h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'inProgress', assigneeId: 'member', ew: 1 }
+    const result = await h.load('maintenanceTasks/updateMaintenanceTasks.js').updateMaintenanceTasks({ maintenanceTaskId: 'task', updateData: { ew: 2.5 } }, actor)
+    assert.equal(result.code, actor === 'member' ? 403 : 200)
+    assert.equal(h.state().maintenance_tasks.task.ew, actor === 'member' ? 1 : 2.5)
+    assert.equal(h.state().maintenance_tasks.task.taskStatus, 'inProgress')
+    assert.equal(h.state().maintenance_tasks.task.assigneeId, 'member')
+  }
+})
+
+test('代分配、代建和EW事务开始前已被降权，必须重新检查当前角色并拒绝写入', async () => {
+  for (const action of ['assignMaintenanceTask', 'updateMaintenanceTasks', 'createMaintenanceTask']) {
+    const h = harness()
+    h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'pending', applicantId: 'user', ew: 1 }
+    const start = h.db.startTransaction
+    h.db.startTransaction = async () => {
+      h.change(s => { s.users.leader.role = 'member'; s.proUsers.leader.role = 'member' })
+      return start()
+    }
+    const params = action === 'assignMaintenanceTask' ? { maintenanceTaskId: 'task', assigneeId: 'other' }
+      : action === 'createMaintenanceTask' ? { ...createParams, isManagementCreated: true, applicantId: 'other' }
+      : { maintenanceTaskId: 'task', updateData: { ew: 2 } }
+    assert.equal((await h.load(`maintenanceTasks/${action}.js`)[action](params, 'leader')).code, 403)
+    assert.equal(h.state().maintenance_tasks.task.taskStatus, 'pending')
+    assert.equal(h.state().maintenance_tasks.task.ew, 1)
+    assert.equal(Object.keys(h.state().maintenance_toDo_list).length, 0)
+  }
+})
+
+test('管理员继承活动编辑和参与者查看权限，组员仍不能导入其他志愿者', async () => {
+  for (const actor of ['member', 'admin']) {
+    const h = harness(); h.caller(actor)
+    h.state().voluntary_activities = { event: { _id: 'event', activityId: 'event', title: '原活动', activityStatus: 'inPreparation',
+      participantsIDList: [], numberOfVolunteers: 0, volunteerCount: 10, recruitmentOpen: true } }
+    assert.equal((await h.load('volunteerActivities/updateVolunteerActivity.js').main({ activityId: 'event', title: '新活动' }, {})).code, actor === 'admin' ? 200 : 403)
+    assert.equal(h.state().voluntary_activities.event.title, actor === 'admin' ? '新活动' : '原活动')
+    assert.equal((await h.load('volunteerActivities/getParticipantsInfo.js').main({ activityId: 'event' }, { OPENID: actor })).code, actor === 'admin' ? 200 : 403)
+    if (actor === 'member') {
+      const result = await h.load('volunteerActivities/batchImportVolunteers.js').batchImportVolunteers({ activityId: 'event', selectedMembers: ['other'] }, { OPENID: actor })
+      assert.equal(result.code, 403)
+      assert.equal(h.state().voluntary_activities.event.numberOfVolunteers, 0)
+    }
+  }
+})
+
+test('受理人增删以users为准且事务内复查角色，管理员可接管，过期投影不能授权', async () => {
+  for (const action of ['addTaskAssignees', 'removeTaskAssignees']) for (const actor of ['member', 'leader', 'admin']) {
+    const h = harness()
+    h.state().proUsers.member.role = 'leader'
+    h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'inProgress', applicantId: 'user', assigneeId: 'member',
+      additionalAssignees: action === 'removeTaskAssignees' ? [{ assigneeId: 'other' }] : [] }
+    if (actor === 'leader') {
+      const start = h.db.startTransaction
+      h.db.startTransaction = async () => {
+        h.change(s => { s.users.leader.role = 'member'; s.proUsers.leader.role = 'member' })
+        return start()
+      }
+    }
+    const params = action === 'addTaskAssignees' ? { taskId: 'task', selectedMembers: ['other'] } : { taskId: 'task', assigneesToRemove: ['other'] }
+    const before = structuredClone(h.state().maintenance_tasks.task)
+    const result = await h.load(`maintenanceTasks/${action}.js`)[action](params, actor)
+    assert.equal(result.code, actor === 'admin' ? 200 : 403, `${action}: ${actor}`)
+    if (actor !== 'admin') assert.deepEqual(h.state().maintenance_tasks.task, before)
+    else assert.equal(h.state().maintenance_tasks.task.additionalAssignees.length, action === 'addTaskAssignees' ? 1 : 0)
+    assert.equal(h.state().ewaSummary.legacy.totalEW, 71.8)
+  }
+})
+
+test('完成任务不接受过期proUsers组长投影，实际管理员仍有组长权限', async () => {
+  const h = harness()
+  h.state().proUsers.member.role = 'leader'
+  h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'completed', applicantId: 'user' }
+  const complete = h.load('maintenanceTasks/completeMaintenanceTask.js').completeMaintenanceTask
+  assert.equal((await complete({ maintenanceTaskId: 'task' }, 'member')).code, 403)
+  assert.equal((await complete({ maintenanceTaskId: 'task' }, 'admin')).code, 200)
+})
+
 test('报修绑定真实身份，普通用户不能代建或伪造管理标志；组长管理创建仍可用', async () => {
   const h = harness(), create = h.load('maintenanceTasks/createMaintenanceTask.js').createMaintenanceTask
   for (const params of [{ applicantId: 'other' }, { isManagementCreated: true }, { applicantId: {} }, { isManagementCreated: 'false' }]) {
@@ -124,6 +238,19 @@ test('认领验证操作者与当前目标角色；成员只能本人认领，�
   }
   const h = harness(); h.state().users.other.role = 'user'
   assert.notEqual((await h.load('maintenanceTasks/assignMaintenanceTask.js').assignMaintenanceTask({ maintenanceTaskId: 'task', assigneeId: 'other' }, 'leader')).code, 200)
+})
+
+test('退休与接单或选班并发时发生事务冲突，不给退休成员留下新责任', async () => {
+  for (const action of ['claim', 'duty']) {
+    const h = harness()
+    h.state().maintenance_tasks.task = { _id: 'task', maintenanceTaskId: 'task', taskStatus: 'pending', applicantId: 'user' }
+    h.beforeCommit(() => h.change(state => { state.users.member.employmentStatus = 'retired' }))
+    const result = action === 'claim' ? await h.load('maintenanceTasks/assignMaintenanceTask.js').assignMaintenanceTask({ maintenanceTaskId: 'task' }, 'member') : await h.select(['s0'])
+    assert.notEqual(result.code, 200)
+    assert.equal(h.state().maintenance_tasks.task.taskStatus, 'pending')
+    assert.equal(h.state().duty_slots.s0.dutyHolderId, '')
+    assert.equal(h.state().users.member.employmentStatus, 'retired')
+  }
 })
 
 test('确认直接提交本地选择；排班与待办一起提交，重试不重复，历史待办ID和字段保留', async () => {
@@ -374,7 +501,8 @@ test('实际wx-server-sdk的确认与结算将全部写入携带同一事务ID�
     const confirmed = await load('confirmDutySelection').confirmDutySelection({ selectedSlots: ['s0'] }, 'member')
     assert.equal(confirmed.code, 200, confirmed.message)
     const confirmWrites = calls.filter(c => c.api === 'database.modifyDocument')
-    assert.equal(confirmWrites.length, 3)
+    assert.equal(confirmWrites.length, 4)
+    assert.ok(confirmWrites.some(c => c.params.collectionName === 'users' && c.params.data.includes('membershipWriteTime')))
     assert.ok(confirmWrites.every(c => c.params.transactionId === 'safety-transaction'))
     assert.ok(confirmWrites.some(c => c.params.data.includes('createTime')))
     assert.equal(calls.at(-1).api, 'database.commitTransaction')

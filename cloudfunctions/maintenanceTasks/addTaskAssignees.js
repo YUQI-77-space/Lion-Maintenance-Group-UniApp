@@ -32,12 +32,12 @@ exports.addTaskAssignees = async (params, OPENID) => {
       }
     }
     
-    // 获取当前用户角色（从 proUsers 集合，更高效）
-    const userResult = await db.collection('proUsers').where({
+    // 管理身份只以 users 为准。
+    const userResult = await db.collection('users').where({
       openid: OPENID
     }).get()
     
-    if (userResult.data.length === 0) {
+    if (userResult.data.length !== 1) {
       return {
         code: 403,
         data: null,
@@ -48,7 +48,7 @@ exports.addTaskAssignees = async (params, OPENID) => {
     const currentUser = userResult.data[0]
     
     // 只有组长可以添加受理人
-    if (currentUser.role !== 'leader') {
+    if (!['leader', 'admin'].includes(currentUser.role)) {
       return {
         code: 403,
         data: null,
@@ -111,7 +111,7 @@ exports.addTaskAssignees = async (params, OPENID) => {
       openid: db.command.in(newAssignees)
     }).get()
     
-    if (newAssigneesInfo.data.length !== newAssignees.length) {
+    if (newAssigneesInfo.data.length !== newAssignees.length || newAssigneesInfo.data.some(member => member.employmentStatus === 'retired')) {
       return {
         code: 400,
         data: null,
@@ -139,15 +139,20 @@ exports.addTaskAssignees = async (params, OPENID) => {
     }
     
     // 更新任务数据
-    await db.collection('maintenance_tasks').where({
-      maintenanceTaskId: params.taskId
-    }).update({
-      data: {
-        additionalAssignees: newAdditionalAssignees,
-        updateTime: currentTime
+    await require('./memberStatus').withActiveMembers(db, [OPENID, ...newAssignees], async tx => {
+      const { data: actor } = await tx.collection('users').doc(currentUser._id).get()
+      if (!['leader', 'admin'].includes(actor.role)) {
+        throw Object.assign(new Error('身份已变化，无权添加受理人'), { code: 403 })
       }
+      const ref = tx.collection('maintenance_tasks').doc(task._id)
+      const { data: current } = await ref.get()
+      if (!current || !['pending', 'inProgress'].includes(current.taskStatus) ||
+          JSON.stringify(current.additionalAssignees || []) !== JSON.stringify(existingAdditionalAssignees)) {
+        throw new Error('任务已变化或已结束，请刷新后重新添加受理人')
+      }
+      await ref.update({ data: { additionalAssignees: newAdditionalAssignees, updateTime: currentTime } })
     })
-    
+
     // 为新受理人创建待办事项
     const todoPromises = newAssignees.map(async (assigneeId) => {
       const assigneeInfo = newAssigneesInfo.data.find(info => info.openid === assigneeId)
@@ -225,9 +230,9 @@ exports.addTaskAssignees = async (params, OPENID) => {
   } catch (err) {
     console.error('添加受理人失败:', err);
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '添加受理人失败'
     }
   }
-} 
+}

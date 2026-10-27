@@ -2,6 +2,7 @@ const avatarManager = require('./utils/avatarManager');
 const network = require('./utils/network');
 const outbox = require('./utils/outbox');
 const api = require('./utils/apiAdapter');
+const identity = require('./utils/identity');
 
 // ==================== 启动期噪音日志过滤 ====================
 // 小程序框架会在 app.js 之前/期间输出一些与业务无关的日志：
@@ -211,6 +212,7 @@ App({
 		const prevRole = this.globalData.role;
 		const tabsInitialized = Array.isArray(this.globalData.currentTabs) && this.globalData.currentTabs.length > 0;
 		if (newRole === prevRole && tabsInitialized) {
+			identity.notifyIdentityChanged(this);
 			return;
 		}
 
@@ -236,6 +238,7 @@ App({
 		} catch (e) {
 			console.error('[App] 计算或发布 tabs 失败:', e);
 		}
+		identity.notifyIdentityChanged(this);
 	},
 
 	// 登录检查和导航
@@ -275,6 +278,7 @@ App({
 					const ok = !!(res && res.success && res.data);
 					if (ok) {
 						const updatedUserInfo = res.data;
+						if (!identity.isCurrentUserInfo(this, updatedUserInfo)) return this.globalData.isLogin;
 						this.globalData.userInfo = updatedUserInfo;
 						this.globalData.openid = updatedUserInfo.openid;
 						this.globalData.isLogin = true;
@@ -365,6 +369,7 @@ App({
 			
 			if (res.success && res.data) {
 				const updatedUserInfo = res.data;
+				if (!identity.isCurrentUserInfo(this, updatedUserInfo)) return this.globalData.isLogin;
 				
 				this.globalData.userInfo = updatedUserInfo;
 				wx.setStorageSync('userInfo', updatedUserInfo);
@@ -410,6 +415,7 @@ App({
 
 			if (res.success && res.data) {
 				const updatedUserInfo = res.data;
+				if (!identity.isCurrentUserInfo(this, updatedUserInfo)) return;
 				this.globalData.userInfo = updatedUserInfo;
 				wx.setStorageSync('userInfo', updatedUserInfo);
 				wx.setStorageSync('isLogin', true);
@@ -462,7 +468,7 @@ App({
 	checkPermission: function(requiredRole) {
 		const currentRole = this.globalData.role;
 		if (requiredRole === 'leader') {
-			return currentRole === 'leader' || currentRole === 'admin';
+			return (currentRole === 'leader' || currentRole === 'admin') && (!this.globalData.userInfo || this.globalData.userInfo.employmentStatus !== 'retired');
 		} else if (requiredRole === 'member') {
 			return currentRole === 'leader' || currentRole === 'member' || currentRole === 'admin';
 		} else {

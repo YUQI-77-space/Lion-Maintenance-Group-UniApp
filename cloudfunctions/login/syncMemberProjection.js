@@ -1,6 +1,7 @@
 const { ensureEwaSummary } = require('./ensureEwaSummary')
+const { statusOf } = require('./memberStatus')
 
-// login/users 为独立部署单元，此实现保持一致；始终重读身份，防止旧会话把已移出成员加回。
+// login/users 为独立部署单元，此实现保持一致；退休保留角色、成员投影和历史记录。
 async function syncMemberProjection(db, openid) {
   const member = await db.runTransaction(async tx => {
     const users = await tx.collection('users').where({ openid }).limit(2).get()
@@ -9,11 +10,10 @@ async function syncMemberProjection(db, openid) {
     const projections = await tx.collection('proUsers').where({ openid }).limit(2).get()
     if (projections.data.length > 1) throw new Error('成员身份重复，请联系管理员')
     const pro = projections.data[0]
-    if (!['member', 'leader', 'admin'].includes(user.role) || user.membershipStatus === 'removed') {
-      if (pro) await tx.collection('proUsers').doc(pro._id).remove()
+    if (!['member', 'leader', 'admin'].includes(user.role)) {
       return null
     }
-    const data = { openid, role: user.role, nickName: user.nickName || '',
+    const data = { openid, role: user.role, employmentStatus: statusOf(user), nickName: user.nickName || '',
       avatarUrl: user.avatarUrl || '', cloudAvatarUrl: user.cloudAvatarUrl || null,
       cloudAvatarFileID: user.cloudAvatarFileID || null, studentId: user.studentId || '', qqId: user.qqId || '',
       department: user.department || (pro && pro.department) || null,
@@ -22,6 +22,6 @@ async function syncMemberProjection(db, openid) {
     else await tx.collection('proUsers').add({ data: { ...data, createTime: user.createTime || db.serverDate() } })
     return data
   })
-  if (member) await ensureEwaSummary(db, member)
+  if (member && statusOf(member) === 'active') await ensureEwaSummary(db, member)
 }
 module.exports = { syncMemberProjection }

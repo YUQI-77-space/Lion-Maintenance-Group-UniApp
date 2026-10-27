@@ -51,7 +51,7 @@ test('仅查询任务相关人员的头像，去重并保留已有业务值；�
   assert(!JSON.stringify(result.data).includes('不能返回'));
   const query = queries.find(q => q.name === 'users');
   assert.deepEqual([...query.where.openid], ['owner', 'lead', 'helper']);
-  assert.deepEqual(Object.keys(query.field).sort(), ['_id', 'avatarUrl', 'cloudAvatarFileID', 'openid']);
+  assert.deepEqual(Object.keys(query.field).sort(), ['_id', 'avatarUrl', 'cloudAvatarFileID', 'employmentStatus', 'openid']);
 });
 
 test('没有本人待办时不读取主任务或任何头像', async () => {

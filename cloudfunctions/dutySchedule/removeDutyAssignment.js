@@ -44,7 +44,7 @@ exports.removeDutyAssignment = async (event, openid) => {
     const user = userResult.data[0]
 
     // 验证操作人权限 - 只有组长可以执行删除操作
-    if (!user.role || user.role !== 'leader') {
+    if (!user.role || !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,

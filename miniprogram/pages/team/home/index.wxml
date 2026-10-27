@@ -10,6 +10,7 @@
 
 <view class="container" wx:if="{{isMember}}" style="padding-top: {{navBarHeight + 16}}px; padding-bottom: {{tabbarHeight + 16}}px;">
   <view class="header">
+    <view wx:if="{{readOnly}}" class="member-readonly-note">已退休 · 感谢您的付出，历史记录仍为您保留。</view>
     <view class="subtitle">欢迎回来，{{role === 'admin' ? '管理员' : (role === 'leader' ? '组长' : '组员')}}</view>
   </view>
 

@@ -150,7 +150,7 @@ exports.resetCurrentWeekData = async (event, openid) => {
     const user = userResult.data[0]
 
     // 验证用户权限 - 只有组长可以重置数据
-    if (!user.role || user.role !== 'leader') {
+    if (!user.role || !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,

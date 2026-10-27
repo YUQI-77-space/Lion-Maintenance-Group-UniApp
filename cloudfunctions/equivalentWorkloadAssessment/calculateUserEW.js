@@ -1,5 +1,6 @@
 // 计算用户等效工作量
 const cloud = require('wx-server-sdk')
+const { isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
@@ -37,7 +38,7 @@ exports.calculateUserEW = async (params, OPENID) => {
     const user = userResult.data[0]
     
     // 只有组长或者用户本人可以计算EW
-    if (user.role !== 'leader' && OPENID !== params.userId) {
+    if (!['leader', 'admin'].includes(user.role) && OPENID !== params.userId) {
       return {
         code: 403,
         data: null,
@@ -59,6 +60,7 @@ exports.calculateUserEW = async (params, OPENID) => {
     }
     
     const targetUser = targetUserResult.data[0]
+    if (!isActiveMember(user) || !isActiveMember(targetUser)) return { code: 403, data: null, message: 'EWA 仅对在职组员开放' }
     
     // 计算维修任务EW
     const maintenanceTasks = await db.collection('maintenance_tasks').where(
@@ -129,4 +131,4 @@ exports.calculateUserEW = async (params, OPENID) => {
       message: err.message || '计算用户等效工作量失败'
     }
   }
-} 
+}

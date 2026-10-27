@@ -79,7 +79,7 @@ Page({
     const role = app.globalData.role || wx.getStorageSync('role') || 'user'
     
     
-    if (role !== 'leader') {
+    if (!['leader', 'admin'].includes(role)) {
       
       wx.showToast({
         title: '只有组长可以创建活动',

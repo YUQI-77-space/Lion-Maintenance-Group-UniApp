@@ -22,7 +22,7 @@ exports.exportExcel = async (params, OPENID) => {
     }
     
     const user = userResult.data[0]
-    if (user.role !== 'leader') {
+    if (!['leader', 'admin'].includes(user.role)) {
       return { code: 403, data: null, message: '只有组长才能导出工作量数据' }
     }
     

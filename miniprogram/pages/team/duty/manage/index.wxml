@@ -151,7 +151,7 @@
                           <image class="badge-icon" src="{{iconCheck}}" mode="aspectFit"></image>
                         </view>
 
-                        <text class="slot-text">{{slotData.statusText}}</text>
+                        <text class="slot-text">{{slotData.statusText}}</text><text wx:if="{{slotData.slotData.dutyHolderEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
                       </view>
                     </view>
                   </view>

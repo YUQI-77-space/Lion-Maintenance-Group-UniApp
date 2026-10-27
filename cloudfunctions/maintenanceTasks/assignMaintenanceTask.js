@@ -36,7 +36,7 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
       return { code: 403, data: null, message: '无权认领或代其他成员分配任务' }
     }
     const targets = assigneeId === OPENID ? callers : await db.collection('users').where({ openid: assigneeId }).limit(2).get()
-    if (targets.data.length !== 1 || !['member', 'leader', 'admin'].includes(targets.data[0].role)) {
+    if (targets.data.length !== 1 || !['member', 'leader', 'admin'].includes(targets.data[0].role) || targets.data[0].employmentStatus === 'retired') {
       return { code: 403, data: null, message: '受理人已不是维修组成员' }
     }
     
@@ -88,13 +88,20 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
     }
     
     // 使用原子性更新操作：只有当任务状态为pending时才能更新
-    const updateResult = await db.collection('maintenance_tasks').where({
-      maintenanceTaskId: params.maintenanceTaskId,
-      taskStatus: 'pending' // 原子性检查：只更新状态为pending的任务
-    }).update({
-      data: assigneeInfo
+    const updateResult = await require('./memberStatus').withActiveMembers(db, [OPENID, assigneeId], async tx => {
+      const { data: currentCaller } = await tx.collection('users').doc(caller._id).get()
+      if (assigneeId !== OPENID && !['leader', 'admin'].includes(currentCaller.role)) {
+        throw Object.assign(new Error('身份已变化，无权代其他成员分配任务'), { code: 403 })
+      }
+      const found = await db.collection('maintenance_tasks').where({ maintenanceTaskId: params.maintenanceTaskId }).limit(2).get()
+      if (found.data.length !== 1) return { stats: { updated: 0 } }
+      const ref = tx.collection('maintenance_tasks').doc(found.data[0]._id)
+      const { data: current } = await ref.get()
+      if (!current || current.taskStatus !== 'pending') return { stats: { updated: 0 } }
+      await ref.update({ data: assigneeInfo })
+      return { stats: { updated: 1 } }
     })
-    
+
     // 检查更新是否成功：如果更新的记录数为0，说明任务已被认领或不存在
     if (updateResult.stats.updated === 0) {
       // 再次查询任务以确定具体错误原因
@@ -263,7 +270,7 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
     
   } catch (err) {
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '认领维修任务失败'
     }

@@ -50,7 +50,8 @@ async function notifyDepartmentMembers(taskData) {
     while (true) {
       const batch = await db.collection('proUsers')
         .where({
-          role: 'member', // 只通知组员
+          role: 'member', // 只通知在职组员
+          employmentStatus: db.command.neq('retired'),
           department: targetDepartment
         })
         .field({ openid: true, nickName: true })
@@ -368,9 +369,18 @@ exports.createMaintenanceTask = async (params = {}, OPENID) => {
     
     
     // 添加维修任务
-    const addResult = await db.collection('maintenance_tasks').add({
-      data: taskData
-    })
+    const participantIds = [OPENID, finalApplicantId].filter(Boolean)
+    const profiles = await require('./memberStatus').readProfiles(db, participantIds)
+    const internalIds = participantIds.filter(id => require('./memberStatus').MEMBER_ROLES.includes((profiles.get(id) || {}).role))
+    const addResult = internalIds.length
+      ? await require('./memberStatus').withActiveMembers(db, internalIds, async tx => {
+        if (params.isManagementCreated) {
+          const { data: actor } = await tx.collection('users').doc(caller._id).get()
+          if (!['leader', 'admin'].includes(actor.role)) throw Object.assign(new Error('身份已变化，无权代建任务'), { code: 403 })
+        }
+        return tx.collection('maintenance_tasks').add({ data: taskData })
+      })
+      : await db.collection('maintenance_tasks').add({ data: taskData })
     
     console.log('数据库插入结果:', addResult);
     
@@ -441,7 +451,7 @@ exports.createMaintenanceTask = async (params = {}, OPENID) => {
   } catch (err) {
     console.error('创建维修任务时发生错误:', err);
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '创建维修任务失败'
     }

@@ -1,5 +1,6 @@
 // 获取等效工作量排行榜
 const cloud = require('wx-server-sdk')
+const { activeMembers, isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
@@ -16,6 +17,7 @@ const _ = db.command
  */
 exports.getRanking = async (params, OPENID) => {
   try {
+    if (!OPENID) return { code: 401, data: null, message: '请先登录' }
     // 设置默认参数
     const {
       page = 1,
@@ -60,11 +62,11 @@ exports.getRanking = async (params, OPENID) => {
     
     const user = userResult.data[0]
     
-    if (user.role !== 'member' && user.role !== 'leader') {
+    if (!isActiveMember(user)) {
       return {
         code: 403,
         data: null,
-        message: '只有维修组成员才能查看排行榜'
+        message: 'EWA 仅对在职组员开放'
       }
     }
     
@@ -72,9 +74,10 @@ exports.getRanking = async (params, OPENID) => {
     const skip = (page - 1) * pageSize
     
     // 仅查询含有有效 ewaUserId 的记录，避免历史脏数据；支持按用户昵称/学号搜索
-    const whereCondition = {
-      ewaUserId: _.exists(true)
-    }
+    const activeIds = (await activeMembers(db)).map(member => member.openid)
+    const activeSet = new Set(activeIds)
+    if (!activeIds.length) return { code: 200, data: { list: [], total: 0, page, pageSize, userRanking: null }, message: '暂无在职组员' }
+    const whereCondition = { ewaUserId: _.in(activeIds) }
 
     const searchText = (search || '').trim()
     if (searchText) {
@@ -116,6 +119,8 @@ exports.getRanking = async (params, OPENID) => {
         }
       }
 
+      matchedOpenids = matchedOpenids.filter(openid => activeSet.has(openid))
+      if (!matchedOpenids.length) return { code: 200, data: { list: [], total: 0, page, pageSize, userRanking: null }, message: '没有匹配的在职组员' }
       whereCondition.ewaUserId = _.in(matchedOpenids)
     }
 
@@ -170,7 +175,7 @@ exports.getRanking = async (params, OPENID) => {
     
     // 获取当前用户的排名信息
     let userRanking = null
-    if (includeUserRanking && (user.role === 'member' || user.role === 'leader')) {
+    if (includeUserRanking && activeSet.has(OPENID)) {
       // 查询当前用户的EW记录
       const userEWResult = await db.collection('ewaSummary')
         .where({
@@ -184,6 +189,7 @@ exports.getRanking = async (params, OPENID) => {
         // 计算当前用户的排名
         const higherRankCountResult = await db.collection('ewaSummary')
           .where({
+            ewaUserId: _.in(activeIds),
             [sortField]: db.command.gt(userEW[sortField] || 0)
           })
           .count()
@@ -236,4 +242,4 @@ exports.getRanking = async (params, OPENID) => {
       message: err.message || '获取排行榜失败'
     }
   }
-} 
+}

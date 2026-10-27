@@ -55,7 +55,7 @@
 
       <view class="info-item">
         <view class="info-label">创建者</view>
-        <view class="info-value">{{activity.creatorName || '未知'}}</view>
+        <view class="info-value">{{activity.creatorName || '未知'}}</view><text wx:if="{{activity.creatorEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
       </view>
     </view>
     
@@ -66,10 +66,10 @@
     </view>
     
     <!-- 参与者列表 -->
-    <view class="participants-section" wx:if="{{userRole === 'leader'}}">
+    <view class="participants-section" wx:if="{{(userRole === 'leader' || userRole === 'admin')}}">
       <view class="participants-header">
         <view class="section-title">参与者列表</view>
-        <view class="participant-header-actions" wx:if="{{isFromManagePage}}">
+        <view class="participant-header-actions" wx:if="{{isFromManagePage && !readOnly}}">
           <view class="participant-action-btn participant-action-btn--import"
                 wx:if="{{activity.activityStatus !== 'ended'}}"
                 bindtap="showImportVolunteersModal">
@@ -101,7 +101,7 @@
             
             <!-- Col 2: Name & StudentId -->
             <view class="info-column">
-              <text class="info-text name">{{item.nickName || 'N/A'}}</text>
+              <text class="info-text name">{{item.nickName || 'N/A'}}</text><text wx:if="{{item.employmentStatus === 'retired'}}" class="member-retired">已退休</text>
               <text class="info-text student-id">{{item.studentId || '未填'}}</text>
             </view>
             
@@ -121,7 +121,7 @@
     </view>
 
     <!-- 管理操作按钮：编辑、删除（仅从管理列表进入的组长可见） -->
-    <view class="action-area management-action-area" wx:if="{{isFromManagePage && userRole === 'leader'}}">
+    <view class="action-area management-action-area" wx:if="{{!readOnly && isFromManagePage && (userRole === 'leader' || userRole === 'admin')}}">
       <view class="btn btn-edit" catchtap="goToEdit">编辑</view>
       <view class="btn btn-delete {{deleting ? 'btn-disabled' : ''}}" catchtap="deleteActivity">
         <loading-animation wx:if="{{deleting}}" size="small" /><text wx:else>删除</text>
@@ -300,7 +300,7 @@
     <scroll-view class="per-ew-list" scroll-y="true">
       <view class="per-ew-item" wx:for="{{participants}}" wx:key="openid">
         <view class="per-ew-left">
-          <text class="per-ew-name">{{item.nickName || 'N/A'}}</text>
+          <text class="per-ew-name">{{item.nickName || 'N/A'}}</text><text wx:if="{{item.employmentStatus === 'retired'}}" class="member-retired">已退休</text>
 
         </view>
         <input class="per-ew-input" type="digit" placeholder="0-50" data-openid="{{item.openid}}" value="{{perUserEWMap[item.openid] || ''}}" bindinput="onPerUserEWInput" />

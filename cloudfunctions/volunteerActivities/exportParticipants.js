@@ -29,7 +29,7 @@ exports.main = async (event, context) => {
 
     // 验证用户权限
     const userRes = await db.collection('users').where({ openid: OPENID }).get();
-    if (userRes.data.length === 0 || userRes.data[0].role !== 'leader') {
+    if (userRes.data.length === 0 || !['leader', 'admin'].includes(userRes.data[0].role)) {
       console.error('[exportParticipants] 错误: 用户权限不足');
       return { code: 403, message: '权限不足' };
     }

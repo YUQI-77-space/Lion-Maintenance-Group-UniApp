@@ -1,10 +1,11 @@
 const { ensureEwaSummary } = require('./ensureEwaSummary')
+const { isActiveMember } = require('./memberStatus')
 
 // 分批审查/补齐历史成员；默认只读，不重算任何已有 EW。
 exports.repairProUserEwa = async (db, params, OPENID) => {
   try {
     const caller = await db.collection('users').where({ openid: OPENID }).limit(1).get()
-    if (!caller.data.length || caller.data[0].role !== 'leader') {
+    if (!isActiveMember(caller.data[0]) || !['leader', 'admin'].includes(caller.data[0].role)) {
       return { success: false, message: '只有组长才能审查和补齐 EWA', data: null }
     }
     const { cursor = '', dryRun = true } = params
@@ -30,7 +31,7 @@ exports.repairProUserEwa = async (db, params, OPENID) => {
       try {
         // users 是当前身份来源，遗留的孤立/已退组 proUsers 记录留给人工处理。
         const user = await db.collection('users').where({ openid: member.openid }).limit(1).get()
-        if (!user.data.length || !['member', 'leader'].includes(user.data[0].role)) {
+        if (!isActiveMember(user.data[0])) {
           data.skipped.push({ ...info, reason: 'users 中不存在有效成员身份，需人工核对' })
           continue
         }

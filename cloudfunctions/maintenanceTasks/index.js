@@ -19,6 +19,8 @@ const { getMembersList } = require('./getMembersList')
 const { addTaskAssignees } = require('./addTaskAssignees')
 const { removeTaskAssignees } = require('./removeTaskAssignees')
 const { deleteMaintenanceTask } = require('./deleteMaintenanceTask')
+const { retirementBlock } = require('./memberStatus')
+const READ_ACTIONS = ['obtainApplicantInfo', 'obtainClaimantInfo', 'getMaintenanceTasksList', 'getMaintenanceTaskDetail', 'getMembersList']
 
 exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
@@ -31,6 +33,10 @@ exports.main = async (event, context) => {
   }
   
   try {
+    if (!READ_ACTIONS.includes(action)) {
+      const blocked = await retirementBlock(db, OPENID)
+      if (blocked) return blocked
+    }
     switch (action) {
       case 'obtainApplicantInfo':
         result = await obtainApplicantInfo(params, OPENID)
@@ -88,4 +94,4 @@ exports.main = async (event, context) => {
   }
   
   return result
-} 
+}

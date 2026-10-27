@@ -166,6 +166,8 @@ Page({
     this.checkPendingFeedbackMessages();
   },
 
+  onIdentityChanged() { this.getUserInfo(); },
+
   // 底部导航交互控制
   setTabbarInteractionLocked(locked) {
     try {

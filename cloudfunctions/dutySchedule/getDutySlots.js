@@ -3,6 +3,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const { batchUpdateDutyStatus } = require('./dutyStatusManager')
+const { readProfiles, statusOf } = require('./memberStatus')
 
 /**
  * 获取指定周的值班时间段数据
@@ -100,7 +101,9 @@ exports.getDutySlots = async (event, openid) => {
     }
 
     // 处理数据结构，按表格形式组织
-    const processedData = processSlotDataForTable(slotsResult.data, weekNumber, year, config)
+    const profiles = await readProfiles(db, slotsResult.data.map(slot => slot.dutyHolderId || slot.assignedUser))
+    const markedSlots = slotsResult.data.map(slot => ({ ...slot, dutyHolderEmploymentStatus: statusOf(profiles.get(slot.dutyHolderId || slot.assignedUser)) }))
+    const processedData = processSlotDataForTable(markedSlots, weekNumber, year, config)
 
     console.log('[getDutySlots] 数据处理完成')
 
@@ -262,4 +265,4 @@ function processSlotDataForTable(slots, weekNumber, year, config) {
     availableSlots: slots.filter(s => s.isAvailable && !s.dutyHolderId).length,
     assignedSlots: slots.filter(s => s.dutyHolderId).length
   }
-} 
+}

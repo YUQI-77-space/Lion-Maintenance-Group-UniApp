@@ -62,7 +62,7 @@ exports.cancelMaintenanceTask = async (params, OPENID) => {
     const user = userResult.data[0]
     const userRole = user.role
     
-    if (userRole !== 'leader' && task.applicantId !== OPENID) {
+    if (!['leader', 'admin'].includes(userRole) && task.applicantId !== OPENID) {
       return {
         code: 403,
         data: null,

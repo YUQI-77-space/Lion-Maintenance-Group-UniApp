@@ -15,6 +15,12 @@ exports.main = async (event, context) => {
   const { OPENID } = cloud.getWXContext()
   
   try {
+    if (OPENID) {
+      const actor = await db.collection('users').where({ openid: OPENID }).limit(2).get()
+      if (actor.data.some(user => user.employmentStatus === 'retired' || user.membershipStatus === 'removed')) {
+        return { success: false, code: 403, message: '退休成员不能执行数据库初始化' }
+      }
+    }
     const { action, params = {} } = event
     
     console.log('initDataBase云函数收到请求:', { action, params, OPENID });

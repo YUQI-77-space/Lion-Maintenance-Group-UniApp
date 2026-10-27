@@ -2,6 +2,7 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
+const { requireLeader } = require('./switchToWeek')
 
 /**
  * 判断时间段是否可用
@@ -194,8 +195,7 @@ exports.regenerateDutySlots = async (event, openid) => {
     console.log('[regenerateDutySlots] 开始生成值班时间段（有序生成策略）')
     console.log('[regenerateDutySlots] 参数：', { weekNumber: event.weekNumber, totalWeeks: event.totalWeeks })
 
-    // TODO: 这里应该添加权限检查，确保只有组长可以生成时间段
-    // const userResult = await checkLeaderPermission(openid)
+    await requireLeader(openid)
 
     // 获取配置
     const configResult = await db.collection('duty_config').doc('global').get()
@@ -273,7 +273,7 @@ exports.regenerateDutySlots = async (event, openid) => {
   } catch (err) {
     console.error('[regenerateDutySlots] 错误：', err)
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '生成值班时间段失败'
     }

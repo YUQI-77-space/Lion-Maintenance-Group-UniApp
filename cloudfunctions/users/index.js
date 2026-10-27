@@ -12,6 +12,7 @@ const usersCollection = db.collection('users')
 const proUsersCollection = db.collection('proUsers')
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
+  if (event.action === 'removeTeamMember') return { success: false, code: 410, message: '移出操作已停用，请更新小程序后编辑在职状态' }
   if (memberManagement.ACTIONS.includes(event.action)) {
     return memberManagement.handle(db, event.action, event.params || {}, wxContext.OPENID)
   }
@@ -79,6 +80,7 @@ async function getProUsers() {
         cloudAvatarUrl: user.cloudAvatarUrl,
         cloudAvatarFileID: user.cloudAvatarFileID,
         department: user.department || null,
+        employmentStatus: require('./memberStatus').statusOf(user),
         isEmergencyContact: user.isEmergencyContact === true
       }
     })
@@ -102,7 +104,7 @@ async function getProUsers() {
 async function getEmergencyContacts() {
   try {
     const result = await proUsersCollection
-      .where({ isEmergencyContact: true })
+      .where({ isEmergencyContact: true, employmentStatus: db.command.neq('retired') })
       .orderBy('nickName', 'asc')
       .get()
 
@@ -677,6 +679,7 @@ async function getProUserByOpenId(openid) {
         studentId: proUser.studentId,
         qqId: proUser.qqId,
         role: proUser.role,
+        employmentStatus: require('./memberStatus').statusOf(proUser),
         avatarUrl: proUser.avatarUrl,
         cloudAvatarUrl: proUser.cloudAvatarUrl,
         cloudAvatarFileID: proUser.cloudAvatarFileID,

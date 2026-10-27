@@ -47,7 +47,8 @@ async function getMembersList(event, wxContext) {
     
     // 构建查询条件（使用 proUsers 集合）
     let whereCondition = {
-      role: _.in(['member', 'leader']),
+      role: _.in(['member', 'leader', 'admin']),
+      employmentStatus: _.neq('retired'),
       openid: _.neq(OPENID) // 排除自己
     }
     
@@ -164,7 +165,8 @@ async function batchImportVolunteers(event, wxContext) {
       openid: OPENID
     }).get()
     
-    const isLeader = userResult.data.length > 0 && userResult.data[0].role === 'leader'
+    const isLeader = userResult.data.length > 0 && ['leader', 'admin'].includes(userResult.data[0].role)
+    if (!isLeader) return { code: 403, message: '只有在职组长或管理员可以导入志愿者' }
     
     // 检查招募状态（组长操作时跳过此检查）
     if (!isLeader && activity.recruitmentOpen === false) {
@@ -208,10 +210,10 @@ async function batchImportVolunteers(event, wxContext) {
       })
       .get()
     
-    if (membersResult.data.length !== newMembers.length) {
+    if (membersResult.data.length !== newMembers.length || membersResult.data.some(member => !['member', 'leader', 'admin'].includes(member.role) || member.employmentStatus === 'retired')) {
       return {
         code: 400,
-        message: '部分成员信息不存在'
+        message: '部分成员已退休或不具备在职组员身份，请刷新名单'
       }
     }
     
@@ -219,6 +221,9 @@ async function batchImportVolunteers(event, wxContext) {
     const transaction = await db.startTransaction()
     
     try {
+      await require('./memberStatus').lockActiveMembers(transaction, db, [OPENID, ...newMembers])
+      const { data: actor } = await transaction.collection('users').doc(userResult.data[0]._id).get()
+      if (!['leader', 'admin'].includes(actor.role)) throw Object.assign(new Error('身份已变化，无权导入志愿者'), { code: 403 })
       const membersInfo = membersResult.data
       const memberNames = membersInfo.map(m => m.nickName || '未知')
 
@@ -354,7 +359,7 @@ async function batchImportVolunteers(event, wxContext) {
       console.error('批量导入志愿者事务失败:', error)
       await transaction.rollback()
       return {
-        code: 500,
+        code: typeof error.code === 'number' ? error.code : 500,
         message: '批量导入志愿者失败: ' + error.message
       }
     }
@@ -370,4 +375,4 @@ async function batchImportVolunteers(event, wxContext) {
 module.exports = {
   getMembersList,
   batchImportVolunteers
-} 
+}

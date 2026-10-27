@@ -124,10 +124,12 @@ async function createWeekData(weekNumber, year, semesterStartDate) {
 
 // 只信任微信上下文传入的 openid，系统调用由模块内部第三参数控制。
 async function requireLeader(openid) {
-  if (!openid) throw new Error('只有组长或管理员可以维护值班周次')
-  const users = await db.collection('users').where({ openid }).get()
-  if (!users.data.some(user => ['leader', 'admin'].includes(user.role))) {
-    throw new Error('只有组长或管理员可以维护值班周次')
+  const denied = () => Object.assign(new Error('只有在职组长或管理员可以维护值班'), { code: 403 })
+  if (!openid) throw denied()
+  const users = await db.collection('users').where({ openid }).limit(2).get()
+  if (users.data.length !== 1 || !['leader', 'admin'].includes(users.data[0].role) ||
+      users.data[0].employmentStatus === 'retired' || users.data[0].membershipStatus === 'removed') {
+    throw denied()
   }
 }
 

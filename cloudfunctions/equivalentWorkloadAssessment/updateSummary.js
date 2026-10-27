@@ -1,5 +1,6 @@
 // 更新等效工作量汇总
 const cloud = require('wx-server-sdk')
+const { activeMembers, isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
@@ -44,7 +45,7 @@ exports.updateSummary = async (params, OPENID) => {
     
     const user = userResult.data[0]
     
-    if (user.role !== 'leader') {
+    if (!isActiveMember(user) || !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,
@@ -53,17 +54,7 @@ exports.updateSummary = async (params, OPENID) => {
     }
     
     // 分页读取全部成员，避免 .get() 默认只返回 100 人。
-    const memberResult = { data: [] }
-    let cursor = ''
-    while (true) {
-      const condition = { role: db.command.in(['member', 'leader']) }
-      if (cursor) condition._id = db.command.gt(cursor)
-      const page = await db.collection('proUsers').where(condition)
-        .orderBy('_id', 'asc').limit(100).get()
-      memberResult.data.push(...page.data)
-      if (page.data.length < 100) break
-      cursor = page.data[page.data.length - 1]._id
-    }
+    const memberResult = { data: await activeMembers(db) }
     
     // 更新每个成员的EW汇总
     const updatePromises = memberResult.data.map(async (member) => {

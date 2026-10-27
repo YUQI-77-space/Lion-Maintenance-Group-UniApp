@@ -108,7 +108,7 @@
       <view class="person">
         <avatar-display class="person-avatar" userInfo="{{taskDetail.assigneeAvatar}}" openid="{{taskDetail.assigneeId}}" size="small" showBorder="{{false}}" />
         <view class="person-main">
-          <text class="person-name">{{taskDetail.assigneeName}}</text>
+          <text class="person-name">{{taskDetail.assigneeName}}</text><text wx:if="{{taskDetail.assigneeEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
           <text class="person-meta">学号 {{taskDetail.assigneeStudentId || '未填'}}</text>
         </view>
         <text class="role-tag">主受理</text>
@@ -131,7 +131,7 @@
         <view class="person sub-person" wx:for="{{taskDetail.additionalAssignees}}" wx:key="assigneeId">
           <avatar-display class="person-avatar" userInfo="{{item.avatarProfile}}" openid="{{item.assigneeId}}" size="small" showBorder="{{false}}" />
           <view class="person-main">
-            <text class="person-name">{{item.assigneeName || '未填'}}</text>
+            <text class="person-name">{{item.assigneeName || '未填'}}</text><text wx:if="{{item.employmentStatus === 'retired'}}" class="member-retired">已退休</text>
             <text class="person-meta">学号 {{item.assigneeStudentId || '未填'}} · 受理 {{item.assigneeTime || '未填'}}</text>
           </view>
           <text class="role-tag" wx:if="{{item.assigneeQqId}}" bindlongpress="copyQQ" data-qq="{{item.assigneeQqId}}" data-type="协助受理人">QQ {{item.assigneeQqId}}</text>

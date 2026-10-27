@@ -27,6 +27,7 @@
   class="mg-theme mg-data-page repair-container"
   style="padding-top: {{currentStep < 5 ? contentTop : contentTopNoBar}}px; padding-bottom: {{tabbarHeight + 16}}px;"
 >
+  <view wx:if="{{readOnly}}" class="member-readonly-note">已退休 · 当前仅可浏览，组员资料与历史记录始终为您保留。</view>
   <!-- ==================== 步骤 0：选择大类 ==================== -->
   <view wx:if="{{currentStep === 0}}">
     <!-- 搜索栏 -->
@@ -269,7 +270,7 @@
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{submitMessage}}">{{submitMessage}}<button wx:if="{{submitUnknown}}" class="mg-button mg-button--secondary" bindtap="goToTodo">到待办核实结果</button></view>
       <view class="button-group">
         <button class="btn btn-outline" bindtap="prevStep" disabled="{{submitting || submitUnknown}}">返回修改</button>
-        <button class="btn btn-primary" bindtap="submitRepair" disabled="{{submitting || submitUnknown}}"><loading-animation wx:if="{{submitting}}" size="small" /><text wx:else>{{'提交报修'}}</text></button>
+        <button class="btn btn-primary" bindtap="submitRepair" disabled="{{readOnly || submitting || submitUnknown}}"><loading-animation wx:if="{{submitting}}" size="small" /><text wx:else>{{'提交报修'}}</text></button>
       </view>
     </view>
   </view>

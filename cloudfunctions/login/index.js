@@ -37,9 +37,8 @@ async function syncProUsersByUserDoc(userDoc) {
 async function updateUserRole(userId, proposedRole) {
   const role = await db.runTransaction(async tx => {
     const { data: user } = await tx.collection('users').doc(userId).get()
-    // 已移出身份不能凭旧权限码恢复；在组或管理者任命的身份以数据库为准。
-    const finalRole = user.membershipStatus === 'removed' ? 'user' :
-      (user.roleManaged || ['member', 'leader', 'admin'].includes(user.role) ? user.role : proposedRole)
+    // 在职状态与角色独立；退休成员不因重新登录或旧权限码变成普通用户。
+    const finalRole = user.roleManaged || ['member', 'leader', 'admin'].includes(user.role) ? user.role : proposedRole
     await tx.collection('users').doc(userId).update({ data: {
       role: finalRole, version: (user.version || 0) + 1, updateTime: db.serverDate()
     } })
@@ -119,6 +118,7 @@ async function verifySession(openid) {
         user: {
           openid: user.openid,
           role: currentRole,
+          employmentStatus: require('./memberStatus').statusOf(user),
           nickName: user.nickName,
           avatarUrl: user.avatarUrl,
           qqId: user.qqId // QQ号字段
@@ -188,7 +188,7 @@ async function userPermissionAuthentication(openid, authCode) {
     return {
       success: true,
       message: role === 'user' ? '未匹配到高级权限，设置为普通用户' : `已匹配到${role}权限`,
-      data: { role }
+      data: { role, employmentStatus: require('./memberStatus').statusOf(user) }
     }
   } catch (error) {
     console.error('权限认证出错', error)
@@ -243,6 +243,7 @@ async function revalidatePermissions(openid, authCode) {
         user: {
           openid: user.openid,
           role: newRole,
+          employmentStatus: require('./memberStatus').statusOf(user),
           nickName: user.nickName,
           avatarUrl: user.avatarUrl,
           qqId: user.qqId

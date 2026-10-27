@@ -1,5 +1,6 @@
 // 获取用户待办事项列表
 const cloud = require('wx-server-sdk')
+const { markTasks } = require('./memberStatus')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
@@ -200,7 +201,7 @@ exports.getTodoList = async (params, OPENID) => {
           }
         }
 
-        todoList = tasks.map(({ isUrgent, ...task }) => task);
+        todoList = await markTasks(db, tasks.map(({ isUrgent, ...task }) => task));
         break;
 
       case 'volunteer':

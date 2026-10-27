@@ -164,7 +164,7 @@ module.exports = {
 
       <view class="info-item">
         <view class="info-label">姓名</view>
-        <view class="info-value">{{taskDetail.applicantName}}</view>
+        <view class="info-value">{{taskDetail.applicantName}}</view><text wx:if="{{taskDetail.applicantEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
       </view>
 
       <view class="info-item">
@@ -203,7 +203,7 @@ module.exports = {
         </view>
         <view class="info-item">
           <view class="info-label">姓名</view>
-          <view class="info-value">{{taskDetail.assigneeName}}</view>
+          <view class="info-value">{{taskDetail.assigneeName}}</view><text wx:if="{{taskDetail.assigneeEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
         </view>
 
         <view class="info-item">
@@ -242,7 +242,7 @@ module.exports = {
           </view>
           <view class="info-item">
             <view class="info-label">姓名</view>
-            <view class="info-value">{{item.assigneeName}}</view>
+            <view class="info-value">{{item.assigneeName}}</view><text wx:if="{{item.employmentStatus === 'retired'}}" class="member-retired">已退休</text>
           </view>
 
           <view class="info-item">
@@ -268,7 +268,7 @@ module.exports = {
     </view>
 
     <!-- 管理操作按钮：仅在管理详情页展示 -->
-    <view class="action-area management-action-area" wx:if="{{fromManage && userRole === 'leader'}}">
+    <view class="action-area management-action-area" wx:if="{{!readOnly && fromManage && (userRole === 'leader' || userRole === 'admin')}}">
       <view class="btn btn-complete {{completing ? 'btn-disabled' : ''}}"
             wx:if="{{taskDetail.taskStatus === 'inProgress'}}"
             bindtap="completeTask">
@@ -283,7 +283,7 @@ module.exports = {
     </view>
 
     <!-- 待受理状态下显示"认领"（组员详情页，不在管理详情页） -->
-    <view class="action-area" wx:elif="{{taskDetail.taskStatus === 'pending' && (userRole === 'member' || userRole === 'leader') && !fromManage}}">
+    <view class="action-area" wx:elif="{{!readOnly && taskDetail.taskStatus === 'pending' && (userRole === 'member' || (userRole === 'leader' || userRole === 'admin')) && !fromManage}}">
       <view class="btn btn-claim" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
     </view>
   </view>

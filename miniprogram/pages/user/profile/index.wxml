@@ -26,7 +26,7 @@
       </view>
       <view class="user-meta">
         <view class="nickname">{{userInfo.nickName || '未登录'}}</view>
-        <picker wx:if="{{role === 'member' || role === 'leader'}}"
+        <picker wx:if="{{(role === 'member' || role === 'leader') && userInfo.employmentStatus !== 'retired'}}"
                 class="role-picker" mode="selector" range="{{departmentList}}"
                 value="{{departmentIndex}}" bindchange="onDepartmentChange"
                 disabled="{{changingDepartment}}"
@@ -34,6 +34,7 @@
           <view class="role-tag">{{roleName}}</view>
         </picker>
         <view class="role-tag" wx:else>{{roleName}}</view>
+        <text wx:if="{{userInfo.employmentStatus === 'retired'}}" class="member-retired">已退休</text>
       </view>
       <button class="logout-button" size="mini" hover-class="logout-pressed" bindtap="logout" aria-label="退出登录">
         <image class="logout-icon" src="{{iconLogout}}" mode="aspectFit" aria-hidden="true" />

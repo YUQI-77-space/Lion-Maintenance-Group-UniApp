@@ -297,6 +297,10 @@ Page({
       loadingFeedback.hide();
       
       const role = (res.success && res.data && res.data.role) ? res.data.role : 'user';
+      if (res.success && res.data) {
+        app.globalData.userInfo = { ...app.globalData.userInfo, employmentStatus: res.data.employmentStatus || 'active' };
+        wx.setStorageSync('userInfo', app.globalData.userInfo);
+      }
       
       app.updateUserRole && app.updateUserRole(role);
       app.globalData.isLogin = true;
@@ -384,4 +388,4 @@ Page({
 
 
 
-}) 
+})

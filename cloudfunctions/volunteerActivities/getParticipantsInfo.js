@@ -36,7 +36,7 @@ exports.main = async (event, wxContext) => {
       })
       .get()
     
-    if (userResult.data.length === 0 || userResult.data[0].role !== 'leader') {
+    if (userResult.data.length === 0 || !['leader', 'admin'].includes(userResult.data[0].role)) {
       return {
         code: 403,
         message: '权限不足，只有组长可以查看详细参与者信息'
@@ -83,7 +83,8 @@ exports.main = async (event, wxContext) => {
         cloudAvatarUrl: true,
         cloudAvatarFileID: true,
         studentId: true,
-        role: true
+        role: true,
+        employmentStatus: true
       })
       .get()
     
@@ -99,7 +100,8 @@ exports.main = async (event, wxContext) => {
         cloudAvatarUrl: user.cloudAvatarUrl,
         cloudAvatarFileID: user.cloudAvatarFileID,
         studentId: user.studentId,
-        role: user.role
+        role: user.role,
+        employmentStatus: user.employmentStatus === 'retired' ? 'retired' : 'active'
       }
     })
     
@@ -128,4 +130,4 @@ exports.main = async (event, wxContext) => {
       message: '获取志愿活动参与者信息失败: ' + error.message
     }
   }
-} 
+}

@@ -18,7 +18,7 @@ exports.main = async (event, context) => {
 
   try {
     const userResult = await db.collection('users').where({ openid: OPENID }).get();
-    if (!userResult.data || userResult.data.length === 0 || userResult.data[0].role !== 'leader') {
+    if (!userResult.data || userResult.data.length === 0 || !['leader', 'admin'].includes(userResult.data[0].role)) {
       return { code: 403, message: '无权操作' };
     }
     

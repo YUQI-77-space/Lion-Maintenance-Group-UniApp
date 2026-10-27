@@ -1,154 +1,39 @@
-// 更新维修任务
+// 通用更新入口目前仅供管理详情设置 EW；状态和受理关系由专用 action 维护。
 const cloud = require('wx-server-sdk')
+const { withActiveMembers } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
-/**
- * 更新维修任务
- * @param {Object} params - 参数对象
- * @param {string} params.maintenanceTaskId - 维修任务ID
- * @param {Object} params.updateData - 要更新的数据
- * @param {string} OPENID - 用户openid
- * @returns {Object} 返回更新结果
- */
-exports.updateMaintenanceTasks = async (params, OPENID) => {
+exports.updateMaintenanceTasks = async (params = {}, OPENID) => {
   try {
-    // 检查参数
-    if (!params.maintenanceTaskId || !params.updateData) {
-      return {
-        code: 400,
-        data: null,
-        message: '缺少必要参数'
+    if (!OPENID) return { code: 401, data: null, message: '请先登录' }
+    const fields = params && params.updateData
+    if (typeof params.maintenanceTaskId !== 'string' || !params.maintenanceTaskId.trim() ||
+        !fields || typeof fields !== 'object' || Array.isArray(fields) ||
+        Object.keys(fields).length !== 1 || !Object.prototype.hasOwnProperty.call(fields, 'ew')) {
+      return { code: 400, data: null, message: '仅支持设置EW，任务状态和受理人请使用对应操作' }
+    }
+    if (typeof fields.ew !== 'number' || !Number.isFinite(fields.ew) || fields.ew < 0 || fields.ew > 300) {
+      return { code: 400, data: null, message: 'EW须为0至300之间的有效数值' }
+    }
+    const users = await db.collection('users').where({ openid: OPENID }).limit(2).get()
+    if (users.data.length !== 1) return { code: 403, data: null, message: '用户身份异常' }
+    const tasks = await db.collection('maintenance_tasks').where({ maintenanceTaskId: params.maintenanceTaskId }).limit(2).get()
+    if (tasks.data.length !== 1) return { code: 404, data: null, message: '未找到唯一的维修任务' }
+    await withActiveMembers(db, [OPENID], async tx => {
+      const { data: actor } = await tx.collection('users').doc(users.data[0]._id).get()
+      if (!['leader', 'admin'].includes(actor.role)) {
+        throw Object.assign(new Error('只有在职组长或管理员可以设置EW'), { code: 403 })
       }
-    }
-    
-    // 查询任务详情
-    const taskResult = await db.collection('maintenance_tasks').where({
-      maintenanceTaskId: params.maintenanceTaskId
-    }).get()
-    
-    // 检查任务是否存在
-    if (taskResult.data.length === 0) {
-      return {
-        code: 404,
-        data: null,
-        message: '未找到对应的维修任务'
+      const ref = tx.collection('maintenance_tasks').doc(tasks.data[0]._id)
+      const { data: task } = await ref.get()
+      if (!task || task.maintenanceTaskId !== params.maintenanceTaskId) {
+        throw Object.assign(new Error('任务已变化，请刷新后重试'), { code: 409 })
       }
-    }
-    
-    const task = taskResult.data[0]
-    
-    // 检查用户权限（只有申请人、认领人和组长可以更新任务）
-    const userResult = await db.collection('users').where({
-      openid: OPENID
-    }).get()
-    
-    if (userResult.data.length === 0) {
-      return {
-        code: 403,
-        data: null,
-        message: '未找到用户信息'
-      }
-    }
-    
-    const user = userResult.data[0]
-    const userRole = user.role
-    
-    if (userRole !== 'leader' && 
-        task.applicantId !== OPENID && 
-        task.assigneeId !== OPENID) {
-      return {
-        code: 403,
-        data: null,
-        message: '您无权更新此任务'
-      }
-    }
-    
-    // 当前时间
-    const now = new Date()
-    
-    // 构建更新数据
-    const updateData = {
-      ...params.updateData,
-      updateTime: now
-    }
-
-    // “是否紧急”已废弃，不允许旧客户端或手工请求重新写入该字段。
-    delete updateData.isUrgent
-
-    // 禁止普通用户更新敏感字段
-    if (userRole !== 'leader') {
-      delete updateData.ew
-    }
-    
-    // 更新维修任务
-    await db.collection('maintenance_tasks').where({
-      maintenanceTaskId: params.maintenanceTaskId
-    }).update({
-      data: updateData
+      await ref.update({ data: { ew: fields.ew, updateTime: db.serverDate() } })
     })
-    
-    // 如果有状态更新，同步更新待办事项
-    if (updateData.taskStatus) {
-      // 更新申请人待办事项
-      if (task.applicantId) {
-        await db.collection('maintenance_toDo_list').where({
-          taskId: params.maintenanceTaskId,
-          toDoListUserId: task.applicantId
-        }).update({
-          data: {
-            taskStatus: updateData.taskStatus,
-            updateTime: now
-          }
-        })
-      }
-      
-      // 更新认领人待办事项
-      if (task.assigneeId) {
-        await db.collection('maintenance_toDo_list').where({
-          taskId: params.maintenanceTaskId,
-          toDoListUserId: task.assigneeId
-        }).update({
-          data: {
-            taskStatus: updateData.taskStatus,
-            updateTime: now
-          }
-        })
-      }
-      
-      // 新增：更新所有协助受理人的待办事项
-      if (Array.isArray(task.additionalAssignees) && task.additionalAssignees.length > 0) {
-        const helperIds = task.additionalAssignees
-          .map(a => a && a.assigneeId)
-          .filter(Boolean)
-      
-        for (const helperId of helperIds) {
-          await db.collection('maintenance_toDo_list').where({
-            taskId: params.maintenanceTaskId,
-            toDoListUserId: helperId
-          }).update({
-            data: {
-              taskStatus: updateData.taskStatus,
-              updateTime: now
-            }
-          })
-        }
-      }
-    }
-    
-    return {
-      code: 200,
-      data: {
-        maintenanceTaskId: params.maintenanceTaskId
-      },
-      message: '更新维修任务成功'
-    }
-    
-  } catch (err) {
-    return {
-      code: 500,
-      data: null,
-      message: err.message || '更新维修任务失败'
-    }
+    return { code: 200, data: { maintenanceTaskId: params.maintenanceTaskId }, message: '更新维修任务成功' }
+  } catch (error) {
+    return { code: typeof error.code === 'number' ? error.code : 500, data: null, message: error.message || '更新维修任务失败' }
   }
-} 
+}

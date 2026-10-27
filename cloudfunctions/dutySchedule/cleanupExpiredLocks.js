@@ -2,6 +2,7 @@
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const { lockManager } = require('./lockManager')
+const { requireLeader } = require('./switchToWeek')
 
 /**
  * 清理过期锁
@@ -34,7 +35,9 @@ exports.cleanupExpiredLocks = async (event = {}, openid) => {
  */
 exports.forceReleaseUserLocks = async (event = {}, openid) => {
   try {
+    await requireLeader(openid)
     const targetUserId = event.userId || openid
+    if (typeof targetUserId !== 'string' || !targetUserId.trim()) return { code: 400, data: null, message: '用户标识无效' }
     const result = await lockManager.forceReleaseUserLocks(targetUserId)
     return {
       code: 200,
@@ -44,7 +47,7 @@ exports.forceReleaseUserLocks = async (event = {}, openid) => {
   } catch (err) {
     console.error('[forceReleaseUserLocks] 错误：', err)
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '强制释放用户锁失败'
     }

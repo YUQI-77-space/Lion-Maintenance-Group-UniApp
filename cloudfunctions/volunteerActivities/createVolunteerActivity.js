@@ -54,7 +54,7 @@ exports.main = async (event, wxContext) => {
       })
       .get()
     
-    if (userResult.data.length === 0 || userResult.data[0].role !== 'leader') {
+    if (userResult.data.length === 0 || !['leader', 'admin'].includes(userResult.data[0].role)) {
       return {
         code: 403,
         message: '权限不足，只有组长可以创建活动'
@@ -127,8 +127,10 @@ exports.main = async (event, wxContext) => {
     }
     
     // 写入数据库
-    const result = await db.collection('voluntary_activities').add({
-      data: activityData
+    const result = await require('./memberStatus').withActiveMembers(db, [openid], async tx => {
+      const { data: actor } = await tx.collection('users').doc(userResult.data[0]._id).get()
+      if (!['leader', 'admin'].includes(actor.role)) throw Object.assign(new Error('身份已变化，无权创建活动'), { code: 403 })
+      return tx.collection('voluntary_activities').add({ data: activityData })
     })
     
     
@@ -143,7 +145,7 @@ exports.main = async (event, wxContext) => {
   } catch (error) {
     console.error('创建志愿活动失败', error)
     return {
-      code: 500,
+      code: typeof error.code === 'number' ? error.code : 500,
       message: '创建志愿活动失败: ' + error.message
     }
   }

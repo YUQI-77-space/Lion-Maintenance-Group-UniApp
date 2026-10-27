@@ -27,7 +27,7 @@ exports.main = async (event, wxContext) => {
 
     // 权限校验：仅组长
     const userRes = await db.collection('users').where({ openid: OPENID }).get()
-    if (!userRes.data || userRes.data.length === 0 || userRes.data[0].role !== 'leader') {
+    if (!userRes.data || userRes.data.length === 0 || !['leader', 'admin'].includes(userRes.data[0].role)) {
       return { code: 403, message: '无权操作' }
     }
 

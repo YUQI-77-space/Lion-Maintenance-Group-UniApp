@@ -44,7 +44,7 @@ exports.main = async (event, wxContext) => {
       })
       .get()
     
-    if (userResult.data.length === 0 || userResult.data[0].role !== 'leader') {
+    if (userResult.data.length === 0 || !['leader', 'admin'].includes(userResult.data[0].role)) {
       return {
         code: 403,
         message: '权限不足，只有组长可以切换招募状态'

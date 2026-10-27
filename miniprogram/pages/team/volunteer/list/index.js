@@ -239,7 +239,7 @@ Page({
       return;
     }
     
-    if (this.data.userRole !== 'member' && this.data.userRole !== 'leader') {
+    if (this.data.userRole !== 'member' && !['leader', 'admin'].includes(this.data.userRole)) {
       wx.showToast({ title: '只有维修组成员才能报名活动', icon: 'none' });
       return;
     }

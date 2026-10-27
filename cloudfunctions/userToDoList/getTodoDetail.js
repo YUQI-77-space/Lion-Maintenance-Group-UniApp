@@ -111,13 +111,14 @@ exports.getTodoDetail = async (params, OPENID) => {
           for (let offset = 0; offset < participantIds.length; offset += 100) {
             const profiles = await db.collection('users')
               .where({ openid: db.command.in(participantIds.slice(offset, offset + 100)) })
-              .field({ _id: false, openid: true, avatarUrl: true, cloudAvatarFileID: true })
+              .field({ _id: false, openid: true, avatarUrl: true, cloudAvatarFileID: true, employmentStatus: true })
               .limit(100)
               .get();
             profiles.data.forEach(profile => {
               avatarProfiles[profile.openid] = {
                 avatarUrl: profile.avatarUrl || '',
-                cloudAvatarFileID: profile.cloudAvatarFileID || ''
+                cloudAvatarFileID: profile.cloudAvatarFileID || '',
+                ...(profile.employmentStatus === 'retired' ? { employmentStatus: 'retired' } : {})
               };
             });
           }
@@ -126,8 +127,11 @@ exports.getTodoDetail = async (params, OPENID) => {
         }
         todoDetail.applicantAvatar = avatarProfiles[todoDetail.applicantId] || {};
         todoDetail.assigneeAvatar = avatarProfiles[todoDetail.assigneeId] || {};
+        todoDetail.applicantEmploymentStatus = todoDetail.applicantAvatar.employmentStatus || 'active';
+        todoDetail.assigneeEmploymentStatus = todoDetail.assigneeAvatar.employmentStatus || 'active';
         todoDetail.additionalAssignees = (todoDetail.additionalAssignees || []).map(person => ({
           ...person,
+          employmentStatus: (avatarProfiles[person.assigneeId] || {}).employmentStatus || 'active',
           avatarProfile: avatarProfiles[person.assigneeId] || {}
         }));
         break;

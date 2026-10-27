@@ -52,7 +52,7 @@ exports.sendMessages = async (params, OPENID) => {
 
     const user = userResult.data[0]
     
-    if (!user || user.role !== 'leader') {
+    if (!user || !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,

@@ -73,9 +73,17 @@ Page({
   },
 
   onLoad: function (options) {
-    
+    if (!getApp().checkPermission('leader')) {
+      wx.showToast({ title: '仅在职组长可以管理值班', icon: 'none' });
+      wx.navigateBack();
+      return;
+    }
     this.initWeekOptions()
     this.initPage()
+  },
+
+  onShow() {
+    if (!getApp().checkPermission('leader')) wx.navigateBack();
   },
 
   // 顶部标签点击切换

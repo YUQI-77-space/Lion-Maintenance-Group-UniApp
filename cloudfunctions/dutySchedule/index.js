@@ -20,6 +20,8 @@ const { scheduledStatusUpdate } = require('./dutyStatusManager')
 const { scheduleDutyReminder } = require('./scheduleDutyReminder')
 const autoWeekSwitcher = require('./autoWeekSwitcher')
 const dutyReminderScheduler = require('./dutyReminderScheduler')
+const { retirementBlock } = require('./memberStatus')
+const READ_ACTIONS = ['getDutyConfig', 'checkWeekExists', 'getDutySlots', 'getUserDutySlots', 'getLockStatus']
 
 exports.main = async (event, context) => {
   // 检查是否为定时触发器调用（对大小写保持宽容，并记录上下文便于排查）
@@ -48,8 +50,10 @@ exports.main = async (event, context) => {
     }
     
     const { action } = processedEvent
-
-    
+    if (!READ_ACTIONS.includes(action)) {
+      const blocked = await retirementBlock(cloud.database(), OPENID)
+      if (blocked) return blocked
+    }
 
     switch (action) {
       case 'getDutyConfig':

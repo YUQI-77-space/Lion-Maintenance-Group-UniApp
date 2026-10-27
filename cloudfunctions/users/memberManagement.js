@@ -1,11 +1,13 @@
 // 仅管理已在组成员；账号注册及首次身份认证仍由用户自行完成。
 const { createHash } = require('crypto')
 const { validateNickname } = require('./sensitiveWordFilter')
+const { statusOf } = require('./memberStatus')
 const ROLES = ['member', 'leader', 'admin']
 const DEPARTMENTS = ['运营管理部', '电子技术部', '机电维修部']
-const ACTIONS = ['getManagedMembers', 'getManagedMemberDetail', 'updateManagedMember', 'changeMemberRole', 'removeTeamMember']
+const ACTIONS = ['getManagedMembers', 'getManagedMemberDetail', 'updateManagedMember', 'changeMemberRole', 'changeMemberEmploymentStatus']
 const PROFILE_FIELDS = ['nickName', 'studentId', 'qqId', 'department', 'isEmergencyContact']
 function fail(message, code = 400, data = null) { throw Object.assign(new Error(message), { code, data }) }
+const requestFingerprint = (action, params) => createHash('sha256').update(JSON.stringify({ action, userId: params.userId, version: params.version, fields: params.fields, role: params.role, employmentStatus: params.employmentStatus })).digest('hex')
 async function one(db, name, query) {
   const { data } = await db.collection(name).where(query).limit(2).get()
   if (data.length > 1) fail('存在重复身份记录，请先核对数据', 409)
@@ -14,18 +16,20 @@ async function one(db, name, query) {
 async function caller(db, openid) {
   if (!openid) fail('请先登录', 401)
   const user = await one(db, 'users', { openid })
-  if (!user || !['leader', 'admin'].includes(user.role) || user.membershipStatus === 'removed') fail('只有组长及管理员可以管理组员', 403)
+  if (!user || !['leader', 'admin'].includes(user.role) || statusOf(user) !== 'active') fail('只有在职组长及管理员可以管理组员', 403)
   return user
 }
-function permissions(actor) {
-  const editable = ['leader', 'admin'].includes(actor.role) && actor.membershipStatus !== 'removed'
-  return { canEdit: editable, canRemove: editable, canChangeRole: editable }
+function permissions(actor, user = {}) {
+  const editable = ['leader', 'admin'].includes(actor.role) && statusOf(actor) === 'active'
+  return { canEdit: editable, canChangeEmploymentStatus: editable,
+    canChangeRole: editable && ['member', 'leader'].includes(user.role) }
 }
 function present(user, pro = {}, actor) {
   const result = { userId: user._id, openid: user.openid, role: user.role,
     nickName: String(user.nickName || ''), studentId: String(user.studentId || ''), qqId: String(user.qqId || ''),
     avatarUrl: user.avatarUrl || '', cloudAvatarUrl: user.cloudAvatarUrl || '', cloudAvatarFileID: user.cloudAvatarFileID || '',
     department: pro.department || user.department || '', isEmergencyContact: pro.isEmergencyContact === true,
+    employmentStatus: statusOf(user),
     version: user.version || 0, updateTime: user.updateTime || null, joinedAt: user.joinedAt || null,
     permissions: permissions(actor, user) }
   return result
@@ -44,7 +48,7 @@ async function all(db, name, condition) {
 async function target(db, userId) {
   if (typeof userId !== 'string' || !userId || userId.length > 128) fail('无效的用户标识')
   const user = await one(db, 'users', { _id: userId })
-  if (!user || !ROLES.includes(user.role) || user.membershipStatus === 'removed') fail('该用户已不在组内，请刷新列表', 404)
+  if (!user || !ROLES.includes(user.role)) fail('未找到组员资料，请刷新列表', 404)
   return user
 }
 function profile(fields) {
@@ -76,7 +80,7 @@ async function blockers(db, openid) {
   const _ = db.command
   const maintenance = await all(db, 'maintenance_tasks', _.and([
     { taskStatus: _.in(['pending', 'inProgress']) },
-    _.or([{ assigneeId: openid }, { additionalAssignees: _.elemMatch({ assigneeId: openid }) }])
+    _.or([{ applicantId: openid }, { assigneeId: openid }, { additionalAssignees: _.elemMatch({ assigneeId: openid }) }])
   ]))
   const duty = await all(db, 'duty_slots', _.or([{ assignedUser: openid }, { dutyHolderId: openid }]))
   const volunteer = await all(db, 'voluntary_activities', _.and([
@@ -95,18 +99,29 @@ async function blockers(db, openid) {
 }
 async function handle(db, action, params, openid) {
   try {
-    const actor = await caller(db, openid)
+    let actor
+    try { actor = await caller(db, openid) } catch (error) {
+      // 本人退休／降权的成功请求可安全重放，仅返回同一操作者的同一结果。
+      if (error.code === 403 && openid && typeof params._requestId === 'string' && params._requestId.length <= 128) {
+        const id = 'member_' + createHash('sha256').update(openid + ':' + params._requestId).digest('hex')
+        const saved = await one(db, 'member_management_logs', { _id: id })
+        if (saved && saved.actorId === openid && saved.fingerprint === requestFingerprint(action, params)) {
+          return { success: true, code: 200, message: '操作已完成', data: saved.result }
+        }
+      }
+      throw error
+    }
     if (action === 'getManagedMembers') {
-      const { keyword = '', department = '', role = '', page = 1, pageSize = 20 } = params
+      const { keyword = '', department = '', role = '', employmentStatus = 'active', page = 1, pageSize = 20 } = params
       if (typeof keyword !== 'string' || keyword.length > 40 || (department && !DEPARTMENTS.includes(department)) ||
-          (role && !ROLES.includes(role)) || !Number.isInteger(page) || page < 1 ||
+          (role && !ROLES.includes(role)) || !['active', 'retired', 'all'].includes(employmentStatus) || !Number.isInteger(page) || page < 1 ||
           !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) fail('查询条件无效')
       // ponytail: 小型团队按完整分页读取后筛选，规模达到数千人时改为数据库搜索与联表投影。
       const users = await all(db, 'users', { role: db.command.in(role ? [role] : ROLES) })
       const projections = await all(db, 'proUsers', {})
       const byOpenid = new Map(projections.map(row => [row.openid, row]))
       const search = keyword.trim().toLowerCase()
-      const rows = users.filter(user => user.membershipStatus !== 'removed')
+      const rows = users.filter(user => employmentStatus === 'all' || statusOf(user) === employmentStatus)
         .map(user => present(user, byOpenid.get(user.openid), actor))
         .filter(user => (!department || user.department === department) &&
           (!search || user.nickName.toLowerCase().includes(search) || user.studentId.toLowerCase() === search))
@@ -123,11 +138,19 @@ async function handle(db, action, params, openid) {
     const { userId, version, _requestId } = params
     if (!Number.isInteger(version) || version < 0 || typeof _requestId !== 'string' || !_requestId || _requestId.length > 128) fail('缺少有效版本号或请求标识')
     const logId = 'member_' + createHash('sha256').update(openid + ':' + _requestId).digest('hex')
-    const fingerprint = createHash('sha256').update(JSON.stringify({ action, userId, version, fields: params.fields, role: params.role, reason: params.reason })).digest('hex')
+    const fingerprint = requestFingerprint(action, params)
     return await db.runTransaction(async tx => {
       tx.command = db.command
       const currentActor = await caller(tx, openid)
-      const previous = await one(tx, 'member_management_logs', { _id: logId })
+      let previous
+      try {
+        previous = await one(tx, 'member_management_logs', { _id: logId })
+      } catch (error) {
+        if (error.errCode === -502005 || error.code === 'DATABASE_COLLECTION_NOT_EXIST') {
+          fail('组员管理尚未初始化，请联系管理员完成数据库初始化', 503)
+        }
+        throw error
+      }
       if (previous) {
         if (previous.fingerprint !== fingerprint) fail('请求标识已被其他操作使用', 409)
         return { success: true, code: 200, message: '操作已完成', data: previous.result }
@@ -145,24 +168,43 @@ async function handle(db, action, params, openid) {
         if ('department' in changes && changes.department !== before.department &&
             Date.now() - (pro.lastDepartmentChangeTime || 0) < 3600000) fail('部门切换冷却中，请一小时后再操作', 409)
       } else if (action === 'changeMemberRole') {
+        if (!['member', 'leader'].includes(user.role)) fail('这里只支持组员与组长之间的角色调整', 403)
         if (!['member', 'leader'].includes(params.role)) fail('请选择有效的组内角色')
         if (user.role === params.role) fail('角色未发生变化')
         changes = { role: params.role, roleManaged: true }
-      } else if (action === 'removeTeamMember') {
-        if (typeof params.reason !== 'string' || !params.reason.trim() || params.reason.length > 200) fail('请填写不超过200字的移出原因')
-        const related = await blockers(tx, user.openid)
-        if (related.length) fail('请先处理以下待交接事项，再移出成员', 409, { blockers: related })
-        changes = { role: 'user', membershipStatus: 'removed', roleManaged: true,
-          removedAt: db.serverDate(), removedBy: openid, removeReason: params.reason.trim() }
+      } else if (action === 'changeMemberEmploymentStatus') {
+        if (!['active', 'retired'].includes(params.employmentStatus)) fail('请选择在职或退休状态')
+        if (statusOf(user) === params.employmentStatus) fail('在职状态未发生变化')
+        if (params.employmentStatus === 'retired') {
+          const related = await blockers(tx, user.openid)
+          if (related.length) fail('还有未完成事项，请先沟通并推进任务完成后再设为退休', 409, { blockers: related })
+        }
+        changes = { employmentStatus: params.employmentStatus }
       } else fail('未知的管理操作')
       const before = present(user, pro, currentActor)
       const now = db.serverDate()
+      // 降权和退休不能移除最后一名在职管理者。共写其他管理者身份，
+      // 防止两人分别看到对方仍在职、同时退出后无人可管理。
+      const isManager = row => ['leader', 'admin'].includes(row.role) && statusOf(row) === 'active'
+      if (isManager(user) && !isManager({ ...user, ...changes })) {
+        const identities = await all(tx, 'users', {})
+        const counts = new Map()
+        for (const row of identities) counts.set(row.openid, (counts.get(row.openid) || 0) + 1)
+        const managers = identities.filter(row => row._id !== user._id && isManager(row) &&
+          typeof row.openid === 'string' && row.openid && counts.get(row.openid) === 1)
+        if (!managers.length) fail('至少保留一名在职组长或管理员，请先任命接任者', 409)
+        for (const manager of managers) {
+          await tx.collection('users').doc(manager._id).update({ data: { membershipWriteTime: now } })
+        }
+      }
+      // 管理写入也与操作者身份变更冲突，不能使用事务开始后的旧授权。
+      if (currentActor._id !== user._id) {
+        await tx.collection('users').doc(currentActor._id).update({ data: { membershipWriteTime: now } })
+      }
       const userUpdate = { ...changes, version: version + 1, updateTime: now }
       delete userUpdate.isEmergencyContact
       await tx.collection('users').doc(user._id).update({ data: userUpdate })
-      if (action === 'removeTeamMember') {
-        await tx.collection('proUsers').doc(pro._id).remove()
-      } else {
+      {
         const proUpdate = { ...changes, updateTime: now }
         delete proUpdate.roleManaged
         if (changes.department && changes.department !== before.department) proUpdate.lastDepartmentChangeTime = Date.now()
@@ -173,7 +215,7 @@ async function handle(db, action, params, openid) {
         const summary = await one(tx, 'ewaSummary', { ewaUserId: user.openid })
         if (summary) await tx.collection('ewaSummary').doc(summary._id).update({ data: { ewaUserName: changes.nickName, updateTime: now } })
       }
-      const result = { userId, version: version + 1, removed: action === 'removeTeamMember' }
+      const result = { userId, version: version + 1, role: changes.role || user.role, employmentStatus: changes.employmentStatus || statusOf(user) }
       const auditBefore = {}, auditAfter = {}
       for (const key of Object.keys(changes)) {
         if (!['removedAt', 'removedBy', 'roleManaged'].includes(key)) {
@@ -184,9 +226,8 @@ async function handle(db, action, params, openid) {
       // 日志兼作受影响字段备份，事务失败时身份、资料和日志一起回滚。
       await tx.collection('member_management_logs').add({ data: { _id: logId, action, actorId: openid,
         targetId: user.openid, targetUserId: userId, before: auditBefore, after: auditAfter,
-        memberBackup: action === 'removeTeamMember' ? pro : null,
-        reason: params.reason || '', createTime: now, fingerprint, result } })
-      return { success: true, code: 200, message: action === 'removeTeamMember' ? '已移出维修组' : '保存成功', data: result }
+        createTime: now, fingerprint, result } })
+      return { success: true, code: 200, message: action === 'changeMemberEmploymentStatus' ? '在职状态已更新，所有资料与记录已保留' : '保存成功', data: result }
     })
   } catch (error) {
     if (!error.code || typeof error.code !== 'number') console.error('组员管理操作失败', error.message)

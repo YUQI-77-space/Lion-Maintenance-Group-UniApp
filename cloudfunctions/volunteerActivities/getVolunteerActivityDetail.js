@@ -7,6 +7,7 @@ cloud.init({
 
 const db = cloud.database()
 const { StatusUpdateManager } = require('./statusUpdateManager')
+const { readProfiles, statusOf } = require('./memberStatus')
 
 /**
  * 获取志愿活动详情
@@ -52,6 +53,8 @@ exports.main = async (event, wxContext) => {
     }
     
     const activity = activityResult.data[0]
+    const profiles = await readProfiles(db, [activity.creatorId])
+    activity.creatorEmploymentStatus = statusOf(profiles.get(activity.creatorId))
     
     // 检查当前用户是否已报名
     const openid = wxContext.OPENID
@@ -73,4 +76,4 @@ exports.main = async (event, wxContext) => {
       message: '获取志愿活动详情失败: ' + error.message
     }
   }
-} 
+}

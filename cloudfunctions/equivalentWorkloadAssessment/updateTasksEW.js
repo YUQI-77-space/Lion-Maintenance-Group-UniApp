@@ -1,5 +1,6 @@
 // 更新任务的等效工作量值
 const cloud = require('wx-server-sdk')
+const { isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
@@ -55,7 +56,7 @@ exports.updateTasksEW = async (params, OPENID) => {
     const user = userResult.data[0]
     console.log('用户角色:', user.role);
     
-    if (user.role !== 'leader') {
+    if (!isActiveMember(user) || !['leader', 'admin'].includes(user.role)) {
       console.log('用户权限不足:', user.role);
       return {
         code: 403,
@@ -211,4 +212,4 @@ exports.updateTasksEW = async (params, OPENID) => {
       message: err.message || '更新维修任务EW值失败'
     }
   }
-} 
+}

@@ -10,7 +10,7 @@ async function updateMemberDepartment(db, openid, department) {
       const projections = await tx.collection('proUsers').where({ openid }).limit(2).get()
       const user = users.data[0], pro = projections.data[0]
       if (users.data.length !== 1 || projections.data.length !== 1 ||
-          !['member', 'leader', 'admin'].includes(user.role) || user.membershipStatus === 'removed') {
+          !['member', 'leader', 'admin'].includes(user.role) || user.membershipStatus === 'removed' || user.employmentStatus === 'retired') {
         return { success: false, code: 403, message: '只有在组成员才能设置部门' }
       }
       const lastChange = pro.lastDepartmentChangeTime || 0

@@ -1,5 +1,6 @@
 // 更新指定用户的等效工作量
 const cloud = require('wx-server-sdk')
+const { isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
@@ -39,7 +40,7 @@ exports.updateUserEW = async (params, OPENID) => {
     
     const user = userResult.data[0]
     
-    if (user.role !== 'leader') {
+    if (!isActiveMember(user) || !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,
@@ -61,6 +62,7 @@ exports.updateUserEW = async (params, OPENID) => {
     }
     
     const targetUser = targetUserResult.data[0]
+    if (!isActiveMember(targetUser)) return { code: 403, data: null, message: 'EWA 仅管理在职组员，退休成员的历史工作量保持保留' }
     
     // 处理输入的工作量值（这些数值被视为“期望的最终显示值”）
     let maintenanceDesired = parseFloat(params.maintenanceEW) || 0
@@ -185,4 +187,4 @@ exports.updateUserEW = async (params, OPENID) => {
       message: err.message || '更新用户工作量失败'
     }
   }
-} 
+}

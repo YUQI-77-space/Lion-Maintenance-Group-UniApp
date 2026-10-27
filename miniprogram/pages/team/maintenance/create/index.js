@@ -119,7 +119,7 @@ Page({
 		const userRole = app.globalData.role || '';
 		const userInfo = app.globalData.userInfo || {};
 		
-		if (userRole !== 'leader') {
+		if (!['leader', 'admin'].includes(userRole)) {
 			wx.showToast({
 				title: '权限不足',
 				icon: 'none'

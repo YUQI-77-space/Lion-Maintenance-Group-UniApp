@@ -74,6 +74,7 @@ const INITIAL_USER_INFO = (() => {
 
 Page({
   data: {
+    readOnly: false,
     // 导航栏高度
     statusBarHeight: STATUS_BAR_HEIGHT,
     navBarHeight: NAV_BAR_HEIGHT,
@@ -160,6 +161,7 @@ Page({
 
 
   onShow() {
+    this.setData({ readOnly: require('../../utils/memberStatus').isRetired() });
     const currentUser = getApp().globalData.userInfo || {};
     const owner = getApp().globalData.openid || '';
     if (this._draftOwner && this._draftOwner !== owner) {
@@ -765,6 +767,7 @@ Page({
 
   
   async submitRepair() {
+    if (!require('../../utils/memberStatus').canWrite()) return;
     if (this.data.submitting || this.data.submitUnknown || this.data.currentStep !== 4) return;
     this.setData({ submitting: true, submitMessage: '' });
     try { await this._submitRepair(); }

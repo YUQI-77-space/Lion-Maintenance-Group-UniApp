@@ -14,6 +14,7 @@ const { addTodo } = require('./addTodo')
 const { updateTodoStatus } = require('./updateTodoStatus')
 const { deleteTodo } = require('./deleteTodo')
 const { getTodoCount } = require('./getTodoCount')
+const { retirementBlock } = require('./memberStatus')
 
 // 云函数入口函数
 exports.main = async (event, context) => {
@@ -31,6 +32,10 @@ exports.main = async (event, context) => {
   
   // 根据action调用对应方法
   try {
+    if (!['getTodoList', 'getTodoDetail', 'getTodoCount'].includes(action)) {
+      const blocked = await retirementBlock(db, OPENID)
+      if (blocked) return blocked
+    }
     switch (action) {
       case 'getTodoList':
         result = await getTodoList(params, OPENID)
@@ -67,4 +72,4 @@ exports.main = async (event, context) => {
   }
   
   return result
-} 
+}

@@ -528,3 +528,6 @@
 .tag-warning { color: var(--mg-color-warning); background: var(--mg-color-warning-soft); }
 .tag-danger { color: var(--mg-color-danger); background: var(--mg-color-danger-soft); }
 @media (prefers-reduced-motion: reduce) { .fade-in, .btn, .entry-item { transition: none; } }
+/* 人员当前在职状态；文字确保状态不只依靠颜色传达。 */
+.member-retired { display: inline-block; flex-shrink: 0; margin-left: 8rpx; padding: 2rpx 10rpx; border-radius: 8rpx; font-size: 12px; line-height: 18px; color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); vertical-align: middle; white-space: nowrap; }
+.member-readonly-note { padding: 20rpx 28rpx; font-size: 13px; line-height: 20px; color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); }

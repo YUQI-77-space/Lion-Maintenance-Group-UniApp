@@ -2,6 +2,7 @@ const loadingFeedback = require('../../../../utils/loading');
 // pages/team/ewa/manage/index.js
 const api = require('../../../../utils/apiAdapter');
 const router = require('../../../../utils/router');
+const memberStatus = require('../../../../utils/memberStatus');
 
 Page({
   behaviors: [require('../../../../utils/pageRefresh')],
@@ -47,31 +48,16 @@ Page({
     this.setData({ _cacheKey: `ewa_manage_cache_v3:${getApp().globalData.openid || ''}:${getApp().globalData.role || 'user'}` });
     this.checkUserPermission()
     if (!this.data.hasPermission) return;
-    // 先尝试读取缓存，提升首屏速度
-    try {
-      const cached = wx.getStorageSync(this.data._cacheKey)
-      if (cached && cached.users && Array.isArray(cached.users)) {
-        this.setData({
-          users: cached.users,
-          totalCount: typeof cached.totalCount === 'number' ? cached.totalCount : cached.users.length,
-          hasMore: cached.users.length < cached.totalCount,
-          page: cached.page || 1,
-          pageSize: cached.pageSize || 30,
-          _lastLoadedAt: cached.timestamp || 0,
-          loading: false
-        })
-      }
-    } catch (e) { /* ignore */ }
+
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this.checkUserPermission();
     if (this.data.hasPermission) {
-      // 避免频繁刷新：1分钟内复用缓存
-      const now = Date.now()
-      if (!this.data._lastLoadedAt || (now - this.data._lastLoadedAt > 60 * 1000)) {
+      if (!this.data._isFetching) {
         this.setData({ page: 1, hasMore: true })
         this.fetchUsers({ page: 1, pageSize: this.data.pageSize })
       }
@@ -136,13 +122,13 @@ Page({
     const role = app.globalData.role || wx.getStorageSync('role') || 'user'
     
     
-    if (role === 'leader') {
+    if ((role === 'leader' || role === 'admin') && !memberStatus.isRetired()) {
       this.setData({ hasPermission: true })
       
     } else {
-      
+      this.setData({ hasPermission: false, users: [], totalCount: 0, showEditModal: false });
       wx.showToast({
-        title: '抱歉，只有组长才能访问该页面',
+        title: '仅在职组长及管理员可访问',
         icon: 'none',
         duration: 2000
       })
@@ -163,7 +149,7 @@ Page({
       if (!append) this._pendingFetch = opts;
       return;
     }
-    if (this._unloaded) return;
+    if (this._unloaded || !this.data.hasPermission || memberStatus.isRetired()) return;
     this.setData({ _isFetching: true, loading: !append, loadingMore: append, loadError: '' });
     try {
       const result = await api.call('equivalentWorkloadAssessment', {
@@ -176,7 +162,7 @@ Page({
           includeUserRanking: false
         }
       });
-      if (this._unloaded || this._pendingFetch) return;
+      if (this._unloaded || this._pendingFetch || !this.data.hasPermission || memberStatus.isRetired()) return;
       if (result.success && result.data && Array.isArray(result.data.list)) {
         const { list = [], total = 0 } = result.data;
         const merged = append ? (this.data.users || []).concat(list) : list
@@ -197,6 +183,7 @@ Page({
           })
         } catch (e) { /* ignore */ }
       } else {
+        if ([401, 403].includes(result.code)) this.setData({ hasPermission: false, users: [], loading: false });
         this.setData({ loadError: result.message || '获取成员排名失败，请重试' });
       }
     } catch (err) {

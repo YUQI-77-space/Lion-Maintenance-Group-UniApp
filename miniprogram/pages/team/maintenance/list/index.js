@@ -23,6 +23,7 @@ function formatTask(task) {
 
 Page({
   data: {
+    readOnly: false,
     // 分类配置
     categories: [
       { key: 'all', label: '全部' },
@@ -54,6 +55,7 @@ Page({
 
   retryList() { return this.data.appendFailed ? this.loadMoreTasks() : this.loadMaintenanceTasks(true); },
   onShow() {
+    this.setData({ readOnly: require('../../../../utils/memberStatus').isRetired() });
     if (!this._isFirstLoad) {
       this.setData({ page: 1, hasMore: true });
       this.loadMaintenanceTasks(true);
@@ -243,6 +245,7 @@ Page({
 
   // 认领任务
   async claimTask(e) {
+    if (!require('../../../../utils/memberStatus').canWrite()) return;
     if (this.data.claiming) return;
     const taskId = e.currentTarget ? e.currentTarget.dataset.taskId : e;
     const task = this.data.allTasks.find(item => item.maintenanceTaskId === taskId);

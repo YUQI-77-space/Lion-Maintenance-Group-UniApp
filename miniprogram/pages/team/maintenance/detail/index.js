@@ -4,6 +4,7 @@ const app = getApp();
 const api = require('../../../../utils/apiAdapter');
 const time = require('../../../../utils/time');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
+const memberStatus = require('../../../../utils/memberStatus');
 
 // 任务状态文案，与列表页 / 管理页保持一致
 const STATUS_MAP = {
@@ -24,6 +25,7 @@ Page({
     taskId: '', // 任务ID
     taskDetail: {}, // 任务详情
     userRole: '', // 用户角色
+    readOnly: false,
     userOpenid: '', // 用户openid
     fromManage: false, // 是否从管理界面进入
     // 编辑受理人相关数据
@@ -103,12 +105,13 @@ Page({
     this.setData({
       taskId: taskId,
       userRole: userRole,
+      readOnly: memberStatus.isRetired(),
       userOpenid: userOpenid,
       fromManage: fromManage
     });
 
     // 管理入口只允许组长访问，避免组员通过直链看到管理信息或操作按钮
-    if (fromManage && userRole !== 'leader') {
+    if (fromManage && !['leader', 'admin'].includes(userRole)) {
       wx.showToast({
         title: '权限不足',
         icon: 'none'
@@ -122,6 +125,15 @@ Page({
     // 获取任务详情
     this.getTaskDetail();
   },
+
+  onShow() {
+    const readOnly = memberStatus.isRetired();
+    const userRole = app.globalData.role || 'user';
+    const canManage = app.checkPermission('leader');
+    this.setData({ readOnly, userRole, ...(!canManage ? { canManageAssignees: false, showAssigneeDrawer: false, showEWModal: false, showDeleteConfirmModal: false } : {}) });
+  },
+
+  onIdentityChanged() { this.onShow(); },
 
   /**
    * 用户点击右上角分享
@@ -198,6 +210,7 @@ Page({
 
   // 认领任务
   async claimTask(e) {
+    if (!memberStatus.canWrite()) return;
     if (this.data.claiming) return;
     const taskId = this.data.taskId;
     const task = this.data.taskDetail;
@@ -224,7 +237,7 @@ Page({
   },
   // 是否为管理详情页的组长操作
   canManageTask: function() {
-    return this.data.fromManage && this.data.userRole === 'leader';
+    return !memberStatus.isRetired() && this.data.fromManage && ['leader', 'admin'].includes(this.data.userRole);
   },
 
   // 组长完成维修任务：仅进行中的任务可走此路径
@@ -1137,7 +1150,7 @@ Page({
 
   shouldEnableAssigneeManagement: function(status) {
     const currentStatus = status || 'pending';
-    return this.data.fromManage && this.data.userRole === 'leader' && currentStatus === 'inProgress';
+    return !memberStatus.isRetired() && this.data.fromManage && ['leader', 'admin'].includes(this.data.userRole) && currentStatus === 'inProgress';
   },
 
   // 防止滚动穿透

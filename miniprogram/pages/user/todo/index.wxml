@@ -53,7 +53,7 @@
                   <view class="info-row"><text class="info-label">问题类别:</text><text class="info-value">{{item.level1}} > {{item.level2}}</text></view>
                   <view class="info-row"><text class="info-label">预约时间:</text><text class="info-value">{{item.appointmentTime}}</text></view>
                   <view class="info-row"><text class="info-label">申请人:</text><text class="info-value">{{item.applicantName}}</text></view>
-                  <view class="info-row" wx:if="{{item.assigneeName}}"><text class="info-label">受理人:</text><text class="info-value">{{item.assigneeName}}</text></view>
+                  <view class="info-row" wx:if="{{item.assigneeName}}"><text class="info-label">受理人:</text><text class="info-value">{{item.assigneeName}}</text><text wx:if="{{item.assigneeEmploymentStatus === 'retired'}}" class="member-retired">已退休</text></view>
                 </view>
               </view>
               <view class="task-actions" wx:if="{{item.applicantId === item.toDoListUserId && item.taskStatus !== 'completed' && item.taskStatus !== 'cancelled'}}">

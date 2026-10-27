@@ -35,7 +35,7 @@ function harness(count = 0, uniqueEwaUserId = true) {
       state[name] ||= []
       let condition = {}, cap = 100, sort = ''
       const q = {
-        where(value) { condition = value; return q }, limit(value) { cap = value; return q },
+        field() { return q }, where(value) { condition = value; return q }, limit(value) { cap = value; return q },
         orderBy(value) { sort = value; return q },
         async get() {
           let rows = state[name].filter(row => matches(row, condition))

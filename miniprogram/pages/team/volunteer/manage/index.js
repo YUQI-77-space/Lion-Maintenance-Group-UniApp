@@ -106,6 +106,7 @@ Page(Object.assign({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    if (!getApp().checkPermission('leader')) { wx.navigateBack(); return; }
     // 初始化状态管理器
     this.initActivityStatusManager()
     
@@ -183,7 +184,7 @@ Page(Object.assign({
     const role = app.globalData.role || wx.getStorageSync('role') || 'user'
     
     
-    if (role !== 'leader') {
+    if (!['leader', 'admin'].includes(role) || require('../../../../utils/memberStatus').isRetired()) {
       
       wx.showToast({
         title: '只有组长可以访问管理页面',
@@ -303,7 +304,7 @@ Page(Object.assign({
     
     // 检查用户角色
     const role = app.globalData.role || wx.getStorageSync('role') || 'user';
-    if (role !== 'leader') {
+    if (!['leader', 'admin'].includes(role)) {
       wx.showToast({
         title: '只有组长可以切换招募状态',
         icon: 'none'

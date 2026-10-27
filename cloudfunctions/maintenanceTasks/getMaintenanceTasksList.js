@@ -1,5 +1,6 @@
 // 获取维修任务列表
 const cloud = require('wx-server-sdk')
+const { markTasks } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
@@ -26,33 +27,19 @@ exports.getMaintenanceTasksList = async (params, OPENID) => {
       tools: '工具借用类'
     }
 
-    // 首先尝试从 proUsers 集合获取用户角色（维修组成员）
-    const proUserResult = await db.collection('proUsers').where({
+    // users 是身份权威，旧投影不能保留已撤销的管理读取权限。
+    const userResult = await db.collection('users').where({
       openid: OPENID
-    }).get()
-
-    let userRole = 'user'
-
-    if (proUserResult.data.length > 0) {
-      userRole = proUserResult.data[0].role
-    } else {
-      const userResult = await db.collection('users').where({
-        openid: OPENID
-      }).get()
-
-      if (userResult.data.length === 0) {
-        return {
-          code: 403,
-          data: null,
-          message: '未找到用户信息，无法获取任务列表'
-        }
-      }
+    }).limit(2).get()
+    if (userResult.data.length !== 1) {
+      return { code: 403, data: null, message: '用户身份不存在或重复，无法获取任务列表' }
     }
+    const userRole = userResult.data[0].role
 
     // 构建基础查询条件
     let baseQuery = {}
 
-    if (userRole === 'leader') {
+    if (['leader', 'admin'].includes(userRole)) {
       baseQuery = {}
     } else if (userRole === 'member') {
       baseQuery = _.or([
@@ -74,7 +61,7 @@ exports.getMaintenanceTasksList = async (params, OPENID) => {
           ]),
           { level1: level1Value }
         ])
-      } else if (userRole === 'leader') {
+      } else if (['leader', 'admin'].includes(userRole)) {
         baseQuery = { level1: level1Value }
       } else {
         baseQuery = { applicantId: OPENID, level1: level1Value }
@@ -99,10 +86,10 @@ exports.getMaintenanceTasksList = async (params, OPENID) => {
         .count()
     ])
 
-    const tasks = (dataResult.list || []).map(task => {
+    const tasks = await markTasks(db, (dataResult.list || []).map(task => {
       const { isUrgent, ...rest } = task
       return rest
-    })
+    }))
     const total = countResult.total || 0
     const hasMore = skip + tasks.length < total
 

@@ -50,7 +50,7 @@ exports.getUserDutySlots = async (event, openid) => {
     const user = userResult.data[0]
 
     // 验证用户权限
-    if (!user.role || (user.role !== 'member' && user.role !== 'leader')) {
+    if (!user.role || (user.role !== 'member' && !['leader', 'admin'].includes(user.role))) {
       return {
         code: 403,
         data: null,

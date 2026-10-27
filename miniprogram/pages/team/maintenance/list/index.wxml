@@ -17,6 +17,7 @@
   <scroll-view class="content" scroll-y bindscrolltolower="onReachBottom" refresher-enabled bindrefresherrefresh="onRefresherRefresh" refresher-triggered="{{refresherTriggered}}" refresher-default-style="none">
 <view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{refresherTriggered}}" size="small" /></view>
     <view class="container">
+      <view wx:if="{{readOnly}}" class="member-readonly-note">已退休 · 您可以查看历史记录，暂不参与接单。</view>
       <view class="mg-page-notice mg-page-notice--error" wx:if="{{loadError}}">{{loadError}}<button class="mg-button mg-button--secondary" bindtap="retryList">重试加载</button></view>
       <!-- 加载动画 -->
       <view class="loading-container" wx:if="{{loading}}">
@@ -39,7 +40,7 @@
                 <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
                 <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
               </view>
-              <view class="task-footer" wx:if="{{item.taskStatus === 'pending'}}">
+              <view class="task-footer" wx:if="{{!readOnly && item.taskStatus === 'pending'}}">
                 <view class="btn btn-claim" 
                       wx:if="{{item.taskStatus === 'pending'}}"
                       catchtap="claimTask" 

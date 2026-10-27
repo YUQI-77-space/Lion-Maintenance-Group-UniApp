@@ -54,7 +54,7 @@ exports.deleteMaintenanceTask = async (params, OPENID) => {
     const user = userResult.data[0]
     const userRole = user.role
     
-    if (userRole !== 'leader') {
+    if (!['leader', 'admin'].includes(userRole)) {
       return {
         code: 403,
         data: null,

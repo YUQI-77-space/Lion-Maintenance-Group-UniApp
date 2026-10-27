@@ -18,18 +18,24 @@ const { getMembersList, batchImportVolunteers } = require('./batchImportVoluntee
 const { StatusUpdateManager } = require('./statusUpdateManager')
 const activityReminderScheduler = require('./activityReminderScheduler')
 const scheduleInvitedVolunteerReminder = require('./scheduleInvitedVolunteerReminder')
+const { retirementBlock } = require('./memberStatus')
+const READ_ACTIONS = ['getVolunteerActivitiesList', 'getvolunteerActivitiesList', 'getVolunteerActivityDetail', 'getvolunteerActivitieDetail', 'getParticipantsInfo', 'getUserVolunteerActivities', 'getExecutionHistory', 'getMembersList']
 
 // 定时触发器入口
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   
-  if (context && context.TriggerName === 'statusUpdateTrigger') {
+  if (!wxContext.OPENID && context && context.TriggerName === 'statusUpdateTrigger') {
     return await schedulerMain(event, context);
   }
   
   let processedEvent = { ...event }
   if (event.params) {
     processedEvent = { ...processedEvent, ...event.params }
+  }
+  if (!READ_ACTIONS.includes(event.action)) {
+    const blocked = await retirementBlock(db, wxContext.OPENID)
+    if (blocked) return blocked
   }
   switch (event.action) {
     case 'createVolunteerActivity':
@@ -108,7 +114,7 @@ async function getUserVolunteerActivities(event, context) {
         openid: OPENID
       }).get();
       
-      if (userResult.data.length === 0 || userResult.data[0].role !== 'leader') {
+      if (userResult.data.length === 0 || !['leader', 'admin'].includes(userResult.data[0].role)) {
         return {
           code: 403,
           data: null,
@@ -317,4 +323,4 @@ async function logSchedulerExecution(logData) {
   }
 }
 
- 
+

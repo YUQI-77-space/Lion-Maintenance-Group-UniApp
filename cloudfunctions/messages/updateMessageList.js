@@ -39,7 +39,7 @@ exports.updateMessageList = async (params, OPENID) => {
     }
     
     const user = userResult.data[0]
-    if (params.messageUserId !== OPENID && user.role !== 'leader') {
+    if (params.messageUserId !== OPENID && !['leader', 'admin'].includes(user.role)) {
       return {
         code: 403,
         data: null,

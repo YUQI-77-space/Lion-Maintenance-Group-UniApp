@@ -56,7 +56,7 @@ Page({
     // 获取用户角色，只有组长才能访问此页面
     const userRole = app.globalData.role || '';
 
-    if (userRole !== 'leader') {
+    if (!['leader', 'admin'].includes(userRole) || require('../../../../utils/memberStatus').isRetired()) {
       wx.showToast({
         title: '权限不足',
         icon: 'none'
@@ -83,6 +83,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    if (!app.checkPermission('leader')) { wx.navigateBack(); return; }
     // 只在非首次进入时刷新，避免 onLoad + onShow 双重加载
     if (!this._isFirstLoad) {
       this.setData({ page: 1, hasMore: true });

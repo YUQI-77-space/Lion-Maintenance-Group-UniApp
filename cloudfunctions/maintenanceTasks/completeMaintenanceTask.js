@@ -74,15 +74,8 @@ exports.completeMaintenanceTask = async (params, OPENID) => {
 
     // 检查权限：申请人和组长都可以确认任务完成
     const isApplicant = task.applicantId === OPENID
-    let isLeader = user.role === 'leader'
-
-    // 组长身份以 users / proUsers 任一来源为准，避免权限同步延迟导致误拒绝
-    if (!isLeader) {
-      const proUserResult = await db.collection('proUsers').where({
-        openid: OPENID
-      }).get()
-      isLeader = proUserResult.data.length > 0 && proUserResult.data[0].role === 'leader'
-    }
+    // users 是身份权威，旧成员投影不能恢复已经撤销的管理权限。
+    const isLeader = ['leader', 'admin'].includes(user.role)
 
     if (!isApplicant && !isLeader) {
       console.log('用户无权确认任务完成, 申请人ID:', task.applicantId, '用户ID:', OPENID, '用户角色:', user.role);

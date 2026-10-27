@@ -24,12 +24,12 @@ exports.getMembersList = async (params, OPENID) => {
       }
     }
     
-    // 获取当前用户角色（从 proUsers 集合，更高效）
-    const userResult = await db.collection('proUsers').where({
+    // 管理身份只以 users 为准。
+    const userResult = await db.collection('users').where({
       openid: OPENID
     }).get()
     
-    if (userResult.data.length === 0) {
+    if (userResult.data.length !== 1) {
       return {
         code: 403,
         data: null,
@@ -40,7 +40,7 @@ exports.getMembersList = async (params, OPENID) => {
     const currentUser = userResult.data[0]
     
     // 只有组长可以添加受理人
-    if (currentUser.role !== 'leader') {
+    if (!['leader', 'admin'].includes(currentUser.role)) {
       return {
         code: 403,
         data: null,
@@ -77,7 +77,8 @@ exports.getMembersList = async (params, OPENID) => {
     
     // 构建查询条件（针对 proUsers 集合）
     let query = {
-      role: db.command.in(['member', 'leader'])
+      role: db.command.in(['member', 'leader', 'admin']),
+      employmentStatus: db.command.neq('retired')
     }
     
     // 如果有搜索关键词，添加搜索条件
@@ -144,4 +145,4 @@ exports.getMembersList = async (params, OPENID) => {
       message: err.message || '获取成员列表失败'
     }
   }
-} 
+}

@@ -1,5 +1,6 @@
 // 高级Excel导出功能 - 生成包含4个工作表的详细EW分析Excel文件
 const cloud = require('wx-server-sdk')
+const { activeMembers, isActiveMember } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
@@ -77,7 +78,7 @@ async function validatePermission(OPENID) {
   }
   
   const user = userResult.data[0]
-  if (user.role !== 'leader') {
+  if (!isActiveMember(user) || !['leader', 'admin'].includes(user.role)) {
     console.log('[validatePermission] 用户非组长，权限不足')
     return null
   }
@@ -91,15 +92,7 @@ async function validatePermission(OPENID) {
  */
 async function getUsersData() {
   console.log('[getUsersData] 获取维修组成员数据')
-  const result = await db.collection('proUsers')
-    .field({
-      openid: true,
-      nickName: true,
-      studentId: true,
-      role: true
-    })
-    .orderBy('studentId', 'asc')
-    .get()
+  const result = { data: (await activeMembers(db)).sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''))) }
   
   console.log(`[getUsersData] 获取到 ${result.data.length} 名成员`)
   result.data.forEach((user, index) => {

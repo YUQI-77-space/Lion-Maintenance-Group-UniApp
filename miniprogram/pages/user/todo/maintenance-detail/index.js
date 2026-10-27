@@ -5,6 +5,7 @@ const api = require('../../../../utils/apiAdapter');
 const time = require('../../../../utils/time');
 const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const iconManager = require('../../../../utils/iconManager');
+const memberStatus = require('../../../../utils/memberStatus');
 
 // 状态文案
 const STATUS_TEXT = {
@@ -81,6 +82,10 @@ Page({
     }
   },
 
+  onShow() {
+    if (memberStatus.isRetired()) this.setData({ canComplete: false, canCancel: false, showActionBar: false, showCancelModal: false });
+  },
+
   /**
    * 加载任务详情（使用统一适配器 + async/await）
    */
@@ -103,8 +108,8 @@ Page({
 
         const isApplicant = taskDetail.applicantId === userOpenid;
         const isAssignee = taskDetail.assigneeId === userOpenid;
-        const canComplete = isApplicant && taskDetail.taskStatus === 'inProgress';
-        const canCancel = isApplicant && taskDetail.taskStatus !== 'completed' && taskDetail.taskStatus !== 'cancelled';
+        const canComplete = !memberStatus.isRetired() && isApplicant && taskDetail.taskStatus === 'inProgress';
+        const canCancel = !memberStatus.isRetired() && isApplicant && taskDetail.taskStatus !== 'completed' && taskDetail.taskStatus !== 'cancelled';
 
         if (taskDetail.completeTime) {
           taskDetail.completeTime = this.formatTime(taskDetail.completeTime);
@@ -155,6 +160,7 @@ Page({
    * 确认完成任务
    */
   async confirmCompleteTask() {
+    if (!memberStatus.canWrite()) return;
     if (this.data.operationBusy) return;
     this.setData({ operationBusy: true });
     try { return await this._guardedConfirmCompleteTask(); }
@@ -226,6 +232,7 @@ Page({
 
   // 打开撤销弹窗
   openCancelModal() {
+    if (!memberStatus.canWrite()) return;
     const { taskDetail } = this.data;
 
     if (!(taskDetail.applicantId === app.globalData.openid && taskDetail.taskStatus !== 'completed' && taskDetail.taskStatus !== 'cancelled')) {
@@ -257,6 +264,7 @@ Page({
 
   // 确认撤销任务
   async confirmCancelTask() {
+    if (!memberStatus.canWrite()) return;
     if (this.data.operationBusy) return;
     this.setData({ operationBusy: true });
     try { return await this._guardedConfirmCancelTask(); }

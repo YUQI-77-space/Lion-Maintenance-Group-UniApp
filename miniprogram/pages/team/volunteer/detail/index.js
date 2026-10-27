@@ -3,6 +3,7 @@ const loadingFeedback = require('../../../../utils/loading');
 const app = getApp()
 const api = require('../../../../utils/apiAdapter')
 const time = require('../../../../utils/time')
+const memberStatus = require('../../../../utils/memberStatus')
 
 Page({
   behaviors: [require('../../../../utils/pageRefresh')],
@@ -16,6 +17,7 @@ Page({
     activity: null,
     participants: [],
     userRole: '',
+    readOnly: false,
     openid: '',
     isRegistered: false,
     loading: true,
@@ -83,12 +85,13 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this.getUserRole()
     // 如果已经有活动ID，刷新活动详情
     if (this.data.activityId) {
       this.getActivityDetail()
 
       // 如果是组长，刷新参与者信息
-      if (this.data.userRole === 'leader') {
+      if (['leader', 'admin'].includes(this.data.userRole)) {
         this.getParticipants()
       }
     }
@@ -99,16 +102,20 @@ Page({
    */
   getUserRole() {
     const app = getApp()
-    const userInfo = wx.getStorageSync('userInfo')
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo')
     const role = app.globalData.role || wx.getStorageSync('role') || 'user'
     
     if (userInfo) {
       this.setData({
         userRole: role,
+        readOnly: memberStatus.isRetired(),
+        ...(!app.checkPermission('leader') ? { showImportModal: false, showPerUserEWModal: false, showMessageModal: false } : {}),
         openid: userInfo.openid
       })
     }
   },
+
+  onIdentityChanged() { this.getUserRole(); },
 
   /**
    * 获取活动详情
@@ -141,7 +148,7 @@ Page({
           formattedEndTime
         });
 
-        if (this.data.userRole === 'leader') {
+        if (['leader', 'admin'].includes(this.data.userRole)) {
           await this.getParticipants();
         }
       } else {
@@ -165,7 +172,7 @@ Page({
    * 获取参与者信息（仅组长可用）
    */
   getParticipants: async function() {
-    if (this.data.userRole !== 'leader' || !this.data.activityId) return;
+    if (!['leader', 'admin'].includes(this.data.userRole) || !this.data.activityId) return;
     try {
       const result = await api.call('volunteerActivities', { action: 'getParticipantsInfo', params: { activityId: this.data.activityId } });
       if (result.success) {
@@ -198,7 +205,7 @@ Page({
    * 导出参与者信息（仅组长可用）
    */
   exportParticipants: async function() {
-    if (this.data.userRole !== 'leader') return;
+    if (!['leader', 'admin'].includes(this.data.userRole)) return;
     loadingFeedback.show({ title: '正在生成...', mask: true });
     try {
       const result = await api.call('volunteerActivities', { action: 'exportParticipants', params: { activityId: this.data.activityId } });
@@ -238,7 +245,8 @@ Page({
    * 显示导入志愿者弹窗
    */
   showImportVolunteersModal() {
-    if (this.data.userRole !== 'leader') return
+    if (!memberStatus.canWrite()) return;
+    if (!['leader', 'admin'].includes(this.data.userRole)) return
     const activity = this.data.activity
     
     if (!activity) {
@@ -641,7 +649,7 @@ Page({
    * 打开按人EW弹窗
    */
   openSetPerUserEWModal() {
-    if (this.data.userRole !== 'leader') return
+    if (!['leader', 'admin'].includes(this.data.userRole)) return
     this.setData({ showPerUserEWModal: true })
   },
   /**
@@ -716,7 +724,7 @@ Page({
    * 是否为管理详情页的组长操作
    */
   canManageActivity() {
-    return this.data.isFromManagePage && this.data.userRole === 'leader';
+    return !memberStatus.isRetired() && this.data.isFromManagePage && ['leader', 'admin'].includes(this.data.userRole);
   },
 
   /**
@@ -830,7 +838,7 @@ Page({
     this.getActivityDetail()
 
     // 如果是组长，刷新参与者信息 (getActivityDetail成功后会自动调用)
-    // if (this.data.userRole === 'leader') {
+    // if (['leader', 'admin'].includes(this.data.userRole)) {
     //   this.getParticipants()
     // }
   },

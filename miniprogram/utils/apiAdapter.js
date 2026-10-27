@@ -116,6 +116,13 @@ async function call(name, payload) {
       const res = await withTimeout(callFn, timeout);
       try {
         const unified = normalizeResult(res && res.result);
+        // 权限拒绝可能来自其他设备的降权；统一刷新，避免各业务保留旧入口。
+        if ([401, 403].includes(unified.code) && !(name === 'users' && action === 'getUserByOpenId') && typeof getApp === 'function') {
+          const app = getApp();
+          if (app && app.refreshUserInfo) {
+            try { await app.refreshUserInfo({ sync: false }); } catch (_) { /* 保留原始权限拒绝，稍后可再刷新身份。 */ }
+          }
+        }
         return unified;
       } catch (e) {
         return { success: false, code: 500, message: e.message || '解析失败', data: null };

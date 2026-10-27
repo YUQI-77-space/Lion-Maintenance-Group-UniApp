@@ -2,10 +2,11 @@
 <view slot="refresher" class="unified-refresher"><loading-animation wx:if="{{unifiedRefreshing}}" size="small" /></view>
 <!--pages/team/duty/roster/index.wxml-->
 <view class="mg-theme mg-data-page roster-page">
+  <view class="member-readonly-note" wx:if="{{readOnly}}">已退休 · 感谢您为维修组的付出，历史值班记录仍为您保留。本页仅供查看。</view>
   <view class="header">
     <view class="week-heading">
       <text class="main-title">第 {{currentWeek}} 周</text>
-      <text wx:if="{{isDataReady}}" class="edit-status {{configData.isEditingEnabled ? '' : 'edit-status--closed'}}">{{configData.isEditingEnabled ? '开放预选' : '仅供查看'}}</text>
+      <text wx:if="{{isDataReady}}" class="edit-status {{!readOnly && configData.isEditingEnabled ? '' : 'edit-status--closed'}}">{{!readOnly && configData.isEditingEnabled ? '开放预选' : '仅供查看'}}</text>
     </view>
     <text class="date-range" wx:if="{{weekDateRange}}">{{weekDateRange}}</text>
     <view class="stats-info" wx:if="{{isDataReady}}">
@@ -32,7 +33,7 @@
   <!-- 值班表格 -->
   <view class="schedule-panel" wx:if="{{isDataReady && !isLoading}}">
     <view class="panel-heading"><text class="section-title">本周排班</text><text class="scroll-hint">左右滑动查看日期 →</text></view>
-    <text class="panel-description">{{configData.isEditingEnabled ? '点击可选时段预选，再到下方核对确认。' : '本周预选已关闭，可查看排班与个人时段。'}}</text>
+    <text class="panel-description">{{!readOnly && configData.isEditingEnabled ? '点击可选时段预选，再到下方核对确认。' : '本周预选已关闭，可查看排班与个人时段。'}}</text>
     <view class="duty-table-container">
     <view class="duty-table">
       <!-- 左侧固定列 -->
@@ -69,7 +70,7 @@
                   aria-role="{{slotData.canSelect ? 'button' : 'text'}}"
                   aria-label="{{weekDates[colIndex].dayName}} {{weekDates[colIndex].dateDisplay}} {{timeSlotData.timeSlotInfo.name}} {{timeSlotData.timeSlotInfo.startTime}}至{{timeSlotData.timeSlotInfo.endTime}} {{slotData.statusText}}">
               <text class="slot-check" wx:if="{{slotData.status === 'selected' || slotData.status === 'preSelected' || slotData.status === 'confirmed'}}">✓</text>
-              <text class="slot-text">{{slotData.statusText}}</text>
+              <text class="slot-text">{{slotData.statusText}}</text><text wx:if="{{slotData.slotData.dutyHolderEmploymentStatus === 'retired'}}" class="member-retired">已退休</text>
             </view>
           </view>
         </view>
@@ -136,7 +137,7 @@
       </view>
 
     </view>
-    <view class="action-buttons" wx:if="{{configData.isEditingEnabled && (selectedSlots.length > 0 || userSlots.preSelectedSlots.length > 0)}}">
+    <view class="action-buttons" wx:if="{{!readOnly && configData.isEditingEnabled && (selectedSlots.length > 0 || userSlots.preSelectedSlots.length > 0)}}">
       <text class="confirm-hint">确认后不可自行取消，请核对日期与时间。</text>
       <button class="confirm-btn" bindtap="confirmSelection" disabled="{{confirming}}"><loading-animation wx:if="{{confirming}}" size="small" /><text wx:else>{{'核对并确认时段'}}</text></button>
     </view>
@@ -144,7 +145,7 @@
     <!-- 空状态 -->
     <view class="empty-selection" wx:if="{{selectedSlots.length === 0 && userSlots.confirmedSlots.length === 0 && userSlots.preSelectedSlots.length === 0}}">
       <text class="empty-text">本周还没有选择时段</text>
-      <text class="empty-hint" wx:if="{{configData.isEditingEnabled}}">从上方表格选择，预选会显示在这里。</text>
+      <text class="empty-hint" wx:if="{{!readOnly && configData.isEditingEnabled}}">从上方表格选择，预选会显示在这里。</text>
       <text class="empty-hint" wx:if="{{!configData.isEditingEnabled}}">当前周编辑权限已关闭，无法进行值班选择</text>
     </view>
   </view>

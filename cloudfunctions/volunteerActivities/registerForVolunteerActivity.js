@@ -117,11 +117,11 @@ exports.main = async (event, wxContext) => {
       }
     }
     
-    if (!userInfo) {
+    if (!userInfo || !['member', 'leader', 'admin'].includes(userInfo.role) || userInfo.employmentStatus === 'retired') {
       console.error('未找到用户信息')
       return {
         code: 400,
-        message: '未找到用户信息，请先完善个人资料'
+        message: '仅在职组员可以报名志愿活动'
       }
     }
     
@@ -131,6 +131,7 @@ exports.main = async (event, wxContext) => {
     const transaction = await db.startTransaction()
     
     try {
+      await require('./memberStatus').lockActiveMembers(transaction, db, [OPENID])
       // 准备更新数据
       const updateData = {
         numberOfVolunteers: _.inc(1),
@@ -359,4 +360,4 @@ exports.main = async (event, wxContext) => {
       message: '报名失败: ' + error.message
     }
   }
-} 
+}

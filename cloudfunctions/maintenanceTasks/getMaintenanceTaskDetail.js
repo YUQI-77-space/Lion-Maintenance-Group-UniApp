@@ -1,5 +1,6 @@
 // 获取维修任务详情
 const cloud = require('wx-server-sdk')
+const { markTasks } = require('./memberStatus')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
@@ -59,7 +60,7 @@ exports.getMaintenanceTaskDetail = async (params, OPENID) => {
     
     const user = userResult.data[0]
     const userRole = user.role
-    const task = taskResult.data[0]
+    const task = (await markTasks(db, taskResult.data))[0]
     
     console.log('用户角色:', userRole, '任务申请人:', task.applicantId, '任务受理人:', task.assigneeId);
     
@@ -70,7 +71,7 @@ exports.getMaintenanceTaskDetail = async (params, OPENID) => {
     }
     
     // 检查访问权限 - 包含协助受理人权限
-    if (userRole !== 'leader' && 
+    if (!['leader', 'admin'].includes(userRole) && 
         userRole !== 'member' && 
         task.applicantId !== OPENID && 
         task.assigneeId !== OPENID &&

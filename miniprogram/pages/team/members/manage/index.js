@@ -3,6 +3,7 @@ const router = require('../../../../utils/router');
 Page({
   data: { keyword: '', departments: ['全部部门', ...members.departments], departmentIndex: 0,
     roles: ['全部角色', '组员', '组长', '管理员'], roleIndex: 0,
+    employmentLabels: ['在职', '退休', '全部'], employmentIndex: 0,
     items: [], total: 0, page: 1, pageSize: 20, hasMore: true, loading: false,
     loadingMore: false, refresherTriggered: false, error: '' },
   onShow() { if (members.checkPermission()) this.load(true); },
@@ -16,10 +17,11 @@ Page({
   },
   onDepartment(e) { this.setData({ departmentIndex: Number(e.detail.value) }); this.load(true); },
   onRole(e) { this.setData({ roleIndex: Number(e.detail.value) }); this.load(true); },
+  onEmployment(e) { this.setData({ employmentIndex: Number(e.detail.value) }); this.load(true); },
   onSearchConfirm() { clearTimeout(this._searchTimer); this.load(true); },
   clearSearch() { clearTimeout(this._searchTimer); this.setData({ keyword: '' }); this.load(true); },
-  resetFilters() { clearTimeout(this._searchTimer); this.setData({ departmentIndex: 0, roleIndex: 0 }); this.load(true); },
-  resetSearch() { clearTimeout(this._searchTimer); this.setData({ keyword: '', departmentIndex: 0, roleIndex: 0 }); this.load(true); },
+  resetFilters() { clearTimeout(this._searchTimer); this.setData({ departmentIndex: 0, roleIndex: 0, employmentIndex: 0 }); this.load(true); },
+  resetSearch() { clearTimeout(this._searchTimer); this.setData({ keyword: '', departmentIndex: 0, roleIndex: 0, employmentIndex: 0 }); this.load(true); },
   onRefresherRefresh() { this.load(true); },
   onLoadMore() { if (this.data.hasMore && !this.data.loading && !this.data.loadingMore) this.load(false); },
   async load(reset = true) {
@@ -29,7 +31,7 @@ Page({
     this.setData({ loading: reset, loadingMore: !reset, error: '', ...(reset ? { items: [], total: 0 } : {}) });
     const result = await members.call('getManagedMembers', { keyword: this.data.keyword.trim(),
       department: this.data.departmentIndex ? members.departments[this.data.departmentIndex - 1] : '',
-      role: ['', 'member', 'leader', 'admin'][this.data.roleIndex], page, pageSize: this.data.pageSize });
+      role: ['', 'member', 'leader', 'admin'][this.data.roleIndex], employmentStatus: ['active', 'retired', 'all'][this.data.employmentIndex], page, pageSize: this.data.pageSize });
     if (generation !== this._generation) return;
     if (result.success && result.data) {
       const items = result.data.items.map(row => ({ ...row, roleName: members.roles[row.role] }));

@@ -32,12 +32,12 @@ exports.removeTaskAssignees = async (params, OPENID) => {
       }
     }
     
-    // 获取当前用户角色（从 proUsers 集合，更高效）
-    const userResult = await db.collection('proUsers').where({
+    // 管理身份只以 users 为准。
+    const userResult = await db.collection('users').where({
       openid: OPENID
     }).get()
     
-    if (userResult.data.length === 0) {
+    if (userResult.data.length !== 1) {
       return {
         code: 403,
         data: null,
@@ -48,7 +48,7 @@ exports.removeTaskAssignees = async (params, OPENID) => {
     const currentUser = userResult.data[0]
     
     // 只有组长可以删除受理人
-    if (currentUser.role !== 'leader') {
+    if (!['leader', 'admin'].includes(currentUser.role)) {
       return {
         code: 403,
         data: null,
@@ -101,13 +101,18 @@ exports.removeTaskAssignees = async (params, OPENID) => {
     }
     
     // 更新任务数据
-    await db.collection('maintenance_tasks').where({
-      maintenanceTaskId: params.taskId
-    }).update({
-      data: {
-        additionalAssignees: remainingAssignees,
-        updateTime: new Date()
+    await require('./memberStatus').withActiveMembers(db, [OPENID], async tx => {
+      const { data: actor } = await tx.collection('users').doc(currentUser._id).get()
+      if (!['leader', 'admin'].includes(actor.role)) {
+        throw Object.assign(new Error('身份已变化，无权删除受理人'), { code: 403 })
       }
+      const ref = tx.collection('maintenance_tasks').doc(task._id)
+      const { data: current } = await ref.get()
+      if (!current || current.assigneeId !== task.assigneeId ||
+          JSON.stringify(current.additionalAssignees || []) !== JSON.stringify(currentAdditionalAssignees)) {
+        throw Object.assign(new Error('任务已变化，请刷新后重试'), { code: 409 })
+      }
+      await ref.update({ data: { additionalAssignees: remainingAssignees, updateTime: db.serverDate() } })
     })
     
     // 删除被移除受理人的待办事项
@@ -132,7 +137,7 @@ exports.removeTaskAssignees = async (params, OPENID) => {
   } catch (err) {
     console.error('删除受理人失败:', err);
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '删除受理人失败'
     }

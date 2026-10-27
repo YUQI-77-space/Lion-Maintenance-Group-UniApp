@@ -22,7 +22,9 @@ function harness(overrides = {}, now = '2026-10-19T10:30:00+08:00') {
   function collection(store, name, transactional = false) {
     return {
       where(query) {
-        return { get: async () => ({ data: Object.values(store[name] || {}).filter(row => Object.keys(query).every(key => row[key] === query[key])) }) }
+        let cap = 100
+        return { limit(value) { cap = value; return this },
+          get: async () => ({ data: Object.values(store[name] || {}).filter(row => Object.keys(query).every(key => row[key] === query[key])).slice(0, cap) }) }
       },
       doc(id) {
         return {
@@ -207,7 +209,8 @@ test('保留定时器路由，小程序不能伪造 TriggerName 获得系统切�
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'index.js'), 'utf8'), {
     exports, console: { log() {}, error() {} },
     require: name => name === 'wx-server-sdk'
-      ? { init() {}, getWXContext: () => ({ OPENID: caller }) }
+      ? { init() {}, database: () => ({}), getWXContext: () => ({ OPENID: caller }) }
+      : name === './memberStatus' ? { retirementBlock: async () => null } // 退休权限另有跨业务用例；此处隔离定时器路由。
       : name === './autoWeekSwitcher' ? { main: async () => { timerCalls++; return { code: 200 } } } : {}
   })
   assert.equal((await exports.main({ TriggerName: 'autoWeekSwitcherTimer', action: 'unknown' }, {})).code, 400)

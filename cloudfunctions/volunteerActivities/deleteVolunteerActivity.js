@@ -83,7 +83,7 @@ exports.main = async (event, context) => {
       return { code: 404, message: '用户不存在' }
     }
     const user = userResult.data[0]
-    if (user.role !== 'leader') {
+    if (!['leader', 'admin'].includes(user.role)) {
       return { code: 403, message: '只有组长可以删除活动' }
     }
     

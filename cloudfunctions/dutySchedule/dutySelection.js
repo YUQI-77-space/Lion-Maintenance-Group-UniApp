@@ -53,7 +53,7 @@ exports.changeSelection = async (event = {}, openid, mode = 'select') => {
     const configRef = transaction.collection('duty_config').doc('global')
     const { data: config } = await configRef.get()
     const { data: user } = await transaction.collection('users').doc(initialUser._id).get()
-    if (!user || user.openid !== openid || !['member', 'leader', 'admin'].includes(user.role)) reject(403, '只有当前维修组成员可以选择值班')
+    if (!user || user.openid !== openid || !['member', 'leader', 'admin'].includes(user.role) || user.employmentStatus === 'retired') reject(403, '只有在职维修组成员可以选择值班')
     if (!config || config.currentWeek !== initial.currentWeek || config.currentYear !== initial.currentYear ||
         config.startDate !== initial.startDate) reject(409, '周次已变化，请刷新后重新选择')
     if (!config.isEditingEnabled || config.isSystemLock) reject(403, '当前周编辑已关闭或系统已锁定')
@@ -128,7 +128,10 @@ exports.changeSelection = async (event = {}, openid, mode = 'select') => {
     }
     // ponytail: 全局配置文档串行化每周通常35段的选择；高并发再改为每人每周配额锁。
     // 与切周共享冲突边界，事务冲突不自动盲重试。
-    if (changed) await configRef.update({ data: { updateTime: db.serverDate() } })
+    if (changed) {
+      await transaction.collection('users').doc(initialUser._id).update({ data: { membershipWriteTime: db.serverDate() } })
+      await configRef.update({ data: { updateTime: db.serverDate() } })
+    }
     await transaction.commit()
     transaction = null
     const details = targets.map(({ dutySlotId, date, dayOfWeek, timeSlot, startTime, endTime, weekNumber, year }) =>

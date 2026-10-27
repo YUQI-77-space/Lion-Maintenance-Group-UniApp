@@ -1,6 +1,7 @@
 const { getLayout } = require('../../../utils/layout');
 const iconManager = require('../../../utils/iconManager');
 const linkConfig = require('../../../config/linkConfig');
+const memberStatus = require('../../../utils/memberStatus');
 
 // 首帧就同步取到导航栏高度与角色，避免 onLoad 里再 setData 造成的内容空档/布局跳动
 const LAYOUT = getLayout();
@@ -16,7 +17,7 @@ const INITIAL_ROLE = (() => {
   }
 })();
 const INITIAL_IS_MEMBER = INITIAL_ROLE === 'member' || INITIAL_ROLE === 'leader' || INITIAL_ROLE === 'admin';
-const INITIAL_IS_LEADER = INITIAL_ROLE === 'leader' || INITIAL_ROLE === 'admin';
+const INITIAL_IS_LEADER = (INITIAL_ROLE === 'leader' || INITIAL_ROLE === 'admin') && !memberStatus.isRetired();
 
 Page({
   data: {
@@ -31,6 +32,7 @@ Page({
     role: INITIAL_ROLE,
     isMember: INITIAL_IS_MEMBER,
     isLeader: INITIAL_IS_LEADER,
+    readOnly: memberStatus.isRetired(),
     // 功能模块配置
     dailyFunctions: [
       {
@@ -104,20 +106,23 @@ Page({
     tab && tab.setSelectedByRoute && tab.setSelectedByRoute(this.route);
   },
 
+  onIdentityChanged() { this.checkUserRole(); },
+
   // 用户权限检查
   checkUserRole: function () {
     const app = getApp();
     // 使用同步存储作为回退，确保即使 app.globalData 未就绪也能获取角色
     const role = (app && app.globalData && app.globalData.role) || wx.getStorageSync('role') || 'user';
     const isMember = role === 'member' || role === 'leader' || role === 'admin';
-    const isLeader = role === 'leader' || role === 'admin';
+    const isLeader = (role === 'leader' || role === 'admin') && !memberStatus.isRetired();
 
     // 角色未变化时不 setData，避免每次切回本页都白白触发一次整页渲染
-    if (role !== this.data.role || isMember !== this.data.isMember || isLeader !== this.data.isLeader) {
+    if (role !== this.data.role || isMember !== this.data.isMember || isLeader !== this.data.isLeader || memberStatus.isRetired() !== this.data.readOnly) {
       this.setData({
         role: role,
         isMember: isMember,
-        isLeader: isLeader
+        isLeader: isLeader,
+        readOnly: memberStatus.isRetired()
       });
     }
 

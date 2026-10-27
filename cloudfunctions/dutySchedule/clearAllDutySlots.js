@@ -3,6 +3,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const { batchRemoveDutyEW } = require('./dutyEWManager')
+const { requireLeader } = require('./switchToWeek')
 
 /**
  * 带重试机制的单条记录删除
@@ -141,11 +142,8 @@ exports.clearAllDutySlots = async (event, openid) => {
       maxRetries: event.maxRetries 
     })
 
-    // TODO: 权限检查（确保只有组长可以执行删除）
-    if (!event.forceDelete) {
-      // const userResult = await checkLeaderPermission(openid)
-      console.log('[clearAllDutySlots] 权限检查通过（临时跳过）')
-    }
+    // forceDelete 不能绕过当前身份校验。
+    await requireLeader(openid)
 
     // 优化配置参数 - 更大批次，更快删除
     const batchSize = event.batchSize || 100  // 增大批次删除更多记录
@@ -358,7 +356,7 @@ exports.clearAllDutySlots = async (event, openid) => {
   } catch (err) {
     console.error('[clearAllDutySlots] 删除过程发生错误：', err)
     return {
-      code: 500,
+      code: typeof err.code === 'number' ? err.code : 500,
       data: null,
       message: err.message || '清除值班时间段失败'
     }

@@ -3,10 +3,12 @@ const loadingFeedback = require('../../../../utils/loading');
 const api = require('../../../../utils/apiAdapter');
 const iconManager = require('../../../../utils/iconManager');
 const time = require('../../../../utils/time');
+const memberStatus = require('../../../../utils/memberStatus');
 
 Page({
   behaviors: [require('../../../../utils/pageRefresh')],
   data: {
+    readOnly: false,
     // 加载状态
     confirming: false, confirmationMessage: '',
     isLoading: true,
@@ -58,6 +60,7 @@ Page({
   },
 
   onShow: function () {
+    this.setData({ readOnly: memberStatus.isRetired() });
     if (this._firstShow) { this._firstShow = false; return; }
     
     // 页面显示时重新获取数据，以确保数据最新，并确保用户时段与当前周一致
@@ -80,6 +83,7 @@ Page({
 
   // 初始化页面
   initPage: function () {
+    this.setData({ readOnly: memberStatus.isRetired() });
     // 权限检查：仅成员/组长可查看
     try {
       const app = getApp()
@@ -200,6 +204,7 @@ Page({
 
   // 值班格子点击事件
   onSlotTap: function (e) {
+    if (!memberStatus.canWrite()) return;
     if (this.data.confirming) return;
     const { rowIndex, colIndex } = e.currentTarget.dataset
     
@@ -490,6 +495,7 @@ Page({
   // 确认选择
   // 核对固定快照；云端确认仍负责锁、权限和最终结果。
   async confirmSelection() {
+    if (!memberStatus.canWrite()) return;
     if (this.data.confirming || !this.checkEditPermission()) return;
     const selected = [...this.data.selectedSlotsDisplay, ...(this.data.userSlots.preSelectedSlots || [])];
     const unique = selected.filter((slot,index) => selected.findIndex(other => other.dutySlotId === slot.dutySlotId) === index);
@@ -652,4 +658,4 @@ Page({
       })
     }
   }
-}) 
+})
