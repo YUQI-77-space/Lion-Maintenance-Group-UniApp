@@ -1,4 +1,4 @@
-/* 设计值：docs/知识库/Design/design-tokens.json v1.3.0。
+/* 设计值：docs/知识库/Design/design-tokens.json v1.3.1。
    页面全局接入；隔离组件显式导入并在根容器挂 mg-theme。 */
 page, .mg-theme {
   --mg-color-brand: #0369D7;
@@ -21,6 +21,7 @@ page, .mg-theme {
   --mg-color-warning-soft: #FFF4DE;
   --mg-color-danger: #B83232;
   --mg-color-danger-soft: #FDEEEE;
+  --mg-color-notification: #DC2626;
   --mg-color-info: #0250A3;
   --mg-color-info-soft: #F2F8FD;
   --mg-color-neutral: #526174;

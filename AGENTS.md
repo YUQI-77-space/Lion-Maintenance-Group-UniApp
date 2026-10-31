@@ -38,7 +38,7 @@
 | --- | --- |
 | `pages/startup/`、`pages/login/` | 登录守卫、预加载、注册登录 |
 | `pages/home/`、`pages/repair/` | 首页、特色活动与团队风采；报修向导与分类地图 |
-| `pages/team/`、`pages/user/` | 成员、值班、EWA、维修任务、志愿活动、手册/软件外链；个人资料、待办、消息、关于 |
+| `pages/team/`、`pages/user/` | 成员、值班、EWA、维修任务、志愿活动、手册外链；个人资料、待办、消息、关于 |
 | `custom-tab-bar/`、`components/` | 角色化 tab 与交互锁；公共组件、自研 Canvas 图表 |
 | `utils/apiAdapter.js`、`utils/router.js` | 云函数统一调用；路由、角色化导航与 tab 管理 |
 | `utils/outbox.js`、`utils/network.js`、`utils/swrCache.js` | 离线队列、网络监听与 SWR 缓存 |
