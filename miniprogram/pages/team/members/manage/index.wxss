@@ -2,16 +2,16 @@
 page { height: 100%; background: var(--mg-color-bg-page); color: var(--mg-color-text-primary); }
 .directory-page { height: 100vh; display: flex; flex-direction: column; }
 .directory-header { flex-shrink: 0; padding: 24rpx 28rpx 0; background: #fff; border-bottom: 1rpx solid var(--mg-color-bg-subtle); }
-.directory-count { flex-shrink: 0; margin-left: auto; color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); white-space: nowrap; }
-.reset-filters::after, .directory-retry::after { border: 0; }
-.directory-filters { display: flex; flex-wrap: wrap; gap: 0 8px; align-items: center; }
+.directory-filter-row { display: flex; align-items: flex-start; gap: 8px; }
+.directory-count { flex-shrink: 0; margin-left: auto; padding-top: 15px; color: var(--mg-color-text-muted); font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); white-space: nowrap; }
+.directory-retry::after { border: 0; }
+.directory-filters { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 0 8px; align-items: center; }
 .directory-picker { flex: 0 1 auto; min-width: 48px; padding: 8px 0; }
 .filter-chip { box-sizing: border-box; display: flex; align-items: center; gap: 12rpx; min-height: 32px; padding: 0 16rpx; border-radius: 14rpx; background: var(--mg-color-bg-page); color: var(--mg-color-text-muted); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
 .filter-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filter-active { background: var(--mg-color-info-soft); color: var(--mg-color-brand); }
 .filter-caret { position: relative; flex-shrink: 0; width: 12px; height: 12px; }
 .filter-caret::after { content: ''; position: absolute; top: 2px; left: 3px; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
-.reset-filters { flex-shrink: 0; min-width: 48px; min-height: 48px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--mg-color-brand); font-size: var(--mg-font-label); }
 .directory-list { flex: 1; height: 0; min-height: 0; }
 .directory-group { background: #fff; border: 1rpx solid var(--mg-color-bg-subtle); border-radius: 24rpx; margin: 24rpx 28rpx 0; padding: 0 28rpx; overflow: hidden; }
 .directory-member { display: flex; align-items: center; padding: 28rpx 0; min-height: 156rpx; border-bottom: 1rpx solid var(--mg-color-border); gap: 24rpx; }

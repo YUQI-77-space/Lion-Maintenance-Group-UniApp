@@ -6,7 +6,6 @@
   "usingComponents": {
     "skeleton-image": "/components/skeleton-image/index",
     "section-header": "/components/section-header/index",
-    "entry-item": "/components/entry-item/index",
     "loading-animation": "/components/loading-animation/index"
   },
   "disableScroll": true

@@ -24,7 +24,7 @@
   </view>
 
   <!-- ========== 快捷入口：独立圆角区域，不使用共用卡片底面 ========== -->
-  <view class="quick-actions entrance" style="animation-delay: 140ms;">
+  <view class="quick-actions entrance {{singleEntry ? 'is-single' : ''}}" style="animation-delay: 140ms;">
     <block wx:for="{{functionEntries}}" wx:key="id">
     <view class="quick-item {{item.primary ? 'primary' : ''}}"
           wx:if="{{!item.requireAuth || userRole !== 'user'}}"
@@ -33,6 +33,7 @@
           bindtap="onFunctionEntryTap">
       <image class="quick-icon" src="{{item.icon}}" mode="aspectFit"></image>
       <text class="quick-title">{{item.title}}</text>
+      <view class="quick-arrow" aria-hidden="true" />
     </view>
     </block>
   </view>

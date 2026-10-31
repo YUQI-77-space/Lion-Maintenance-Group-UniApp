@@ -20,7 +20,6 @@ Page({
   onEmployment(e) { this.setData({ employmentIndex: Number(e.detail.value) }); this.load(true); },
   onSearchConfirm() { clearTimeout(this._searchTimer); this.load(true); },
   clearSearch() { clearTimeout(this._searchTimer); this.setData({ keyword: '' }); this.load(true); },
-  resetFilters() { clearTimeout(this._searchTimer); this.setData({ departmentIndex: 0, roleIndex: 0, employmentIndex: 0 }); this.load(true); },
   resetSearch() { clearTimeout(this._searchTimer); this.setData({ keyword: '', departmentIndex: 0, roleIndex: 0, employmentIndex: 0 }); this.load(true); },
   onRefresherRefresh() { this.load(true); },
   onLoadMore() { if (this.data.hasMore && !this.data.loading && !this.data.loadingMore) this.load(false); },

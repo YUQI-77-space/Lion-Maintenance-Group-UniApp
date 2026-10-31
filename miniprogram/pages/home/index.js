@@ -72,6 +72,8 @@ Page({
 
     // ===== 今日工作台（仅呈现普通用户可见的信息） =====
     userRole: 'user',
+    // 可见入口只剩一个时（路人只有「我要报修」）改用行式布局，避免单个按钮被拉满整行
+    singleEntry: false,
 
     // 值班（此刻谁在值班 + 一周值班条）
     duty: null,
@@ -253,11 +255,7 @@ Page({
     });
   },
 
-
   // 触摸滑动切换页面
-
-
-
 
   // 轮播图数据初始化
   initSwiperImages: function() {
@@ -290,9 +288,6 @@ Page({
       }
     }, 100);
   },
-
-
-
 
   // 轮播图图片加载失败处理
   onImageError: function(e) {
@@ -357,14 +352,6 @@ Page({
   openRepairProgress(e) {
     const id = e.currentTarget.dataset.id;
     if (id) require('../../utils/router').navigateTo('/pages/user/todo/maintenance-detail/index', { taskId: id });
-  },
-
-  // 功能入口点击事件（兼容 entry-item 组件）
-  onEntryItemTap: function(e) {
-    const index = e.detail.index;
-    if (index !== undefined) {
-      this.onFunctionEntryTap({ currentTarget: { dataset: { index } } });
-    }
   },
 
   // 功能入口点击事件
@@ -435,6 +422,10 @@ Page({
     this._role = role;
 
     this.setData({ userRole: role });
+    // 入口可见性规则与 WXML 一致：requireAuth 的入口只对组内成员显示
+    this.setData({
+      singleEntry: this.data.functionEntries.filter(entry => !entry.requireAuth || role !== 'user').length === 1
+    });
 
     // 缓存只负责首帧不空白，数据新鲜度交给下面的补拉
     this.renderWidgetsFromCache();
@@ -613,8 +604,6 @@ Page({
     }
   },
 
-
-
   // 特色活动更多按钮
   onSpecialEventsMore: function() {
     wx.navigateTo({
@@ -640,7 +629,6 @@ Page({
       }
     });
   },
-
 
   // 初始化团队荣誉数据（首屏加载按网络自适应）
   initTeamHonors: function(isSlowNet) {
@@ -865,13 +853,6 @@ Page({
       });
     }
   },
-
-  // 荣誉图片点击（禁用预览）
-  onHonorTap: function(e) {
-    return;
-  },
-
-
 
   // 页面卸载时清理资源
   onUnload: function() {

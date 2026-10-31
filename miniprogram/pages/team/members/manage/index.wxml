@@ -1,11 +1,12 @@
 <view class="mg-theme mg-data-page directory-page">
   <view class="directory-header">
     <search-field value="{{keyword}}" placeholder="搜索昵称 / 输入完整学号" maxlength="40" bindinput="onSearch" bindconfirm="onSearchConfirm" bindclear="clearSearch" />
-    <view class="directory-filters">
-      <picker class="directory-picker" range="{{departments}}" value="{{departmentIndex}}" bindchange="onDepartment"><view class="filter-chip {{departmentIndex ? 'filter-active' : ''}}"><text class="filter-label">{{departments[departmentIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
-      <picker class="directory-picker" range="{{roles}}" value="{{roleIndex}}" bindchange="onRole"><view class="filter-chip {{roleIndex ? 'filter-active' : ''}}"><text class="filter-label">{{roles[roleIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
-      <picker class="directory-picker" range="{{employmentLabels}}" value="{{employmentIndex}}" bindchange="onEmployment" aria-label="在职状态筛选"><view class="filter-chip filter-active"><text class="filter-label">{{employmentLabels[employmentIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
-      <button wx:if="{{departmentIndex || roleIndex || employmentIndex}}" class="reset-filters" bindtap="resetFilters">重置</button>
+    <view class="directory-filter-row">
+      <view class="directory-filters">
+        <picker class="directory-picker" range="{{departments}}" value="{{departmentIndex}}" bindchange="onDepartment"><view class="filter-chip {{departmentIndex ? 'filter-active' : ''}}"><text class="filter-label">{{departments[departmentIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
+        <picker class="directory-picker" range="{{roles}}" value="{{roleIndex}}" bindchange="onRole"><view class="filter-chip {{roleIndex ? 'filter-active' : ''}}"><text class="filter-label">{{roles[roleIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
+        <picker class="directory-picker" range="{{employmentLabels}}" value="{{employmentIndex}}" bindchange="onEmployment" aria-label="在职状态筛选"><view class="filter-chip filter-active"><text class="filter-label">{{employmentLabels[employmentIndex]}}</text><view class="filter-caret" aria-hidden="true" /></view></picker>
+      </view>
       <text class="directory-count">{{loading ? '' : total + ' 位成员'}}</text>
     </view>
   </view>
