@@ -95,21 +95,6 @@ class SubscriptionAuth {
     return messages[scene] || '';
   }
 
-  // 显示授权说明弹窗
-  static async showAuthTip(message) {
-    return new Promise((resolve) => {
-      wx.showModal({
-        title: '消息通知授权',
-        content: message,
-        confirmText: '授权',
-        cancelText: '跳过',
-        success: (res) => {
-          resolve(res.confirm);
-        }
-      });
-    });
-  }
-
   // 分析授权结果统计
   static analyzeAuthResult(templateIds, authResult) {
     let acceptedCount = 0;
@@ -198,64 +183,6 @@ class SubscriptionAuth {
     }
   }
 
-  // 获取模板授权状态
-  static getAuthStatus(templateId) {
-    try {
-      const authData = wx.getStorageSync('subscription_auth') || {};
-      const templateAuth = authData[templateId];
-      
-      if (!templateAuth) {
-        return {
-          hasAuth: false,
-          status: 'unknown',
-          isExpired: true
-        };
-      }
-      
-      const now = Date.now();
-      const authTime = templateAuth.timestamp;
-      const isExpired = (now - authTime) > (7 * 24 * 60 * 60 * 1000);
-      
-      return {
-        hasAuth: templateAuth.status === 'accept',
-        status: templateAuth.status,
-        isExpired: isExpired,
-        scene: templateAuth.scene,
-        timestamp: authTime
-      };
-    } catch (error) {
-      return {
-        hasAuth: false,
-        status: 'error',
-        isExpired: true
-      };
-    }
-  }
-
-  // 清理过期的授权记录
-  static cleanExpiredAuth() {
-    try {
-      const authData = wx.getStorageSync('subscription_auth') || {};
-      const now = Date.now();
-      const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      
-      let hasChanges = false;
-      
-      Object.keys(authData).forEach(templateId => {
-        const auth = authData[templateId];
-        if (auth && (now - auth.timestamp) > sevenDays) {
-          delete authData[templateId];
-          hasChanges = true;
-        }
-      });
-      
-      if (hasChanges) {
-        wx.setStorageSync('subscription_auth', authData);
-      }
-    } catch (error) {
-    }
-  }
-
   // 预设授权方案
   static async requestApplicantAuth(scene = this.SCENES.REPAIR_SUBMIT, options = {}) {
     const templateIds = [
@@ -281,55 +208,6 @@ class SubscriptionAuth {
     ];
     
     return this.requestSubscribeMessage(templateIds, this.SCENES.VOLUNTEER_REGISTER, options);
-  }
-
-  // 获取授权统计信息
-  static getAuthStatistics() {
-    try {
-      const history = wx.getStorageSync('subscription_auth_history') || [];
-      const authData = wx.getStorageSync('subscription_auth') || {};
-      
-      let totalRequests = 0;
-      let totalAccepted = 0;
-      const sceneStats = {};
-      
-      history.forEach(record => {
-        totalRequests += record.templateIds.length;
-        totalAccepted += record.summary.acceptedCount;
-        
-        if (!sceneStats[record.scene]) {
-          sceneStats[record.scene] = {
-            requests: 0,
-            accepted: 0,
-            rejected: 0
-          };
-        }
-        
-        sceneStats[record.scene].requests += record.templateIds.length;
-        sceneStats[record.scene].accepted += record.summary.acceptedCount;
-        sceneStats[record.scene].rejected += record.summary.rejectedCount;
-      });
-      
-      return {
-        totalRequests,
-        totalAccepted,
-        totalRejected: totalRequests - totalAccepted,
-        acceptanceRate: totalRequests > 0 ? (totalAccepted / totalRequests * 100).toFixed(1) : 0,
-        currentActiveAuth: Object.keys(authData).length,
-        sceneStats,
-        lastRequestTime: history.length > 0 ? history[0].timestamp : null
-      };
-    } catch (error) {
-      return {
-        totalRequests: 0,
-        totalAccepted: 0,
-        totalRejected: 0,
-        acceptanceRate: 0,
-        currentActiveAuth: 0,
-        sceneStats: {},
-        lastRequestTime: null
-      };
-    }
   }
 }
 

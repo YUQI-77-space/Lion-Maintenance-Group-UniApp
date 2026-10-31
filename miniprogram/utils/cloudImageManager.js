@@ -19,9 +19,7 @@ class CloudImageManager {
       // 团队风采
       teamSpirit: this.cloudStorageBase + 'team_spirit/',
       // 团队荣誉 (已统一到主存储桶)
-      teamHonors: this.cloudStorageBase + 'team_honors/',
-      // 通用插画资源
-      illustrations: this.cloudStorageBase + 'illustrations/'
+      teamHonors: this.cloudStorageBase + 'team_honors/'
     };
 
     // 首页图片资源配置
@@ -70,56 +68,6 @@ class CloudImageManager {
     // 通用临时URL缓存
     this.tempUrlCache = new Map();
     this.tempUrlCacheTTL = 30 * 60 * 1000; // 30分钟
-  }
-
-  /**
-   * 获取插画资源URL
-   * @param {string} fileName - 文件名 (包含扩展名)
-   * @param {string} category - 分类 ('illustrations')
-   * @returns {string} 完整的云存储URL
-   */
-  getIllustrationUrl(fileName, category = 'illustrations') {
-    if (!this.imagePaths[category]) {
-      console.warn(`未知的插画分类: ${category}`);
-      return '';
-    }
-    return this.imagePaths[category] + fileName;
-  }
-
-  /**
-   * 批量获取插画资源URL
-   * @param {Array<string>} fileNames - 文件名数组
-   * @param {string} category - 分类
-   * @returns {Array<Object>} 包含id和url的对象数组
-   */
-  getIllustrationUrls(fileNames, category = 'illustrations') {
-    return fileNames.map((fileName, index) => ({
-      id: index + 1,
-      fileName: fileName,
-      url: this.getIllustrationUrl(fileName, category)
-    }));
-  }
-
-  /**
-   * 通用插画资源获取
-   * @param {string} sceneName - 场景名称
-   * @returns {string} 插画URL
-   */
-  getGeneralIllustration(sceneName) {
-    const generalIllustrations = {
-      // 加载中
-      loading: this.getIllustrationUrl('loading.png', 'illustrations'),
-      // 网络错误
-      networkError: this.getIllustrationUrl('network-error.png', 'illustrations'),
-      // 数据为空
-      noData: this.getIllustrationUrl('no-data.png', 'illustrations'),
-      // 权限不足
-      noPermission: this.getIllustrationUrl('no-permission.png', 'illustrations'),
-      // 操作成功
-      success: this.getIllustrationUrl('success.png', 'illustrations')
-    };
-
-    return generalIllustrations[sceneName] || '';
   }
 
   /**
@@ -253,20 +201,6 @@ class CloudImageManager {
   }
 
   /**
-   * 获取默认占位图片
-   * @param {string} type - 占位图类型 ('loading', 'error', 'empty')
-   * @returns {string} 占位图片路径
-   */
-  getPlaceholderImage(type = 'loading') {
-    const placeholders = {
-      loading: '/images/placeholders/loading.png',
-      error: '/images/placeholders/error.png',
-      empty: '/images/placeholders/empty.png'
-    };
-    return placeholders[type] || placeholders.loading;
-  }
-
-  /**
    * 构建顺序图片列表
    * @param {string} basePath - 图片基础路径
    * @param {number} startIndex - 开始序号
@@ -387,56 +321,6 @@ class CloudImageManager {
     const config = this.homeImageConfig.teamHonors;
     const safeCount = Math.min(parseInt(count, 10) || config.initialLoadCount, config.total);
     return this.getHomeTeamHonorsRange(1, safeCount);
-  }
-
-  /**
-   * 获取首页团队荣誉分批加载图片
-   * @param {number} startIndex - 起始序号
-   * @param {number} batchSize - 批次大小
-   * @returns {Array<Object>} 图片列表
-   */
-  getHomeTeamHonorsBatch(startIndex, batchSize) {
-    const config = this.homeImageConfig.teamHonors;
-    const safeBatchSize = Math.max(parseInt(batchSize, 10) || config.batchSize, 1);
-    const start = Math.max(parseInt(startIndex, 10) || 1, 1);
-    const end = start + safeBatchSize - 1;
-    return this.getHomeTeamHonorsRange(start, end);
-  }
-
-  /**
-   * 获取详情页面图片配置
-   * @param {string} pageType - 页面类型 ('specialEvents' 或 'teamSpirit')
-   * @returns {{total: number, pageSize: number}} 配置对象
-   */
-  getDetailPageImageConfig(pageType) {
-    const config = this.detailPageImageConfig[pageType];
-    if (!config) {
-      console.warn(`未知的详情页面类型: ${pageType}`);
-      return { total: 0, pageSize: 12 };
-    }
-    return {
-      total: config.total,
-      pageSize: config.pageSize
-    };
-  }
-
-  /**
-   * 获取详情页面全部图片列表
-   * @param {string} pageType - 页面类型 ('specialEvents' 或 'teamSpirit')
-   * @returns {Array<Object>} 图片列表
-   */
-  getDetailPageAllImages(pageType) {
-    const config = this.detailPageImageConfig[pageType];
-    if (!config) {
-      console.warn(`未知的详情页面类型: ${pageType}`);
-      return [];
-    }
-    return this._buildSequentialImageList(
-      config.basePath,
-      1,
-      config.total,
-      config.defaultExtension
-    );
   }
 
   /**

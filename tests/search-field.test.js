@@ -59,10 +59,9 @@ test('志愿活动清空不回退到旧关键词，重置分页且保留状态�
   assert.equal(page.data.activities.length, 0);
   assert.equal(count, 1);
 });
-test('维修任务与功能页清空恢复原列表，保留业务筛选', () => {
+test('维修任务清空恢复原列表，保留业务筛选', () => {
   for (const [file, clear, source, target] of [
-    ['pages/team/maintenance/manage/index.js', 'clearSearchInput', 'originalFilteredTasks', 'filteredTasks'],
-    ['pages/team/home/more/index.js', 'clearSearch', 'allFunctions', 'functions']
+    ['pages/team/maintenance/manage/index.js', 'clearSearchInput', 'originalFilteredTasks', 'filteredTasks']
   ]) {
     const page = load(file);
     const items = [{ id: 'example' }];

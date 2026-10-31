@@ -302,7 +302,6 @@ Page({
           }
         );
 
-        
         // 优化：快速切换到撤销操作，减少加载状态切换的视觉延迟
         loadingFeedback.show({ title: '处理中...' });
         
@@ -386,8 +385,6 @@ Page({
     return { title: '维修任务详情', path: '/pages/user/todo/maintenance-detail/index?taskId=' + this.data.taskId };
   },
 
-
-
   // 复制QQ号
   copyQQ: function(e) {
     const qq = e.currentTarget.dataset.qq;
@@ -407,28 +404,6 @@ Page({
 
   // 阻止事件穿透（弹窗遮罩使用）
   noop() {},
-
-
-
-  /**
-   * 通知个人资料页面刷新用户信息
-   */
-  notifyProfilePageRefresh() {
-    try {
-      // 设置全局刷新标志
-      const app = getApp();
-      if (app.globalData) {
-        app.globalData.needRefreshProfile = true;
-        
-        // 如果有个人资料页面的刷新回调，立即调用
-        if (app.globalData.profileRefreshCallback) {
-          app.globalData.profileRefreshCallback();
-        }
-      }
-    } catch (error) {
-      console.error('通知个人资料页面刷新失败:', error);
-    }
-  },
 
   /**
    * 处理任务完成后的操作

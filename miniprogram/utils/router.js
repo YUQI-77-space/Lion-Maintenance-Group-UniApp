@@ -326,68 +326,6 @@ const teamRouter = {
   },
   toHome() {
     switchTab(ROUTES.TEAM.HOME);
-  },
-  
-  toMaintenanceList() {
-    navigateTo(ROUTES.TEAM.MAINTENANCE.LIST);
-  },
-  
-  toMaintenanceDetail(id) {
-    navigateTo(ROUTES.TEAM.MAINTENANCE.DETAIL, { id });
-  },
-  
-  toMaintenanceManage(checkLeaderPermission = true) {
-    if (checkLeaderPermission) {
-      checkPermission('leader', () => {
-        navigateTo(ROUTES.TEAM.MAINTENANCE.MANAGE);
-      });
-    } else {
-      navigateTo(ROUTES.TEAM.MAINTENANCE.MANAGE);
-    }
-  },
-  
-  toVolunteerList() {
-    navigateTo(ROUTES.TEAM.VOLUNTEER.LIST);
-  },
-  
-  toVolunteerDetail(id) {
-    navigateTo(ROUTES.TEAM.VOLUNTEER.DETAIL, { id });
-  },
-  
-  toVolunteerCreate(checkLeaderPermission = true) {
-    if (checkLeaderPermission) {
-      checkPermission('leader', () => {
-        navigateTo(ROUTES.TEAM.VOLUNTEER.CREATE);
-      });
-    } else {
-      navigateTo(ROUTES.TEAM.VOLUNTEER.CREATE);
-    }
-  },
-  
-  toVolunteerManage(checkLeaderPermission = true) {
-    if (checkLeaderPermission) {
-      checkPermission('leader', () => {
-        navigateTo(ROUTES.TEAM.VOLUNTEER.MANAGE);
-      });
-    } else {
-      navigateTo(ROUTES.TEAM.VOLUNTEER.MANAGE);
-    }
-  },
-  
-  toEwaManage(checkLeaderPermission = true) {
-    if (checkLeaderPermission) {
-      checkPermission('leader', () => {
-        navigateTo(ROUTES.TEAM.EWA.MANAGE);
-      });
-    } else {
-      navigateTo(ROUTES.TEAM.EWA.MANAGE);
-    }
-  }
-};
-
-const repairRouter = {
-  toRepair() {
-    switchTab(ROUTES.REPAIR);
   }
 };
 
@@ -403,7 +341,6 @@ module.exports = {
   userRouter,
   loginRouter,
   teamRouter,
-  repairRouter,
   switchTab,
   isTabSwitching,
   getTabOrder,

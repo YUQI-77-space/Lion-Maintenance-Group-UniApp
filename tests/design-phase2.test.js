@@ -51,8 +51,8 @@ test('全部规定色彩组合达到对比度要求', () => {
   }
 });
 
-test('六页显式接入、组件隔离内自带 Token；阶段3后全局使用同一 Token', () => {
-  const pages = ['user/about', 'home/team-spirit', 'home/special-events', 'team/home/more', 'team/manual', 'team/software'];
+test('保留内容页显式接入、组件隔离内自带 Token；阶段3后全局使用同一 Token', () => {
+  const pages = ['user/about', 'home/team-spirit', 'home/special-events', 'team/manual'];
   for (const page of pages) {
     const sheet = read(`pages/${page}/index.wxss`);
     assert.match(sheet, /@import "\/styles\/design-primitives.wxss"/);

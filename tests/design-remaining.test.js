@@ -80,13 +80,74 @@ test('TabBar 连点只切一次，完成后释放锁，非法路径不导航', (
   assert.equal(router.isTabSwitching(),false);
 });
 
-test('entry-item 只分发原事件，不直接跳转', () => {
-  const { instance } = harness('components/entry-item/index.js');
-  const events=[]; instance.triggerEvent=(...args)=>events.push(args);
-  instance.data.path='/pages/repair/index'; instance.data.itemIndex=2;
-  instance.onTap({});
-  assert.equal(events[0][0],'tap');
-  assert.equal(events[0][1].index,2);
+test('首页原生入口保留跳转与成员权限，非法索引不导航', () => {
+  for (const role of ['user', 'member', 'leader', 'admin']) {
+    const routes = [], modals = [];
+    const { instance } = harness('pages/home/index.js', {
+      app: { globalData: { role } },
+      wx: { showModal: value => modals.push(value) },
+      modules: { '../../utils/router': { navigateTo: route => routes.push(route) } }
+    });
+    const tap = index => instance.onFunctionEntryTap({ currentTarget: { dataset: { index } } });
+    tap(-1);
+    tap(0);
+    tap(1);
+    assert.deepEqual(routes, role === 'user'
+      ? ['/pages/repair/index']
+      : ['/pages/repair/index', '/pages/team/duty/roster/index']);
+    assert.equal(modals.length, role === 'user' ? 1 : 0);
+  }
+});
+
+test('维修组首页保留日常、管理与手册外链，入口按角色展示', () => {
+  for (const role of ['user', 'member', 'leader', 'admin']) {
+    const modals = [], copied = [], routes = [];
+    const { instance } = harness('pages/team/home/index.js', {
+      app: { globalData: { role } },
+      modules: {
+        '../../../utils/memberStatus': { isRetired: () => false },
+        '../../../config/linkConfig': { team_manual: 'https://example.invalid/manual' },
+        '../../../utils/router': { navigateTo: route => routes.push(route) }
+      },
+      wx: { showModal: value => modals.push(value), setClipboardData: value => copied.push(value.data) }
+    });
+    instance.onLoad({});
+    assert.equal(instance.data.isMember, role !== 'user');
+    assert.equal(instance.data.isLeader, role === 'leader' || role === 'admin');
+    assert.equal(instance.data.dailyFunctions.length, 4);
+    assert.equal(instance.data.manageFunctions.length, 5);
+    const manual = instance.data.dailyFunctions.find(item => item.id === 'manual');
+    instance.navigateTo({ currentTarget: { dataset: { link: manual.link } } });
+    modals.at(-1).success();
+    assert.deepEqual(copied, ['https://example.invalid/manual']);
+    assert.equal(routes.length, 0);
+    const task = instance.data.dailyFunctions.find(item => item.id === 'maintenance');
+    instance.navigateTo({ currentTarget: { dataset: { path: task.path } } });
+    assert.deepEqual(routes, ['/pages/team/maintenance/list/index']);
+  }
+});
+
+test('值班当前编辑权限开关继续调用原接口，连点只写一次', async () => {
+  const pending = deferred();
+  const { instance, calls } = harness('pages/team/duty/manage/index.js', { call: () => pending.promise });
+  instance.data.configData = { currentWeek: 8, isEditingEnabled: true };
+  let invoked = 0;
+  const original = instance.performEditPermissionToggle;
+  const promises = [];
+  instance.performEditPermissionToggle = function () { invoked++; promises.push(original.call(this)); };
+  instance.onEditPermissionSwitchChange({ detail: { value: true } });
+  assert.equal(invoked, 0);
+  instance.onEditPermissionSwitchChange({ detail: { value: false } });
+  instance.onEditPermissionSwitchChange({ detail: { value: false } });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].name, 'dutySchedule');
+  assert.equal(calls[0].payload.action, 'updateDutyConfig');
+  assert.equal(calls[0].payload.params.configType, 'isEditingEnabled');
+  assert.equal(calls[0].payload.params.value, false);
+  assert.equal(calls[0].payload.config.retries, 0);
+  pending.resolve({ success: true });
+  await Promise.all(promises);
+  assert.equal(instance._dutyWriting, false);
 });
 
 test('我的首次 onLoad/onShow 只刷新一批资料与反馈；不重复提交未变计数', () => {
@@ -213,8 +274,10 @@ test('下拉 EWA 只读，不执行重算；管理保存取消不写接口', asy
   await instance.saveUserEW();assert.equal(calls.length,0);assert.equal(instance.data.savingEW,false);
 });
 
-test('移除统计后其余注册路由完整，样式导入均可解析', () => {
-  const app=JSON.parse(read('app.json'));assert.equal(app.pages.length,30);
+test('移除统计、软件与更多页后其余注册路由完整，样式导入均可解析', () => {
+  const app=JSON.parse(read('app.json'));assert.equal(app.pages.length,28);
+  assert.ok(!app.pages.includes('pages/team/software/index'));
+  assert.ok(!app.pages.includes('pages/team/home/more/index'));
   for (const page of app.pages) for (const ext of ['js','json','wxml','wxss']) assert.ok(fs.existsSync(path.resolve('miniprogram',page+'.'+ext)));
   function walk(dir) { return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory() && !['images','config','node_modules'].includes(entry.name) ? walk(path.join(dir,entry.name)) : entry.isFile() ? [path.join(dir,entry.name)] : []); }
   for (const file of walk(path.resolve('miniprogram'))) {
@@ -320,8 +383,11 @@ test('EWA 刷新排队后只展示和缓存最后结果，移除搜索参数', a
   const first=deferred(); const writes=[];
   const {instance,calls}=harness('pages/team/ewa/manage/index.js',{
     wx:{setStorageSync:(key,value)=>writes.push(value)},
+    modules:{'../../../../utils/memberStatus':{isRetired:()=>false}},
     call:async(name,payload)=>payload.params.pageSize===30?first.promise:{success:true,data:{list:[{ewaUserId:'new',totalEW:2}],total:1}}
   });
+  // 页面在 onLoad 通过权限校验后才拉取；本用例只验证刷新排队，直接置为已授权
+  instance.data.hasPermission=true;
   const initial=instance.fetchUsers({pageSize:30});
   await instance.fetchUsers({pageSize:100});
   first.resolve({success:true,data:{list:[{ewaUserId:'old',totalEW:1}],total:1}});

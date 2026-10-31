@@ -79,8 +79,6 @@ Page({
     this._pendingFetch = null;
   },
 
-  preventMove() {},
-
   /** 无权限时回到上一页 */
   goBack() {
     wx.navigateBack({ delta: 1 })
@@ -120,8 +118,7 @@ Page({
     // 修复权限验证逻辑：role和userInfo是分别存储的
     const app = getApp()
     const role = app.globalData.role || wx.getStorageSync('role') || 'user'
-    
-    
+
     if ((role === 'leader' || role === 'admin') && !memberStatus.isRetired()) {
       this.setData({ hasPermission: true })
       

@@ -2,7 +2,6 @@
 <!-- 自定义导航栏 -->
 <view class="custom-navbar" style="padding-top: {{statusBarHeight}}px;">
   <view class="navbar-content" style="height: {{navbarContentHeight}}px; padding-right: {{navbarRight}}px;">
-    <!-- <image class="navbar-logo" src="/images/icons/logo.png" mode="aspectFit"></image> -->
     <image class="navbar-logo" src="{{iconLogo}}" mode="aspectFit"></image>
     <text class="navbar-title">物科院维修组</text>
   </view>
@@ -43,6 +42,4 @@
 
 </view>
 
-<!-- 装饰猪猪图标 - 放置在页面下方空白区域 -->
-<!-- <image class="pig-decoration" src="/images/icons/pig.png" mode="aspectFit" />  -->
 <loading-overlay id="global-loading" />

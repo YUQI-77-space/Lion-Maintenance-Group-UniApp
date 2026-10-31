@@ -151,8 +151,6 @@ Page({
 
   // 处理值班数据
   processDutyData: function (data) {
-    
-    
 
     // 检查周数是否发生变化，如果变化则清空预选状态
     this.checkAndClearIfWeekChanged(data.weekNumber, data.year)
@@ -178,8 +176,6 @@ Page({
     // 保证用户时段与新周一致（避免出现底部仍显示旧周的情况）
     this.loadUserDutySlots({ weekNumber: data.weekNumber, year: data.year })
 
-    
-    
   },
 
   // 生成周日期范围文本
@@ -207,7 +203,6 @@ Page({
     if (!memberStatus.canWrite()) return;
     if (this.data.confirming) return;
     const { rowIndex, colIndex } = e.currentTarget.dataset
-    
 
     // 首先检查编辑权限
     if (!this.checkEditPermission()) {
@@ -217,8 +212,6 @@ Page({
     // 获取对应的时间段数据
     const timeSlotData = this.data.tableData[rowIndex]
     const slotData = timeSlotData.dailySlots[colIndex]
-
-    
 
     if (!slotData.canSelect) {
       // 不可选择的格子
@@ -246,20 +239,6 @@ Page({
   retryLoadData: function () {
     
     this.loadDutyData()
-  },
-
-  // 跳转到值班管理页面（仅组长可见）
-  goToManagePage: function () {
-    try {
-      const app = getApp()
-      if (app && typeof app.checkPermission === 'function' && app.checkPermission('leader')) {
-        wx.navigateTo({ url: '/pages/team/duty/manage/index' })
-      } else {
-        wx.showToast({ title: '仅组长可进入管理', icon: 'none' })
-      }
-    } catch (e) {
-      wx.navigateTo({ url: '/pages/team/duty/manage/index' })
-    }
   },
 
   // ========== 预选功能相关方法 ==========
@@ -337,9 +316,7 @@ Page({
     }
     
     const selectedSlotsDisplay = [...this.data.selectedSlotsDisplay, slotDisplayInfo]
-    
-    
-    
+
     this.setData({
       selectedSlots: selectedSlots,
       selectedSlotsDisplay: selectedSlotsDisplay
@@ -358,9 +335,7 @@ Page({
   removeSlotFromSelection: function (slotId) {
     const selectedSlots = this.data.selectedSlots.filter(id => id !== slotId)
     const selectedSlotsDisplay = this.data.selectedSlotsDisplay.filter(slot => slot.dutySlotId !== slotId)
-    
-    
-    
+
     this.setData({
       selectedSlots: selectedSlots,
       selectedSlotsDisplay: selectedSlotsDisplay
@@ -384,8 +359,7 @@ Page({
     
     // 检查编辑权限是否开启
     const isEditingEnabled = configData?.isEditingEnabled !== false
-    
-    
+
     // 更新表格数据
     const updatedTableData = tableData.map(timeSlotRow => {
       return {

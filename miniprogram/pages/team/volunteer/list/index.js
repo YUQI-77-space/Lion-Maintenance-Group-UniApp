@@ -177,17 +177,7 @@ Page({
     this.setData(delays);
   },
 
-  // 仅播放一次的入场动画
-  playEnterAnimationOnce: function() {
-    if (this._playedEnterAnimation) return;
-    const hasData = Array.isArray(this.data.activities) && this.data.activities.length > 0;
-    if (!hasData) return;
-    this._playedEnterAnimation = true;
-    this.triggerCardAnimation(0);
-  },
-
   // 切换后在后台预取其它状态第一页，优化后续切换体验（不改变现有逻辑）
-
 
   /**
    * 统一处理活动衍生字段，确保缓存与实时加载表现一致
@@ -321,8 +311,6 @@ Page({
     }
   },
 
-
-
   /**
    * 跳转到活动详情页
    */
@@ -332,10 +320,6 @@ Page({
       url: `/pages/team/volunteer/detail/index?id=${activityId}`
     })
   },
-
-
-
-
 
   /**
    * 格式化日期

@@ -31,17 +31,6 @@ page { background: var(--mg-color-bg-page); }
   margin-top: 10rpx;
 }
 
-.team-slogan {
-  font-size: var(--mg-font-label);
-  color: var(--primary-color);
-  font-weight: 600;
-  margin-top: 20rpx;
-  padding: 15rpx 20rpx;
-  background: linear-gradient(to right, rgba(58, 117, 251, 0.05), rgba(255, 255, 255, 0.8));
-  border-left: 8rpx solid var(--primary-color);
-  border-radius: 8rpx;
-}
-
 .section {
   margin-bottom: 40rpx;
   background-color: var(--card-background);
@@ -62,21 +51,6 @@ page { background: var(--mg-color-bg-page); }
 .section-title {
   font-size: var(--mg-font-section); line-height: var(--mg-line-section);
   font-weight: 600;
-}
-
-.more-btn {
-  font-size: var(--mg-font-label);
-  color: var(--primary-color);
-  padding: 8rpx 16rpx;
-  border: 1px solid var(--primary-color);
-  border-radius: 20rpx;
-  background-color: rgba(58, 117, 251, 0.05);
-  transition: all 0.2s ease;
-}
-
-.more-btn:active {
-  background-color: var(--primary-color);
-  color: white;
 }
 
 .function-grid {
@@ -103,32 +77,6 @@ page { background: var(--mg-color-bg-page); }
   line-height: var(--mg-line-label);
   color: var(--text-main);
 }
-
-/* 开发者信息样式 */
-.developer-info {
-  position: fixed;
-  bottom: 20rpx;
-  right: 30rpx;
-  font-size: var(--mg-font-caption);
-  color: var(--warning-color);
-  font-family: 'KaiTi', '楷体', serif; /* 楷体 */
-  opacity: 0.8;
-}
-
-/* 装饰猪猪图标 - 放置在页面下方空白区域 */
-.pig-decoration {
-  position: fixed;
-  bottom: 138rpx; /* 在底部导航栏上方 */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300rpx;
-  height: 300rpx;
-  opacity: 0.8; /* 提高透明度，让猪猪颜色更接近原图 */
-  z-index: 999; /* 确保在最上层 */
-  pointer-events: none; /* 不阻挡其他元素的点击 */
-  transition: all 0.3s ease;
-}
-
 
 .function-item { min-height: 48px; min-width: 0; padding: 24rpx 8rpx; }
 .function-name { text-align: center; overflow-wrap: break-word; }

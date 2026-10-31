@@ -241,27 +241,6 @@ App({
 		identity.notifyIdentityChanged(this);
 	},
 
-	// 登录检查和导航
-	checkLoginAndNavigate: async function() {
-		try {
-			const registered = await this.verifyUserAccountRemotely(2000);
-			if (registered) {
-				console.log('账号验证通过，允许进入系统');
-				return;
-			}
-			console.log('未检测到注册账号，跳转注册/登录页');
-			wx.reLaunch({
-				url: '/pages/login/index',
-				fail: (err) => {
-					console.error('跳转登录页失败:', err);
-				}
-			});
-		} catch (e) {
-			console.error('检查登录状态出错:', e);
-			wx.reLaunch({ url: '/pages/login/index' });
-		}
-	},
-
 	// 远程验证是否存在注册账号（单航班 + 短TTL，不改变业务行为）
 	verifyUserAccountRemotely: async function(timeoutMs) {
 		try {
@@ -668,8 +647,6 @@ App({
 			try { fn(payload); } catch (e) { console.error(`[App] 事件处理异常 ${eventName}:`, e); }
 		}
 	},
-
-
 
 	globalData: {
 		userInfo: null,

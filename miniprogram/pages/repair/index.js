@@ -159,7 +159,6 @@ Page({
     this.loadEmergencyContacts();
   },
 
-
   onShow() {
     this.setData({ readOnly: require('../../utils/memberStatus').isRetired() });
     const currentUser = getApp().globalData.userInfo || {};
@@ -264,9 +263,6 @@ Page({
       errorField: ''
     };
   },
-
-
-
 
   initAppointmentDate() {
     const earliestTime = computeEarliestAppointmentTime();
@@ -764,8 +760,6 @@ Page({
     return fields.map(field => ({ ...field, value: this.data[field.key] || '' }));
   },
 
-
-  
   async submitRepair() {
     if (!require('../../utils/memberStatus').canWrite()) return;
     if (this.data.submitting || this.data.submitUnknown || this.data.currentStep !== 4) return;
@@ -952,10 +946,6 @@ Page({
       tempState: {}, submittedTaskId: '', submitMessage: ''
     }, this.specialFieldResetPatch()));
     this.initAppointmentDate();
-  },
-
-  goToHome() {
-    require('../../utils/router').userRouter.toProfile();
   },
 
   goToCategoryMap() {

@@ -93,24 +93,14 @@ test('关于页：四个复制值与既有处理保持一致，每次点击只�
   assert.deepEqual(calls, values.map(value => ['copy', value]));
 });
 
-test('更多功能：搜索／清除与单次跳转保留，四级角色原拦截不变', () => {
+test('手册说明页保留四级角色访问边界', () => {
   for (const role of ['user', 'member', 'leader', 'admin']) {
-    for (const type of ['daily', 'manage']) {
-      const { page, calls } = loadPage('pages/team/home/more/index', role);
-      page.onLoad({ type });
-      page.onShow();
-      const blocked = role === 'user' || (type === 'manage' && role === 'member');
-      assert.equal(calls.filter(call => call[0] === 'modal').length, blocked ? 1 : 0);
-      if (blocked) continue;
-      page.onSearchInput({ detail: { value: '维修任务' } });
-      assert.equal(page.data.functions.length, 1);
-      const target = page.data.functions[0].path;
-      page.navigateTo({ currentTarget: { dataset: { path: target } } });
-      assert.deepEqual(calls.filter(call => call[0] === 'navigate'), [['navigate', target]]);
-      page.onSearchInput({ detail: { value: '不存在的功能' } });
-      assert.equal(page.data.functions.length, 0);
-      page.clearSearch();
-      assert.equal(page.data.functions.length, type === 'daily' ? 5 : 4);
+    const { page, calls } = loadPage('pages/team/manual/index', role);
+    page.onLoad({});
+    assert.equal(calls.filter(call => call[0] === 'modal').length, role === 'user' ? 1 : 0);
+    if (role === 'user') {
+      calls[0][1].success({ confirm: true });
+      assert.equal(calls.filter(call => call[0] === 'back').length, 1);
     }
   }
 });

@@ -171,7 +171,6 @@ class ActivityStatusManager {
       return activities;
     }
 
-    
     // 批量更新过期状态（但不要影响用户体验，异步处理）
     this.batchUpdateOutdatedStatus(outdatedActivities);
     
@@ -194,55 +193,7 @@ class ActivityStatusManager {
       console.error('[批量状态同步] 失败:', error);
     }
   }
-  
-  /**
-   * 获取状态筛选条件的统计信息
-   * @param {Array} activities 活动列表
-   * @returns {Object} 统计信息
-   */
-  static getStatusStatistics(activities) {
-    if (!activities || !Array.isArray(activities)) {
-      return {
-        total: 0,
-        inPreparation: 0,
-        inProgress: 0,
-        ended: 0
-      };
-    }
-    
-    const stats = {
-      total: activities.length,
-      inPreparation: 0,
-      inProgress: 0,
-      ended: 0
-    };
-    
-    activities.forEach(activity => {
-      const status = activity.activityStatus || activity.displayStatus;
-      if (stats.hasOwnProperty(status)) {
-        stats[status]++;
-      }
-    });
-    
-    return stats;
-  }
-  
-  /**
-   * 根据状态筛选活动列表
-   * @param {Array} activities 活动列表
-   * @param {string} statusFilter 状态筛选条件
-   * @returns {Array} 筛选后的活动列表
-   */
-  static filterActivitiesByStatus(activities, statusFilter) {
-    if (!activities || !Array.isArray(activities) || !statusFilter || statusFilter === 'all') {
-      return activities;
-    }
-    
-    return activities.filter(activity => {
-      const status = activity.activityStatus || activity.displayStatus;
-      return status === statusFilter;
-    });
-  }
+
 }
 
 /**

@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "更多功能",
-  "usingComponents": {
-    "search-field": "/components/search-field/index"
-  }
-}

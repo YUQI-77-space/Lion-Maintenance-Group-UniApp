@@ -18,8 +18,6 @@ Page({
     iconCalendar: iconManager.get('team_calendar'),
     iconSwitch: iconManager.get('other_switch'),
     iconTools: iconManager.get('other_info'),
-    iconLock: iconManager.get('status_lock'),
-    iconUnlock: iconManager.get('status_unlock'),
     iconTime: iconManager.get('other_time'),
 
     // 简化的周次切换相关数据
@@ -30,10 +28,7 @@ Page({
     
     // 重置确认相关数据
     showResetConfirmModal: false,
-    // 编辑权限切换相关数据
-    showEditPermissionModal: false,
-    permissionActionText: '',
-    
+
     // 删除功能相关数据
     isDeleteMode: false,
     selectedSlots: [],
@@ -133,8 +128,7 @@ Page({
 
   // 初始化页面
   initPage: function () {
-    
-    
+
     // TODO: 检查组长权限
     this.loadCurrentConfig()
     this.loadDutyTableData()
@@ -287,8 +281,7 @@ Page({
 
   // 显示简化的日期选择器
   showSimpleDatePicker: function () {
-    
-    
+
     // 设置默认日期
     const currentDate = new Date()
     const year = currentDate.getFullYear()
@@ -333,7 +326,6 @@ Page({
 
   // 处理选择的日期
   handleDateSelected: function (selectedDate) {
-    
 
     // 验证日期格式
     if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
@@ -585,8 +577,7 @@ Page({
 
   // 显示简化的重置确认
   showSimpleResetConfirm: function () {
-    
-    
+
     if (!this.data.configData?.currentWeek) {
       wx.showToast({
         title: '当前周次未设置',
@@ -610,8 +601,7 @@ Page({
 
   // 确认重置
   confirmReset: function () {
-    
-    
+
     this.setData({
       showResetConfirmModal: false
     })
@@ -675,49 +665,6 @@ Page({
         showCancel: false
       });
     }
-  },
-
-  // ============ 简化的编辑权限切换功能 ============
-
-  // 显示简化的权限切换
-  showSimplePermissionToggle: function () {
-    
-    
-    if (!this.data.configData?.currentWeek) {
-      wx.showToast({
-        title: '当前周次未设置',
-        icon: 'none'
-      })
-      return
-    }
-    
-    const currentEnabled = this.data.configData.isEditingEnabled
-    const actionText = currentEnabled ? '关闭' : '开启'
-    
-    this.setData({
-      showEditPermissionModal: true,
-      permissionActionText: actionText
-    })
-  },
-
-  // 取消编辑权限切换
-  cancelEditPermissionToggle: function () {
-    
-    this.setData({
-      showEditPermissionModal: false,
-      permissionActionText: ''
-    })
-  },
-
-  // 确认编辑权限切换
-  confirmEditPermissionToggle: function () {
-    
-    
-    this.setData({
-      showEditPermissionModal: false
-    })
-    
-    this.performEditPermissionToggle()
   },
 
   // 执行编辑权限切换操作
@@ -830,8 +777,6 @@ Page({
 
   // 处理表格数据
   processTableData: function (data) {
-    
-    
 
     // 处理表格数据，为每个时间段添加删除相关属性
     const processedTableData = data.tableData.map((timeSlotData, rowIndex) => {
@@ -890,7 +835,6 @@ Page({
       deletePreviewList: []
     })
 
-    
   },
 
   // 生成周日期范围文本
@@ -1153,7 +1097,6 @@ Page({
       return;
     }
 
-
     this.setData({ 
       showDeleteConfirmModal: false,
       isLoading: true,
@@ -1214,4 +1157,4 @@ Page({
       });
     }
   }
-}) 
+})

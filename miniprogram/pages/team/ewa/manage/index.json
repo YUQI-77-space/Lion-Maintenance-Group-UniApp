@@ -8,7 +8,6 @@
   "usingComponents": {
     "avatar-display": "../../../../components/avatar-display/index",
     "loading-animation": "/components/loading-animation/index",
-    "section-header": "/components/section-header/index",
     "action-modal": "/components/action-modal/index"
   },
   "disableScroll": true
