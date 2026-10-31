@@ -6,7 +6,7 @@
 .avatar-small { width: var(--mg-size-avatar-sm); height: var(--mg-size-avatar-sm); }
 .avatar-medium { width: var(--mg-size-avatar-md); height: var(--mg-size-avatar-md); }
 .avatar-large { width: var(--mg-size-avatar-lg); height: var(--mg-size-avatar-lg); }
-/* 兼容已有 xlarge 属性值；当前无页面消费者，不在阶段 2 删除。 */
+/* 个人身份卡使用 xlarge 突出头像。 */
 .avatar-xlarge { width: 200rpx; height: 200rpx; }
 .with-border { border: var(--mg-border-width) solid var(--mg-color-border); }
 .avatar-image { position: absolute; top: 0; left: 0; display: block; width: 100%; height: 100%; border-radius: inherit; }

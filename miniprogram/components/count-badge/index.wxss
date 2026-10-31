@@ -1,0 +1,17 @@
+@import "../../styles/design-tokens.wxss";
+
+.count-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--mg-color-on-brand);
+  background: var(--mg-color-notification);
+  font-size: var(--mg-font-caption);
+  font-weight: var(--mg-weight-semibold);
+  line-height: 1;
+}

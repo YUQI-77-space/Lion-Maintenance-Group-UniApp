@@ -8,18 +8,16 @@
 </view>
 
 <view class="profile-page" style="padding-top: {{navBarHeight}}px; padding-bottom: {{tabbarHeight + 16}}px;">
-  <!-- 沉浸式头部区域 -->
+  <!-- 个人身份卡：头像、姓名、身份纵向居中 -->
   <view class="profile-header">
-    <!-- 暗纹背景 -->
-    <view class="header-pattern"></view>
-    
-<!-- 用户信息区域 -->
+    <image class="profile-background" src="/assets/backgrounds/profile-mist.svg" mode="scaleToFill" aria-hidden="true" />
+    <!-- 用户信息区域 -->
     <view class="header-user">
       <view class="avatar-container">
         <avatar-display 
           userInfo="{{userInfo}}" 
           openid="{{userInfo.openid}}"
-          size="large"
+          size="xlarge"
           showBorder="{{true}}"
           customClass="profile-avatar"
         />
@@ -38,7 +36,6 @@
       </view>
       <button class="logout-button" size="mini" hover-class="logout-pressed" bindtap="logout" aria-label="退出登录">
         <image class="logout-icon" src="{{iconLogout}}" mode="aspectFit" aria-hidden="true" />
-        <text>退出登录</text>
       </button>
     </view>
     
@@ -57,8 +54,8 @@
             <view class="item-desc">{{item.id === 'todo' ? '查看和管理任务' : (item.id === 'message' ? '查看通知消息' : '了解维修组')}}</view>
           </view>
           <!-- 计数徽章：箭头左侧显示 -->
-          <view class="item-badge" wx:if="{{item.id === 'todo' && todoCount > 0}}">{{todoCount > 99 ? '99+' : todoCount}}</view>
-          <view class="item-badge" wx:if="{{item.id === 'message' && unreadMessageCount > 0}}">{{unreadMessageCount > 99 ? '99+' : unreadMessageCount}}</view>
+          <count-badge wx:if="{{item.id === 'todo'}}" count="{{todoCount}}" label="待办事项" />
+          <count-badge wx:if="{{item.id === 'message'}}" count="{{unreadMessageCount}}" label="未读消息" />
           <image class="item-arrow" src="{{iconArrowRight}}" mode="aspectFit" />
         </view>
       </block>

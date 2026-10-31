@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="520" viewBox="0 0 750 520" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="blue" gradientUnits="userSpaceOnUse" cx="25" cy="20" r="440" gradientTransform="translate(25 20) scale(1 0.9) translate(-25 -20)">
+      <stop stop-color="#A5D3FF" stop-opacity="0.85"/>
+      <stop offset="0.45" stop-color="#D5E9FF" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#EAF4FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pink" gradientUnits="userSpaceOnUse" cx="740" cy="70" r="330">
+      <stop stop-color="#F5D7E8" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FDF0F6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="violet" gradientUnits="userSpaceOnUse" cx="720" cy="520" r="470" gradientTransform="translate(720 520) scale(1 0.85) translate(-720 -520)">
+      <stop stop-color="#C9B9F4" stop-opacity="0.85"/>
+      <stop offset="0.5" stop-color="#E9E0FC" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#F4EFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="white" gradientUnits="userSpaceOnUse" cx="365" cy="245" r="300" gradientTransform="translate(365 245) scale(0.85 1) translate(-365 -245)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="#FFFFFF" d="M0 0h750v520H0z"/>
+  <path fill="url(#blue)" d="M0 0h750v520H0z"/>
+  <path fill="url(#pink)" d="M0 0h750v520H0z"/>
+  <path fill="url(#violet)" d="M0 0h750v520H0z"/>
+  <path fill="url(#white)" d="M0 0h750v520H0z"/>
+</svg>

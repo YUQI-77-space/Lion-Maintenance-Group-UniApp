@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "backgroundColor": "#F5F7FA",
   "usingComponents": {
+    "count-badge": "../../../components/count-badge/index",
     "avatar-display": "../../../components/avatar-display/index",
     "feedback-modal": "../../../components/feedback-modal/index"
   },
