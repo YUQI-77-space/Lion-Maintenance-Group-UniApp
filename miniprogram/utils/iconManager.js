@@ -13,6 +13,19 @@
 
 const iconConfig = require('../config/icons');
 
+// 全项目沿用原有语义名，统一使用随代码发布的手绘 SVG。
+const TEAM_ICONS = {
+  team_calendar: 'duty',
+  team_maintenance: 'maintenance',
+  team_volunteer: 'volunteer',
+  team_manual: 'manual',
+  manage_duty: 'duty-manage',
+  manage_maintenance: 'maintenance-manage',
+  manage_volunteer: 'volunteer-manage',
+  manage_ewa: 'ewa-manage',
+  manage_members: 'members-manage'
+};
+
 class IconManager {
   constructor() {
     this._currentSet = iconConfig.currentSet;
@@ -27,8 +40,7 @@ class IconManager {
    * @returns {string} 图标的完整路径
    */
   getIcon(name, options = {}) {
-    // 组员管理使用随代码发布的矢量图，避免依赖本地忽略的媒体配置。
-    if (name === 'manage_members') return '/assets/icons/members.svg';
+    if (Object.prototype.hasOwnProperty.call(TEAM_ICONS, name)) return `/assets/icons/team/${TEAM_ICONS[name]}.svg`;
     if (name === 'common_logout') return '/assets/icons/logout.svg';
     const type = options.type || 'icon';
     const cacheKey = `${this._currentSet}:${name}:${type}`;

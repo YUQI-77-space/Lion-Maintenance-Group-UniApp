@@ -103,6 +103,7 @@ page {
 }
 
 .type-chip {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   padding: 12rpx 22rpx;
   border: 1rpx solid rgba(0, 0, 205, 0.25);
   border-radius: 999rpx;

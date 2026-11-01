@@ -148,55 +148,18 @@ Page({
       .finally(() => {
         this.setData({ refresherTriggered: false });
         this.updateAllPendingCounts();
-        this.triggerCardAnimation(this.data.activeCategory, 0);
       });
   },
 
-  /**
-   * 触发指定分类的卡片入场动画
-   * type: 'maintenance' | 'volunteer' | 'duty'
-   * startIndex: 从第几张开始动画
-   */
-  triggerCardAnimation: function(type, startIndex = 0) {
-    let tasks;
-    switch (type) {
-      case 'maintenance':
-        tasks = this.data.maintenanceTasks;
-        break;
-      case 'volunteer':
-        tasks = this.data.volunteerTasks;
-        break;
-      case 'duty':
-        tasks = this.data.dutyTasks;
-        break;
-      default:
-        return;
-    }
-
-    if (!tasks || tasks.length === 0) return;
-
-    // 防御：钳制到合法范围，避免拼出 xxxDelays[-N] 这类非法 data path。
-    if (startIndex < 0) startIndex = 0;
-    if (startIndex >= tasks.length) return;
-
-    // 如果不是从头开始，保留已有的动画状态
-    if (startIndex === 0) {
-      this._animatedCount = 0;
-    } else {
-      this._animatedCount = this._animatedCount || 0;
-    }
-
-    // 为每一张卡片设置动画延迟
-    const endIndex = tasks.length;
+  // 生成卡片入场延迟（依次入场）
+  // 必须与卡片列表在同一次 setData 中下发：先渲染终态再补动画类会让卡片闪一下再跳到起始位置。
+  buildCardDelays: function(startIndex = 0, total = 0) {
+    const begin = Math.max(0, startIndex);
     const delays = {};
-    const delayKey = type + 'Delays';
-    for (let i = startIndex; i < endIndex; i++) {
-      const delay = (i - startIndex) * 100; // 每张卡片延迟 100ms
-      delays[`${delayKey}[${i}]`] = delay;
+    for (let i = begin; i < total; i++) {
+      delays[i] = (i - begin) * 180; // 每张卡片延迟 180ms，逐条入场节奏更分明
     }
-
-    // 设置延迟数据，触发动画
-    this.setData(delays);
+    return delays;
   },
 
   // 加载维修任务待办
@@ -210,9 +173,9 @@ Page({
         params: { type: 'maintenance', userId: openid }
       });
       if (result.success) {
-        this.setData({ maintenanceTasks: result.data || [] });
+        const maintenanceTasks = result.data || [];
+        this.setData({ maintenanceTasks, maintenanceDelays: this.buildCardDelays(0, maintenanceTasks.length) });
         this.calculatePendingMaintenanceCount();
-        this.triggerCardAnimation('maintenance', 0);
       } else {
         this.setData({ 'loadErrors.maintenance': result.message || '维修待办加载失败' });
       }
@@ -235,9 +198,9 @@ Page({
         params: { type: 'volunteer', userId: openid }
       });
       if (result.success) {
-        this.setData({ volunteerTasks: result.data || [] });
+        const volunteerTasks = result.data || [];
+        this.setData({ volunteerTasks, volunteerDelays: this.buildCardDelays(0, volunteerTasks.length) });
         this.calculatePendingVolunteerCount();
-        this.triggerCardAnimation('volunteer', 0);
       } else {
         this.setData({ 'loadErrors.volunteer': result.message || '加载失败，请重试' });
       }
@@ -258,9 +221,8 @@ Page({
       });
       if (result.success) {
         const processedDutyTasks = this.processDutyTasksStatus(result.data || []);
-        this.setData({ dutyTasks: processedDutyTasks });
+        this.setData({ dutyTasks: processedDutyTasks, dutyDelays: this.buildCardDelays(0, processedDutyTasks.length) });
         this.calculatePendingDutyCount();
-        this.triggerCardAnimation('duty', 0);
       } else {
         this.setData({ 'loadErrors.duty': result.message || '加载失败，请重试' });
       }

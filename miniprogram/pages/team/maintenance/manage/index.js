@@ -140,34 +140,16 @@ onRefresherRefresh: function() {
     this.filterTasksByStatus(tab);
   },
 
-  // 触发卡片入场动画（依次入场）
-  // startIndex: 从第几张开始动画（用于加载更多场景）
-  triggerCardAnimation: function(startIndex = 0) {
-    const tasks = this.data.filteredTasks;
-    if (!tasks || tasks.length === 0) return;
-
-    // 防御：startIndex 可能因筛选/搜索导致为负，或超过列表长度，
-    // 统一钳制到合法范围，避免拼出 cardDelays[-N] 这类非法 data path。
-    if (startIndex < 0) startIndex = 0;
-    if (startIndex >= tasks.length) return;
-
-    // 如果不是从头开始，保留已有的动画状态
-    if (startIndex === 0) {
-      this._animatedCount = 0;
-    } else {
-      this._animatedCount = this._animatedCount || 0;
-    }
-
-    // 为每一张卡片设置动画延迟
-    const endIndex = tasks.length;
+  // 生成卡片入场延迟（依次入场）
+  // 必须与卡片列表在同一次 setData 中下发：先渲染终态再补动画类会让卡片闪一下再跳到起始位置。
+  // startIndex: 从第几张开始计入（加载更多时传旧列表长度）
+  buildCardDelays: function(startIndex = 0, total = 0) {
+    const begin = Math.max(0, startIndex);
     const delays = {};
-    for (let i = startIndex; i < endIndex; i++) {
-      const delay = (i - startIndex) * 100; // 每张卡片延迟 100ms
-      delays[`cardDelays[${i}]`] = delay;
+    for (let i = begin; i < total; i++) {
+      delays[i] = (i - begin) * 180; // 每张卡片延迟 180ms，逐条入场节奏更分明
     }
-
-    // 设置延迟数据，触发动画
-    this.setData(delays);
+    return delays;
   },
 
   // 加载维修任务列表（SWR缓存 + 显式加载提示 + 防抖）
@@ -268,11 +250,9 @@ onRefresherRefresh: function() {
             hasMore,
             page: this.data.page + 1
           });
-          this.filterTasksByStatus(this.data.activeTab);
-          // 以「筛选后列表」的旧有边界作为新卡片动画起点；
+          // 以「筛选后列表」的旧有边界作为新卡片入场起点；
           // 兼容筛选/搜索导致的新增数量与 newTasks.length 不一致的情况，避免负索引。
-          const startIndex = Math.max(0, Math.min(prevFilteredCount, this.data.filteredTasks.length));
-          this.triggerCardAnimation(startIndex);
+          this.filterTasksByStatus(this.data.activeTab, prevFilteredCount);
         } else {
           this.setData({ hasMore: false });
         }
@@ -288,7 +268,8 @@ onRefresherRefresh: function() {
   },
 
   // 根据状态过滤任务
-  filterTasksByStatus: function(status) {
+  // animateFrom: 不传表示整列重新入场；传入时只让该下标之后的新卡片入场
+  filterTasksByStatus: function(status, animateFrom) {
     let filteredTasks = [];
 
     // 根据选项卡状态筛选任务
@@ -301,15 +282,19 @@ onRefresherRefresh: function() {
     const ordered = filteredTasks
       .sort((a, b) => (time.toDate(b.createTime) || 0) - (time.toDate(a.createTime) || 0));
 
+    const begin = typeof animateFrom === 'number'
+      ? Math.max(0, Math.min(animateFrom, ordered.length))
+      : 0;
+
     this.setData({
       filteredTasks: ordered,
-      originalFilteredTasks: ordered // 保存原始筛选结果，用于重置搜索
+      originalFilteredTasks: ordered, // 保存原始筛选结果，用于重置搜索
+      cardDelays: { ...this.data.cardDelays, ...this.buildCardDelays(begin, ordered.length) }
     }, () => {
       const keyword = (this.data.searchKeyword || '').trim();
       if (keyword) {
         this.applySearchFilter(keyword, { silent: true });
       }
-      this.triggerCardAnimation(0);
     });
   },
 
@@ -343,8 +328,10 @@ onRefresherRefresh: function() {
   applySearchFilter: function(keyword, options = {}) {
     const trimmed = (keyword || '').trim().toLowerCase();
     if (!trimmed) {
+      const restored = this.data.originalFilteredTasks || [];
       this.setData({
-        filteredTasks: this.data.originalFilteredTasks
+        filteredTasks: restored,
+        cardDelays: this.buildCardDelays(0, restored.length)
       });
       return null;
     }
@@ -362,7 +349,8 @@ onRefresherRefresh: function() {
     });
 
     this.setData({
-      filteredTasks: searchResults
+      filteredTasks: searchResults,
+      cardDelays: this.buildCardDelays(0, searchResults.length)
     }, () => {
       if (!options.silent) {
         wx.showToast({
@@ -371,7 +359,6 @@ onRefresherRefresh: function() {
           duration: 1500
         });
       }
-      this.triggerCardAnimation(0);
     });
   },
 

@@ -488,6 +488,18 @@ App({
 		}
 	},
 
+	// 已确认的消息结果直接同步，避免写操作被查询 TTL 拦截；版本阻止旧查询回写。
+	updateUnreadMessageCount: function(count, openid = this.globalData.openid) {
+		if (!openid || openid !== this.globalData.openid || !Number.isInteger(count) || count < 0) return;
+		this._unreadRevision = (this._unreadRevision || 0) + 1;
+		this._lastUnreadAt = Date.now();
+		this._lastUnreadVal = count;
+		if (count !== this.globalData.unreadMessageCount) {
+			this.globalData.unreadMessageCount = count;
+			if (this.globalData.messageUpdateCallback) this.globalData.messageUpdateCallback(count);
+		}
+	},
+
 	// 获取未读消息数（TTL + 单航班 + 仅变化时更新）
 	getUnreadMessageCount: async function() {
 		const openid = this.globalData.openid;
@@ -496,6 +508,7 @@ App({
 		const TTL = 10 * 1000;
 		if (this._unreadPromise) return;
 		if ((this._lastUnreadAt || 0) && now - this._lastUnreadAt < TTL) return;
+		const revision = this._unreadRevision || 0;
 		this._unreadPromise = (async () => {
 			try {
 				const res = await api.call('messages', {
@@ -503,16 +516,10 @@ App({
 					params: { messageUserId: openid }
 				});
 				if (res.success && res.data) {
+					if (openid !== this.globalData.openid || revision !== (this._unreadRevision || 0)) return;
 					const { messages = [] } = res.data || {};
 					const unreadCount = messages.filter(msg => !msg.isRead).length;
-					this._lastUnreadAt = Date.now();
-					if (unreadCount !== (this._lastUnreadVal || 0)) {
-						this._lastUnreadVal = unreadCount;
-						this.globalData.unreadMessageCount = unreadCount;
-						if (this.globalData.messageUpdateCallback) {
-							this.globalData.messageUpdateCallback(unreadCount);
-						}
-					}
+					this.updateUnreadMessageCount(unreadCount, openid);
 				} else {
 					console.error('获取消息失败:', res && res.message);
 				}

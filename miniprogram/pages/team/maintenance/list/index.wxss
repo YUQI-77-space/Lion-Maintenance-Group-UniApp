@@ -81,38 +81,21 @@
 /* 卡片入场动画 - 默认隐藏 */
 .task-card {
   display: flex;
+  align-items: stretch;
   background-color: var(--card-background);
   border-radius: 10rpx;
   margin-bottom: 20rpx;
-  padding: 20rpx;
+  padding: 0;
+  /* 不裁剪子元素：撕口半圆要压在卡片描边上，裁剪会让描边从缺口上方划过去 */
   box-shadow: var(--box-shadow);
   border: 1rpx solid var(--border-light);
   position: relative;
-  /* 默认隐藏状态 */
-  opacity: 0;
-  transform: translateX(80rpx) translateZ(0);
   transform-origin: center top;
   transition: transform 0.2s ease-in-out;
 }
 
-/* 卡片入场动画 */
-.task-card.card-animate {
-  animation: cardSlideIn 0.6s cubic-bezier(0.25, 0, 0.1, 1) forwards;
-}
-
 .task-card.card-animate:active {
   transform: scale(0.98) translateZ(0);
-}
-
-@keyframes cardSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(80rpx) translateZ(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateZ(0);
-  }
 }
 
 .status-indicator { display: none; }
@@ -120,6 +103,173 @@
 .task-info {
   flex: 1;
   min-width: 0;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   票根认领：右侧虚线撕拉区
+   纸质票根只在「待受理」出现，撕下即认领；
+   「进行中／已完成」保留撕痕；只读待受理与已取消保留静态票根。
+   ============================================ */
+.ticket-stub {
+  position: relative;
+  flex: 0 0 96rpx;
+  width: 96rpx;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* 底色交给卡片本身：票根透明才能让撕口半圆与页面对齐，圆角只作用于自身按下态 */
+  background-color: transparent;
+  border-left: 2rpx dashed var(--mg-color-border);
+  border-radius: 0 10rpx 10rpx 0;
+}
+
+/* 撕口半圆：与页面底色同色，圆心压在卡片描边上，上半在卡外与页面同色、
+   下半在卡内形成缺口，从而把描边“咬断”，不再是贴在里面的一枚圆点 */
+.ticket-stub::before,
+.ticket-stub::after {
+  content: '';
+  position: absolute;
+  left: -13rpx;
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background-color: var(--mg-color-bg-subtle);
+  z-index: 3;
+}
+.ticket-stub::before { top: -12rpx; }
+.ticket-stub::after { bottom: -12rpx; }
+
+.ticket-stub--claimable:active {
+  background-color: var(--mg-color-info-soft);
+}
+
+/* 历史终态和只读票根不承载操作，也不呈现按钮按下态。 */
+.ticket-stub--inactive .stub-label {
+  color: var(--mg-color-neutral);
+}
+
+.stub-paper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 竖排「认领」：两个字符独立成行，避免依赖 writing-mode */
+.stub-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+  color: var(--mg-color-brand);
+  font-size: var(--mg-font-label);
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* 撕拉蒙层：页面底色自票根顶部向下生长，模拟纸面被撕走 */
+.stub-tear {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  /* 自身裁掉溢出的锯齿：卡片不再 overflow 裁剪，锯齿留在蒙层内才不会垂到卡外 */
+  overflow: hidden;
+  /* 底部留出锯齿带宽度的透明区，纸面从锯齿空隙里透出来，边界才是毛边 */
+  background: linear-gradient(to bottom, var(--mg-color-bg-subtle) 0, var(--mg-color-bg-subtle) calc(100% - 18rpx), rgba(238, 241, 245, 0) calc(100% - 18rpx));
+  z-index: 1;
+  pointer-events: none;
+}
+/* 未开始撕拉时完全不参与绘制：否则高度为 0 的锯齿会留在票根顶部 */
+.ticket-stub.is-tearing .stub-tear { display: block; }
+
+/* 撕裂口：锯齿三角（颜色与页面底色一致）压在蒙层下沿，形成毛边 */
+.stub-tear::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18rpx;
+  /* 锯齿与页面底色 --mg-color-bg-subtle（#EEF1F5）一致，改动底色调需同步此处 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'%3E%3Cpath d='M0 0 L3 15 L6 1 L9 16 L12 2 L15 14 L18 0 Z' fill='%23EEF1F5'/%3E%3C/svg%3E");
+  background-size: 18rpx 18rpx;
+  background-repeat: repeat-x;
+  /* 撕口下方的极浅投影，让毛边有厚度 */
+  filter: drop-shadow(0 2rpx 2rpx rgba(24, 34, 48, 0.12));
+}
+
+/* 撕痕：撕完后只留虚线缺口与极淡的票根轮廓 */
+.stub-ghost {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background-color: var(--mg-color-bg-subtle);
+  border-left: 2rpx dashed var(--mg-color-border);
+  box-sizing: border-box;
+  /* 只留撕痕一侧的虚线，左侧加内阴影表示纸面已被抽走 */
+  box-shadow: inset 8rpx 0 10rpx -6rpx rgba(24, 34, 48, 0.08);
+}
+.stub-ghost.is-visible { opacity: 1; }
+
+/* 撕拉时序：纸面自顶部被撕走 460ms，标签与撕痕同步收敛 */
+.ticket-stub.is-tearing .stub-tear {
+  animation: ticket-tear-wipe 460ms cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+}
+.ticket-stub.is-tearing .stub-paper {
+  animation: ticket-tear-paper 460ms ease-in forwards;
+}
+.ticket-stub.is-tearing .stub-label {
+  animation: ticket-tear-label 260ms ease-out forwards;
+}
+.ticket-stub.is-tearing .stub-ghost {
+  animation: ticket-tear-ghost 460ms ease-out forwards;
+}
+.ticket-stub.is-tearing .stub-ghost.is-visible { opacity: 1; }
+
+@keyframes ticket-tear-wipe {
+  from { height: 0; }
+  to { height: 100%; }
+}
+@keyframes ticket-tear-paper {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(6rpx); }
+}
+@keyframes ticket-tear-label {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.86); }
+}
+@keyframes ticket-tear-ghost {
+  0%, 55% { opacity: 0; }
+  100% { opacity: 1; }
+}
+/* 减少动效：不做撕拉过程，直接呈现撕痕 */
+@media (prefers-reduced-motion: reduce) {
+  .ticket-stub.is-tearing .stub-tear,
+  .ticket-stub.is-tearing .stub-paper,
+  .ticket-stub.is-tearing .stub-label,
+  .ticket-stub.is-tearing .stub-ghost { animation: none; }
+  .ticket-stub.is-tearing .stub-paper,
+  .ticket-stub.is-tearing .stub-label { opacity: 0; }
+  .ticket-stub.is-tearing .stub-tear { height: 100%; }
+  .ticket-stub.is-tearing .stub-ghost { opacity: 1; }
 }
 
 .task-header {
@@ -157,23 +307,24 @@
   margin-bottom: 10rpx;
 }
 
-.task-meta {
+/* 标签独占卡片最后一行，靠左对齐 */
+.task-footer {
   display: flex;
   align-items: center;
-  margin-bottom: 10rpx;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: 10rpx;
 }
 
 .management-tag {
-  background-color: transparent;
-  color: var(--mg-color-brand);
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
+  
+  background-color: var(--mg-color-info-soft);
+  color: var(--mg-color-info);
   font-size: var(--mg-font-caption);
-  padding: 4rpx 10rpx;
-  border-radius: 12rpx;
-  margin-right: 10rpx;
+  line-height: var(--mg-line-caption);
+  padding: 2rpx 12rpx;
+  border-radius: var(--mg-radius-tag);
   font-weight: 500;
-  flex-shrink: 0;
-  border: 1rpx solid var(--mg-color-brand);
 }
 
 .appointment-time {
@@ -198,14 +349,6 @@
   color: var(--success-color);
 }
 
-.task-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 0;
-  padding: 12rpx 0 0;
-}
-
 .task-status {
   padding: 6rpx 14rpx;
   border-radius: 20rpx;
@@ -227,29 +370,6 @@
 .inProgress-card { border-color: var(--maintenance-inProgress-color); }
 .completed-card { border-color: var(--maintenance-completed-color); }
 .cancelled-card { border-color: var(--maintenance-cancelled-color); }
-
-/* 认领按钮样式 */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  font-size: var(--mg-font-body);
-  padding: 10rpx 32rpx;
-  border-radius: 999rpx;
-  line-height: 1.2;
-  border: 1rpx solid;
-  margin: 0;
-  transition: all 0.3s ease;
-  color: #fff;
-}
-
-.btn-claim {
-  border-color: var(--mg-color-brand);
-  background-color: var(--mg-color-brand);
-}
-
-.btn:active { transform: scale(0.97); }
 
 /* 无任务提示 */
 .no-task {

@@ -99,31 +99,12 @@
   margin-bottom: 20rpx;
   box-shadow: var(--box-shadow);
   border: 1rpx solid var(--border-light);
-  /* 默认隐藏状态 */
-  opacity: 0;
-  transform: translateX(80rpx) translateZ(0);
   transform-origin: center top;
   transition: transform 0.2s ease-in-out;
 }
 
-/* 卡片入场动画 */
-.activity-card.card-animate {
-  animation: cardSlideIn 0.6s cubic-bezier(0.25, 0, 0.1, 1) forwards;
-}
-
 .activity-card.card-animate:active {
   transform: scale(0.98) translateZ(0);
-}
-
-@keyframes cardSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(80rpx) translateZ(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateZ(0);
-  }
 }
 
 /* 初始加载状态样式 */

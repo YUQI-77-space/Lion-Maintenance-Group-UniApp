@@ -1,0 +1,43 @@
+/* 维修详情操作按钮：按本次确认统一实底白字，动作仅以颜色和文字区分。 */
+.maintenance-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.maintenance-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 224rpx;
+  min-width: 48px;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--mg-radius-control);
+  font-size: var(--mg-font-body);
+  font-weight: var(--mg-weight-medium);
+  line-height: var(--mg-line-body);
+  text-align: center;
+  color: var(--mg-color-on-brand);
+  background-color: #000000;
+}
+
+.maintenance-action--claim {
+  background-color: var(--mg-color-brand);
+}
+
+.maintenance-action--delete {
+  background-color: var(--mg-color-danger);
+}
+
+.maintenance-action:active {
+  opacity: 0.85;
+}
+
+.maintenance-action--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

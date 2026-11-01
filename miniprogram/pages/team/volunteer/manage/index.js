@@ -239,8 +239,14 @@ Page(Object.assign({
       if (!result.success) throw new Error(result.message || '活动读取失败');
       const raw = result.data && result.data.activities || [];
       const rows = this.addCountdownToPendingActivities(ActivityStatusManager.processActivitiesForDisplay(raw));
+      const animateStartIndex = page === 1 ? 0 : this.data.activities.length;
       const merged = page === 1 ? rows : [...this.data.activities, ...rows.filter(row => !this.data.activities.some(old => old.activityId === row.activityId))];
-      this.setData({ activities: merged, page: page + 1, hasMore: result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : rows.length >= this.data.pageSize });
+      this.setData({
+        activities: merged,
+        page: page + 1,
+        hasMore: result.data && typeof result.data.hasMore === 'boolean' ? result.data.hasMore : rows.length >= this.data.pageSize,
+        cardDelays: { ...this.data.cardDelays, ...this.buildCardDelays(animateStartIndex, merged.length) }
+      });
       swr.set(cacheKey, rows, 60);
     } catch (error) {
       if (generation === this._readGeneration) this.setData({ loadError: error.message || '加载失败，原内容已保留' });
@@ -491,10 +497,10 @@ Page(Object.assign({
       page: 1,
       hasMore: true,
       activities: [],
+      cardDelays: {},
       initialLoading: false
     });
     this.getActivitiesList();
-    this.triggerCardAnimation(0);
   },
 
   // scroll-view 下拉刷新
@@ -504,33 +510,16 @@ Page(Object.assign({
     });
   },
 
-  // 触发卡片入场动画（依次入场）
-  // startIndex: 从第几张开始动画（用于加载更多场景）
-  triggerCardAnimation: function(startIndex = 0) {
-    const activities = this.data.activities;
-    if (!activities || activities.length === 0) return;
-
-    // 防御：钳制到合法范围，避免拼出 cardDelays[-N] 这类非法 data path。
-    if (startIndex < 0) startIndex = 0;
-    if (startIndex >= activities.length) return;
-
-    // 如果不是从头开始，保留已有的动画状态
-    if (startIndex === 0) {
-      this._animatedCount = 0;
-    } else {
-      this._animatedCount = this._animatedCount || 0;
-    }
-
-    // 为每一张卡片设置动画延迟
-    const endIndex = activities.length;
+  // 生成卡片入场延迟（依次入场）
+  // 必须与卡片列表在同一次 setData 中下发：先渲染终态再补动画类会让卡片闪一下再跳到起始位置。
+  // startIndex: 从第几张开始计入（加载更多时传旧列表长度）
+  buildCardDelays: function(startIndex = 0, total = 0) {
+    const begin = Math.max(0, startIndex);
     const delays = {};
-    for (let i = startIndex; i < endIndex; i++) {
-      const delay = (i - startIndex) * 100; // 每张卡片延迟 100ms
-      delays[`cardDelays[${i}]`] = delay;
+    for (let i = begin; i < total; i++) {
+      delays[i] = (i - begin) * 180; // 每张卡片延迟 180ms，逐条入场节奏更分明
     }
-
-    // 设置延迟数据，触发动画
-    this.setData(delays);
+    return delays;
   },
 
   /**

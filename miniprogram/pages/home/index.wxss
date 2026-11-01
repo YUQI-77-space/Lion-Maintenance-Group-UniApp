@@ -299,6 +299,7 @@
 
 /* 状态药丸：沿用维修任务的状态色 */
 .todo-status {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   flex-shrink: 0;
   font-size: var(--mg-font-caption);
   font-weight: 500;
@@ -356,6 +357,10 @@
 }
 
 .todo-item-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: var(--mg-line-caption);
   flex-shrink: 0;
   padding: 12rpx 30rpx;
   font-size: var(--mg-font-caption);

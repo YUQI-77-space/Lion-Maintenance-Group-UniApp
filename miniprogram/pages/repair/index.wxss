@@ -137,7 +137,9 @@ page {
 
 /* ==================== 按钮 ==================== */
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 36rpx;
   height: 84rpx;
   line-height: 80rpx;
@@ -633,6 +635,7 @@ page {
 }
 
 .chip {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   padding: 10rpx 22rpx;
   border-radius: 999rpx;
   background: #f2f3f6;

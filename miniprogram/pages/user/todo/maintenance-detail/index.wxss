@@ -3,6 +3,7 @@
    维修任务详情 - 白卡 + 细边框 + 状态色点缀
    风格与「我的消息」列表保持一致：克制的色彩、清晰的信息层级 */
 @import "/styles/variables.wxss";
+@import "/styles/maintenance-actions.wxss";
 
 .page {
   min-height: 100vh;
@@ -106,6 +107,7 @@
 }
 
 .tag-soft {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   margin-left: 12rpx;
   padding: 2rpx 12rpx;
   border-radius: 999rpx;
@@ -255,6 +257,7 @@
 }
 
 .role-tag {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   flex-shrink: 0;
   margin-left: 16rpx;
   padding: 0;
@@ -291,8 +294,6 @@
   right: 0;
   bottom: 0;
   z-index: 20;
-  display: flex;
-  gap: 20rpx;
   padding: 20rpx 24rpx 24rpx;
   background: rgba(255, 255, 255, 0.96);
   border-top: 1rpx solid var(--mg-color-border);

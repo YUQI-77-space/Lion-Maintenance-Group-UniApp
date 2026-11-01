@@ -4,6 +4,9 @@ const SubscriptionAuth = require('../../../../utils/subscriptionAuth');
 const swr = require('../../../../utils/swrCache');
 const time = require('../../../../utils/time');
 
+// 撕拉动画时长，与 index.wxss 中 ticket-tear-wipe 的 460ms 保持一致
+const TICKET_TEAR_MS = 460;
+
 const STATUS_MAP = {
   pending: '待受理',
   inProgress: '进行中',
@@ -44,13 +47,21 @@ Page({
     hasMore: true,
     loadingMore: false,
     // 卡片入场动画延迟（毫秒）
-    cardDelays: {}
+    cardDelays: {},
+    // 已点击认领、正在播放撕拉动画的任务；与 WXSS 的 460ms 时序一致
+    tornTaskIds: {}
   },
 
   onLoad(options) {
     this.setData({ role: app.globalData.role || 'user', animateCards: false, page: 1, hasMore: true });
     this._isFirstLoad = true;
+    this._pageDestroyed = false;
     this.loadMaintenanceTasks(true);
+  },
+
+  onUnload() {
+    // 标注页面已销毁：认领结果返回后不再写已销毁页面的 data
+    this._pageDestroyed = true;
   },
 
   retryList() { return this.data.appendFailed ? this.loadMoreTasks() : this.loadMaintenanceTasks(true); },
@@ -138,9 +149,8 @@ Page({
           hasMore,
           page: 2,
           loading: false,
-          cardDelays: {}
+          cardDelays: this.buildCardDelays(0, tasks.length)
         });
-        this.triggerCardAnimation();
         swr.set(cacheKey, tasks, TTL_SEC);
       } else {
         this.setData({ loadError: result.message || '获取任务失败，请重试' });
@@ -150,8 +160,8 @@ Page({
       this.setData({ loadError: '加载失败，已保留上次内容，请重试' });
       console.error('获取维修任务列表失败', err);
       if (cached && cached.exists) {
-        this.setData({ allTasks: cached.data.map(formatTask), loading: false, cardDelays: {} });
-        this.triggerCardAnimation();
+        const cachedTasks = cached.data.map(formatTask);
+        this.setData({ allTasks: cachedTasks, loading: false, cardDelays: this.buildCardDelays(0, cachedTasks.length) });
         wx.showToast({ title: '网络异常，已展示上次数据', icon: 'none' });
       } else {
         wx.showToast({ title: '网络错误，请重试', icon: 'none' });
@@ -189,9 +199,9 @@ Page({
           this.setData({
             allTasks: merged,
             hasMore,
-            page: this.data.page + 1
+            page: this.data.page + 1,
+            cardDelays: { ...this.data.cardDelays, ...this.buildCardDelays(startIndex, merged.length) }
           });
-          this.triggerCardAnimation(startIndex);
         } else {
           this.setData({ hasMore: false });
         }
@@ -206,33 +216,16 @@ Page({
     }
   },
 
-  // 触发卡片入场动画（依次入场）
-  // startIndex: 从第几张开始动画（用于加载更多场景）
-  triggerCardAnimation: function(startIndex = 0) {
-    const tasks = this.data.allTasks;
-    if (!tasks || tasks.length === 0) return;
-
-    // 防御：钳制到合法范围，避免拼出 cardDelays[-N] 这类非法 data path。
-    if (startIndex < 0) startIndex = 0;
-    if (startIndex >= tasks.length) return;
-
-    // 如果不是从头开始，保留已有的动画状态
-    if (startIndex === 0) {
-      this._animatedCount = 0;
-    } else {
-      this._animatedCount = this._animatedCount || 0;
-    }
-
-    // 为每一张卡片设置动画延迟
-    const endIndex = tasks.length;
+  // 生成卡片入场延迟（依次入场）
+  // 必须与列表数据在同一次 setData 中下发：先渲染终态再补动画类会让卡片闪一下再跳到起始位置。
+  // startIndex: 从第几张开始计入（加载更多时传旧列表长度）
+  buildCardDelays: function(startIndex = 0, total = 0) {
+    const begin = Math.max(0, startIndex);
     const delays = {};
-    for (let i = startIndex; i < endIndex; i++) {
-      const delay = (i - startIndex) * 100; // 每张卡片延迟 100ms
-      delays[`cardDelays[${i}]`] = delay;
+    for (let i = begin; i < total; i++) {
+      delays[i] = (i - begin) * 180; // 每张卡片延迟 180ms，逐条入场节奏更分明
     }
-
-    // 设置延迟数据，触发动画
-    this.setData(delays);
+    return delays;
   },
 
   // 查看任务详情
@@ -243,26 +236,68 @@ Page({
     });
   },
 
-  // 认领任务
+  // 认领任务：确认后先撕票（立即反馈），授权与提交随后并行，最终状态以服务端为准
   async claimTask(e) {
     if (!require('../../../../utils/memberStatus').canWrite()) return;
     if (this.data.claiming) return;
-    const taskId = e.currentTarget ? e.currentTarget.dataset.taskId : e;
+    const taskId = e && e.currentTarget ? e.currentTarget.dataset.taskId : e;
+    if (!taskId || this.data.tornTaskIds[taskId]) return;
     const task = this.data.allTasks.find(item => item.maintenanceTaskId === taskId);
-    if (!taskId || !task || task.applicantId === app.globalData.openid) { wx.showToast({ title: '不能受理自己的报修', icon: 'none' }); return; }
-    this.setData({ claiming: true });
+    if (!task) { wx.showToast({ title: '任务信息未就绪', icon: 'none' }); return; }
+    // 自己的报修默认不可受理；组长及以上可自领，便于测试与后续拓展
+    const isSelfTask = task.applicantId === app.globalData.openid;
+    const canSelfClaim = ['leader', 'admin'].includes(app.globalData.role || this.data.role);
+    if (isSelfTask && !canSelfClaim) { wx.showToast({ title: '不能受理自己的报修', icon: 'none' }); return; }
+
+    let confirmation;
     try {
-      const confirmation = await wx.showModal({ title: '受理维修任务', content: `受理任务 ${taskId}？请核对问题与预约时间。`, confirmText: '受理任务', cancelText: '返回' });
-      if (!confirmation.confirm) return;
-      try { await SubscriptionAuth.requestAssigneeAuth({ showTip: true, allowPartialSuccess: true }); } catch (_) {}
-      const latest = await api.call('maintenanceTasks', { action: 'getMaintenanceTaskDetail', params: { maintenanceTaskId: taskId } });
-      if (!latest.success || !latest.data || latest.data.taskStatus !== 'pending') {
-        wx.showToast({ title: latest.success ? '该任务状态已变化，请查看最新受理信息' : (latest.message || '无法核对任务状态'), icon: 'none' });
-        await this.loadMaintenanceTasks(true); return;
-      }
-      const result = await api.call('maintenanceTasks', { action: 'assignMaintenanceTask', params: { maintenanceTaskId: taskId, assigneeId: app.globalData.openid }, config: { retries: 0 } });
-      wx.showToast({ title: result.success ? '受理成功' : (result.code === 503 ? '结果待核实，正在刷新任务' : (result.message || '未能受理，请核对最新任务')), icon: result.success ? 'success' : 'none' });
+      confirmation = await wx.showModal({ title: '受理维修任务', content: `受理任务 ${taskId}？请核对问题与预约时间。`, confirmText: '受理任务', cancelText: '返回' });
+    } catch (_) { return; }
+    if (!confirmation || !confirmation.confirm) return;
+    // 弹窗期间可能已有其他点击或任务被他人受理
+    if (this.data.claiming || this.data.tornTaskIds[taskId]) return;
+    // 离线时不播撕拉：直接告知未提交，避免“看起来已受理”的误读
+    if (!require('../../../../utils/network').isOnline()) {
+      wx.showToast({ title: '当前离线，尚未受理', icon: 'none', duration: 2500 });
+      return;
+    }
+
+    // 1. 先撕票：立刻给出视觉反馈，不等授权与网络
+    const tearStartedAt = Date.now();
+    this.setData({ claiming: true, [`tornTaskIds.${taskId}`]: true });
+
+    // 2. 订阅授权不阻塞受理：拒绝、取消或失败都继续认领
+    try { SubscriptionAuth.requestAssigneeAuth({ showTip: false, allowPartialSuccess: true }).catch(() => {}); } catch (_) {}
+
+    // 3. 提交认领：服务端事务内校验任务状态与权限，因此不再前置拉详情
+    let result;
+    try {
+      result = await api.call('maintenanceTasks', { action: 'assignMaintenanceTask', params: { maintenanceTaskId: taskId, assigneeId: app.globalData.openid }, config: { retries: 0 } });
+    } catch (err) {
+      console.error('认领维修任务异常', err);
+      result = { success: false, code: 0, message: '网络异常，未能确认受理结果' };
+    }
+
+    const claimed = !!(result && result.success);
+    // 先通知其他页面失效，即使列表页已被销毁也要广播
+    if (claimed) app.publish('maintenanceChanged', { taskId });
+    if (this._pageDestroyed) return;
+
+    // 动画播完再刷新或复原，避免刷新打断撕拉；网络快于动画时补足剩余时长
+    const remaining = TICKET_TEAR_MS - (Date.now() - tearStartedAt);
+    if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+    if (this._pageDestroyed) return;
+
+    if (claimed) {
       await this.loadMaintenanceTasks(true);
-      if (result.success) app.publish('maintenanceChanged', { taskId });
-    } finally { this.setData({ claiming: false }); }
+      if (this._pageDestroyed) return;
+      this.setData({ claiming: false, [`tornTaskIds.${taskId}`]: false });
+      return;
+    }
+
+    // 失败：票根复原，再以服务端为准刷新（可能已被他人受理或状态已变化）
+    this.setData({ claiming: false, [`tornTaskIds.${taskId}`]: false });
+    const unknownResult = !result || result.code === 0 || result.code === 503;
+    wx.showToast({ title: unknownResult ? '结果待核实，正在刷新任务' : (result.message || '未能受理，请核对最新任务'), icon: 'none' });
+    await this.loadMaintenanceTasks(true);
   },})

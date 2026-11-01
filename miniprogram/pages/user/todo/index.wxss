@@ -61,16 +61,34 @@
 }
 
 /* 侧边栏徽章 */
+.sidebar-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  line-height: var(--mg-line-label);
+}
+
 .sidebar-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   font-size: var(--mg-font-caption);
-  color: var(--text-white);
-  background-color: var(--danger-color);
-  padding: 2rpx 8rpx;
-  border-radius: 10rpx;
-  margin-top: 4rpx;
-  min-width: 32rpx;
+  font-weight: var(--mg-weight-semibold);
+  color: var(--mg-color-on-brand);
+  background-color: var(--mg-color-notification);
+  border-radius: 50%;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1;
+}
+
+.sidebar-badge--large-count {
+  width: 24px;
+  height: 24px;
 }
 
 /* 右侧内容区域 */
@@ -99,31 +117,12 @@
   background-color: var(--card-background);
   box-shadow: var(--box-shadow);
   overflow: hidden;
-  /* 默认隐藏状态 */
-  opacity: 0;
-  transform: translateX(80rpx) translateZ(0);
   transform-origin: center top;
   transition: transform 0.2s ease-in-out;
 }
 
-/* 卡片入场动画 */
-.task-card.card-animate {
-  animation: cardSlideIn 0.5s cubic-bezier(0.25, 0, 0.1, 1) forwards;
-}
-
 .task-card.card-animate:active {
   transform: scale(0.98) translateZ(0);
-}
-
-@keyframes cardSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(60rpx) translateZ(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateZ(0);
-  }
 }
 
 /* 卡片封面 */
@@ -173,6 +172,7 @@
 }
 
 .management-tag {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   background-color: var(--secondary-color);
   color: var(--text-white);
   font-size: var(--mg-font-caption);
@@ -245,15 +245,26 @@
 /* 任务操作按钮 */
 .task-actions {
   display: flex;
-  justify-content: flex-end;
-  padding: 20rpx;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 16rpx 20rpx;
   border-top: 1rpx solid var(--border-light);
 }
 
 .text-btn {
-  font-size: var(--mg-font-body);
-  padding: 10rpx 20rpx;
-  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  max-width: 240rpx;
+  min-width: 0;
+  min-height: 48px;
+  font-size: var(--mg-font-label);
+  line-height: var(--mg-line-label);
+  text-align: center;
+  padding: 8px;
+  border-radius: var(--mg-radius-control);
   border: 1rpx solid;
 }
 
@@ -267,7 +278,6 @@
   color: var(--danger-color);
   border-color: var(--danger-color);
   background-color: var(--status-danger-bg);
-  margin-right: 16rpx;
 }
 
 /* 卡片状态边框颜色 */

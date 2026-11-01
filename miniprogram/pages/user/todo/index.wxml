@@ -9,8 +9,10 @@
       bindtap="onCategoryChange"
       data-key="{{item.key}}"
     >
-      {{item.label}}
-      <view class="sidebar-badge" wx:if="{{item.count > 0}}">{{item.count > 99 ? '99+' : item.count}}</view>
+      <view class="sidebar-label">
+        <text>{{item.label}}</text>
+        <view class="sidebar-badge {{item.count > 99 ? 'sidebar-badge--large-count' : ''}}" wx:if="{{item.count > 0}}" aria-label="{{item.label + '，' + item.count + '条'}}">{{item.count > 99 ? '99+' : item.count}}</view>
+      </view>
     </view>
   </view>
 

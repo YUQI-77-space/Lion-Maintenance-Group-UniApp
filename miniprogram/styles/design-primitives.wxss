@@ -67,7 +67,7 @@
 .mg-button.mg-button--loading { color: var(--mg-color-on-brand); background: var(--mg-color-brand); border-color: transparent; }
 
 .mg-tag {
-  display: inline-block;
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   max-width: 100%;
   padding: var(--mg-space-1) var(--mg-space-2);
   border-radius: var(--mg-radius-tag);

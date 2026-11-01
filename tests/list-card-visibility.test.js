@@ -1,4 +1,6 @@
 // node --test tests/list-card-visibility.test.js；检查真实 WXSS 的类选择器层叠，不访问云资源。
+// 约定：列表卡片加载结束后按序入场（公共 mg-card-enter），基础类保持可见，
+// 动画只作用于 .card-animate，且延迟与结束态不得让卡片停留在透明状态。
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -44,15 +46,27 @@ for (const [page, card] of [
   ['team/volunteer/manage', 'activity-card'],
   ['user/todo', 'task-card']
 ]) {
-  test(`${page} 首次插入及带旧动画类的卡片均即时可见`, () => {
+  test(`${page} 卡片基础态可见，带 card-animate 时按序滑入`, () => {
     const base = path.join(root, 'pages', page, 'index');
     assert.match(fs.readFileSync(`${base}.wxml`, 'utf8'), /class="[^"]*\bmg-data-page\b/);
     const sheet = readSheet(path.join(root, 'app.wxss')) + readSheet(`${base}.wxss`);
-    for (const classes of [[card], [card, 'card-animate']]) {
-      const style = cardStyle(sheet, classes);
-      assert.equal(style.animation, 'none', '卡片不依赖入场动画');
-      assert.equal(style.opacity, '1', '禁用动画后不能停留在透明初态');
-      assert.equal(style.transform, 'none', '卡片不保留入场位移');
-    }
+    // 媒体查询不在本文的层叠计算范围内，先整体取出再计算普通规则
+    const reducedBlocks = [...sheet.matchAll(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/g)].map(match => match[0]);
+    const styleSheet = sheet.replace(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/g, '');
+
+    // 基础态：没有入场类也必须可见，避免动画缺失或被打断后停在透明初态
+    const plain = cardStyle(styleSheet, [card]);
+    assert.notEqual(plain.opacity, '0', '卡片基础态不能是透明');
+    assert.equal(plain.animation, undefined, '卡片基础态不承载入场动画');
+
+    // 入场态：公共 keyframes + backwards，延迟期间才使用 0% 帧，结束后回到可见基础态
+    const animated = cardStyle(styleSheet, [card, 'card-animate']);
+    assert.match(animated.animation || '', /mg-card-enter/, '入场应使用公共 mg-card-enter');
+    assert.match(animated.animation || '', /backwards/, '延迟期间必须用 backwards 保持初帧');
+    assert.doesNotMatch(animated.animation || '', /forwards|both/, '结束态由基础样式提供，不叠加 forwards/both');
+
+    // 减少动效偏好下关闭入场，但不得把卡片隐藏
+    assert.ok(reducedBlocks.some(block => /card-animate[\s\S]*animation: none/.test(block)),
+      '需要有针对卡片入场的 prefers-reduced-motion 兜底');
   });
 }

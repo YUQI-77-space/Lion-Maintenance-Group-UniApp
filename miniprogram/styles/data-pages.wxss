@@ -18,16 +18,29 @@
 .mg-data-page .card-header, .mg-data-page .task-footer, .mg-data-page .participants-header { flex-wrap: wrap; gap: 16rpx; }
 .mg-data-page .card-info, .mg-data-page .hero-main, .mg-data-page .member-card-info { min-width: 0; }
 .mg-data-page .status-tag, .mg-data-page .task-status, .mg-data-page .status-pill,
-.mg-data-page .activity-status { height: auto; padding: 8rpx 16rpx; border: 0; border-radius: var(--mg-radius-tag); line-height: 1.5; white-space: normal; color: var(--mg-color-neutral); background: var(--mg-color-neutral-soft); }
+.mg-data-page .activity-status { display: inline-flex; align-items: center; justify-content: center; align-self: center; height: auto; padding: 8rpx 16rpx; border: 0; border-radius: var(--mg-radius-tag); line-height: 1.5; text-align: center; white-space: normal; color: var(--mg-color-neutral); background: var(--mg-color-neutral-soft); }
 .mg-data-page .status-pending, .mg-data-page .task-status.pending, .mg-data-page .status-pill.pending { color: var(--mg-color-warning); background: var(--mg-color-warning-soft); }
 .mg-data-page .status-inProgress, .mg-data-page .task-status.inProgress, .mg-data-page .status-pill.inProgress,
 .mg-data-page .status-inPreparation { color: var(--mg-color-info); background: var(--mg-color-info-soft); }
 .mg-data-page .status-completed, .mg-data-page .task-status.completed, .mg-data-page .status-pill.completed { color: var(--mg-color-success); background: var(--mg-color-success-soft); }
 .mg-data-page .status-cancelled, .mg-data-page .status-ended, .mg-data-page .task-status.cancelled { color: var(--mg-color-neutral); background: var(--mg-color-neutral-soft); }
-/* 禁用旧入场动画时同步恢复可见初态，避免卡片停在页面定义的 opacity: 0。 */
-.mg-data-page .task-card, .mg-data-page .activity-card, .mg-data-page .card,
-.mg-data-page .task-card.card-animate, .mg-data-page .activity-card.card-animate,
-.mg-data-page .card.card-animate { opacity: 1; animation: none; transform: none; }
+/* 列表入场：加载结束、卡片插入后自右向左渐显滑入，逐条延迟由页面 cardDelays 下发。
+   backwards 只在延迟期间使用 0% 帧，动画结束回到基础可见态，不残留位移与透明度；
+   基础类不再声明 opacity: 0，动画缺失或被打断时卡片仍可见。 */
+.mg-data-page .task-card.card-animate,
+.mg-data-page .activity-card.card-animate,
+.mg-data-page .card.card-animate {
+  animation: mg-card-enter 650ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes mg-card-enter {
+  from { opacity: 0; transform: translate3d(80rpx, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mg-data-page .task-card.card-animate,
+  .mg-data-page .activity-card.card-animate,
+  .mg-data-page .card.card-animate { animation: none; }
+}
 .mg-data-page .sidebar-item, .mg-data-page .tab-item, .mg-data-page .filter-item,
 .mg-data-page .toolbar-btn, .mg-data-page .text-btn, .mg-data-page .close-btn,
 .mg-data-page .modal-close, .mg-data-page .remove-selected-btn, .mg-data-page .pill-button,
@@ -98,3 +111,24 @@
 .mg-data-page .btn-submit, .mg-data-page .settings-btn.primary { color: var(--mg-color-on-brand); background: var(--mg-color-brand); border-color: var(--mg-color-brand); }
 .mg-data-page .settings-btn.ghost { color: var(--mg-color-text-primary); background: var(--mg-color-bg-surface); border-color: var(--mg-color-control-border); }
 .mg-data-page .button-group .btn { border-radius: var(--mg-radius-control); }
+
+/* 短文案操作：触控高度与文字行高分离，不用整颗按钮的高度充当行高。
+   只列出单动作容器；侧栏、Tab、多行设置入口保留原有排版。 */
+.mg-data-page .btn, .mg-data-page .primary-btn,
+.mg-data-page .filter-item,
+.mg-data-page .toolbar-btn, .mg-data-page .text-btn, .mg-data-page .close-btn,
+.mg-data-page .modal-close, .mg-data-page .remove-selected-btn, .mg-data-page .pill-button,
+.mg-data-page .participant-action-btn, .mg-data-page .section-action-btn,
+.mg-data-page .podium-edit-btn, .mg-data-page .action-btn, .mg-data-page .tool-btn,
+.mg-data-page .confirm-btn, .mg-data-page .btn-confirm, .mg-data-page .btn-cancel,
+.mg-data-page .btn-claim, .mg-data-page .btn-outline, .mg-data-page .per-ew-confirm,
+.mg-data-page .per-ew-cancel, .mg-data-page .register-btn, .mg-data-page .submit-button,
+.mg-data-page .submit-btn, .mg-data-page .retry-btn, .mg-data-page .compact-action,
+.mg-data-page .mini-btn, .mg-data-page .btn-submit, .mg-data-page .settings-btn,
+.mg-data-page .modal-btn, .mg-data-page .modal-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
+  text-align: center;
+}

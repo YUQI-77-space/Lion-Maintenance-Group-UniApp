@@ -27,7 +27,7 @@
       <!-- 任务列表 -->
       <view class="task-list" wx:if="{{!loading && allTasks.length > 0}}">
         <block wx:for="{{allTasks}}" wx:key="maintenanceTaskId">
-          <view class="task-card {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
+          <view class="task-card ticket {{item.taskStatus}}-card {{cardDelays[index] !== undefined ? 'card-animate' : ''}}" style="animation-delay: {{cardDelays[index] || 0}}ms;">
             <view class="status-indicator {{item.taskStatus}}"></view>
             <view class="task-info" bindtap="viewTaskDetail" data-task="{{item}}">
               <view class="task-header">
@@ -36,18 +36,30 @@
               </view>
               <view class="task-id">任务编号：{{item.maintenanceTaskId}}</view>
               <view class="application-time">申请时间: {{item.createTimeFormatted}}</view>
-              <view class="task-meta">
-                <text class="management-tag" wx:if="{{item.isManagementCreated}}">组长创建</text>
-                <text class="appointment-time">预约时间: {{item.appointmentTime}}</text>
+              <view class="appointment-time">预约时间: {{item.appointmentTime}}</view>
+              <!-- 标签单独占底部一行靠左，不插入两个时间之间 -->
+              <view class="task-footer" wx:if="{{item.isManagementCreated}}">
+                <text class="management-tag">组长创建</text>
               </view>
-              <view class="task-footer" wx:if="{{!readOnly && item.taskStatus === 'pending'}}">
-                <view class="btn btn-claim" 
-                      wx:if="{{item.taskStatus === 'pending'}}"
-                      catchtap="claimTask" 
-                      data-task-id="{{item.maintenanceTaskId}}">
-                  认领
-                </view>
+            </view>
+            <!-- 按业务状态呈现票根，新旧记录均不依赖本地动画标记 -->
+            <view class="ticket-stub ticket-stub--claimable {{tornTaskIds[item.maintenanceTaskId] ? 'is-tearing' : ''}}"
+                  wx:if="{{!readOnly && item.taskStatus === 'pending'}}"
+                  catchtap="claimTask"
+                  data-task-id="{{item.maintenanceTaskId}}"
+                  role="button"
+                  aria-label="认领任务 {{item.maintenanceTaskId}}">
+              <view class="stub-paper">
+                <view class="stub-label"><text>认</text><text>领</text></view>
               </view>
+              <view class="stub-tear" aria-hidden="true"></view>
+              <view class="stub-ghost" aria-hidden="true"></view>
+            </view>
+            <view class="ticket-stub ticket-stub--torn" wx:elif="{{item.taskStatus === 'inProgress' || item.taskStatus === 'completed'}}" aria-hidden="true">
+              <view class="stub-ghost is-visible"></view>
+            </view>
+            <view class="ticket-stub ticket-stub--inactive" wx:elif="{{item.taskStatus === 'pending' || item.taskStatus === 'cancelled'}}" aria-hidden="true">
+              <view class="stub-label"><text>{{item.taskStatus === 'cancelled' ? '已' : '待'}}</text><text>{{item.taskStatus === 'cancelled' ? '取' : '受'}}</text><text>{{item.taskStatus === 'cancelled' ? '消' : '理'}}</text></view>
             </view>
           </view>
         </block>

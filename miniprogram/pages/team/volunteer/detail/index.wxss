@@ -809,6 +809,7 @@
 }
 
 .member-role-tag {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   font-size: var(--mg-font-caption);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.12);

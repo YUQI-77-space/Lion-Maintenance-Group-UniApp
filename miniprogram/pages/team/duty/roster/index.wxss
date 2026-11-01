@@ -25,7 +25,8 @@
   flex-wrap: wrap;
 }
 .main-title { font-size: var(--mg-font-title); line-height: var(--mg-line-title); font-weight: 600; }
-.edit-status { font-size: var(--mg-font-caption); line-height: 18px; padding: 4rpx 12rpx; border-radius: var(--mg-radius-tag); color: var(--mg-color-brand-strong); background: var(--mg-color-brand-selected); }
+.edit-status {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle; font-size: var(--mg-font-caption); line-height: 18px; padding: 4rpx 12rpx; border-radius: var(--mg-radius-tag); color: var(--mg-color-brand-strong); background: var(--mg-color-brand-selected); }
 .edit-status--closed { color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); }
 .date-range { display: block; margin-top: 8rpx; color: var(--mg-color-text-secondary); font-size: var(--mg-font-label); line-height: var(--mg-line-label); }
 .stats-info { justify-content: flex-start; margin-top: 24rpx; padding-top: 16rpx; border-top: 1px solid var(--mg-color-border); font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); color: var(--mg-color-text-secondary); gap: 8rpx; }

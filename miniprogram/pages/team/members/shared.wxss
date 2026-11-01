@@ -5,7 +5,8 @@ page { background: var(--mg-color-bg-page); color: var(--mg-color-text-primary);
 .member-identity { flex: 1; min-width: 0; }
 .member-name { font-size: var(--mg-font-title); line-height: var(--mg-line-title); font-weight: 600; word-break: break-all; }
 .member-badges { display: flex; flex-wrap: wrap; gap: 12rpx; margin: 16rpx 0; }
-.member-badge { display: inline-block; padding: 6rpx 16rpx; background: var(--mg-color-info-soft); color: var(--mg-color-brand); border: 0; border-radius: 8rpx; font-size: var(--mg-font-caption); line-height: 1.5; }
+.member-badge {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle; padding: 6rpx 16rpx; background: var(--mg-color-info-soft); color: var(--mg-color-brand); border: 0; border-radius: 8rpx; font-size: var(--mg-font-caption); line-height: 1.5; }
 .contact-badge { background: var(--mg-color-success-soft); color: var(--mg-color-success); }
 .member-caption { color: var(--mg-color-text-muted); font-size: var(--mg-font-label); line-height: 1.5; }
 .member-section-title { font-size: var(--mg-font-section); font-weight: 600; line-height: var(--mg-line-section); margin-bottom: 16rpx; }

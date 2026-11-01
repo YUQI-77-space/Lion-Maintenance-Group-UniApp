@@ -141,9 +141,9 @@
   </block>
 
   <!-- 底部操作栏 -->
-  <view class="action-bar" wx:if="{{showActionBar}}">
-    <view class="action-btn ghost-danger" bindtap="openCancelModal">撤销任务</view>
-    <view class="action-btn primary" wx:if="{{canComplete}}" bindtap="confirmCompleteTask">确认完成</view>
+  <view class="action-bar maintenance-actions" wx:if="{{showActionBar}}">
+    <view class="maintenance-action" bindtap="openCancelModal" role="button" aria-label="撤销任务">撤销任务</view>
+    <view class="maintenance-action" wx:if="{{canComplete}}" bindtap="confirmCompleteTask" role="button" aria-label="确认完成">确认完成</view>
   </view>
 
   <!-- 撤销任务弹窗 -->

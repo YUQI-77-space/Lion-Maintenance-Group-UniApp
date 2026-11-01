@@ -191,8 +191,8 @@ module.exports = {
     <view class="assignees-section" wx:if="{{taskDetail.assigneeId}}">
       <view class="card-header">
         <view class="section-title">受理人信息</view>
-        <view class="section-action-btn" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal">
-          添加协助受理人
+        <view class="assignee-add-action" wx:if="{{canManageAssignees}}" bindtap="showAddAssigneeModal" role="button" aria-label="添加协助受理人">
+          <text class="assignee-add-plus" aria-hidden="true">+</text><text>添加协助受理人</text>
         </view>
       </view>
 
@@ -267,24 +267,35 @@ module.exports = {
       </block>
     </view>
 
-    <!-- 管理操作按钮：仅在管理详情页展示 -->
-    <view class="action-area management-action-area" wx:if="{{!readOnly && fromManage && (userRole === 'leader' || userRole === 'admin')}}">
-      <view class="btn btn-complete {{completing ? 'btn-disabled' : ''}}"
+    <!-- 管理操作：统一按钮形状，整组居中 -->
+    <view class="task-action-bar maintenance-actions" wx:if="{{!readOnly && fromManage && (userRole === 'leader' || userRole === 'admin')}}">
+      <view class="maintenance-action {{completing ? 'maintenance-action--disabled' : ''}}"
             wx:if="{{taskDetail.taskStatus === 'inProgress'}}"
-            bindtap="completeTask">
+            bindtap="completeTask"
+            role="button"
+            aria-label="完成任务">
         <loading-animation wx:if="{{completing}}" size="small" /><text wx:else>完成</text>
       </view>
-      <view class="btn btn-ew"
+      <view class="maintenance-action"
             wx:if="{{taskDetail.taskStatus === 'completed'}}"
-            catchtap="setEW">
-        设置EW
+            catchtap="setEW"
+            role="button"
+            aria-label="设置等效工作量">
+        设置 EW
       </view>
-      <view class="btn btn-delete {{completing ? 'btn-disabled' : ''}}" catchtap="deleteTask">删除</view>
+      <view class="maintenance-action maintenance-action--delete {{completing ? 'maintenance-action--disabled' : ''}}"
+            catchtap="deleteTask"
+            role="button"
+            aria-label="删除任务">
+        删除任务
+      </view>
     </view>
 
     <!-- 待受理状态下显示"认领"（组员详情页，不在管理详情页） -->
-    <view class="action-area" wx:elif="{{!readOnly && taskDetail.taskStatus === 'pending' && (userRole === 'member' || (userRole === 'leader' || userRole === 'admin')) && !fromManage}}">
-      <view class="btn btn-claim" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}">认领</view>
+    <view class="action-area maintenance-actions" wx:elif="{{!readOnly && taskDetail.taskStatus === 'pending' && (userRole === 'member' || (userRole === 'leader' || userRole === 'admin')) && !fromManage}}">
+      <view class="maintenance-action maintenance-action--claim {{claiming ? 'maintenance-action--disabled' : ''}}" catchtap="claimTask" data-task-id="{{taskDetail.maintenanceTaskId}}" role="button" aria-label="认领任务">
+        <loading-animation wx:if="{{claiming}}" size="small" /><text wx:else>认领</text>
+      </view>
     </view>
   </view>
 </view>
@@ -363,12 +374,12 @@ module.exports = {
 </view>
 
 <!-- 删除任务二次确认弹窗（管理详情页） -->
-<view class="custom-confirm-modal" wx:if="{{showDeleteConfirmModal}}" catchtouchmove="preventScrollThrough">
-  <view class="modal-content" catchtouchmove="preventScrollThrough">
+<view class="custom-confirm-modal" style="bottom: {{deleteKeyboardHeight}}px;" wx:if="{{showDeleteConfirmModal}}" bindtap="cancelDeleteConfirm" catchtouchmove="preventScrollThrough">
+  <view class="modal-content" catchtap="noop" catchtouchmove="preventScrollThrough">
     <view class="modal-header">二次确认</view>
     <view class="modal-body">
       <view class="confirm-text">为防止误操作，请输入任务编号"{{taskToDelete.maintenanceTaskId}}"以确认删除</view>
-      <input class="confirm-input" placeholder="请在此输入任务编号" bindinput="onDeleteConfirmInput" value="{{deleteConfirmInput}}"/>
+      <input class="confirm-input" placeholder="请在此输入任务编号" bindinput="onDeleteConfirmInput" value="{{deleteConfirmInput}}" adjust-position="{{false}}" bindfocus="onDeleteKeyboardHeightChange" bindkeyboardheightchange="onDeleteKeyboardHeightChange" cursor-spacing="16" aria-label="输入任务编号以确认删除"/>
     </view>
     <view class="modal-footer">
       <button class="btn-cancel" bindtap="cancelDeleteConfirm">取消</button>

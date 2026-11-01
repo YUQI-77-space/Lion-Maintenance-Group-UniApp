@@ -153,6 +153,7 @@
 }
 
 .page-stat-chip {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
   font-size: var(--mg-font-caption);

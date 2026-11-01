@@ -50,6 +50,7 @@ Page({
     ewInputText: '0.5',
     ewSaving: false,
     showDeleteConfirmModal: false,
+    deleteKeyboardHeight: 0,
     taskToDelete: null,
     deleteConfirmInput: '',
     deleting: false,
@@ -135,6 +136,15 @@ Page({
 
   onIdentityChanged() { this.onShow(); },
 
+  onUnload() {
+    // 标注页面已销毁：异步受理结果返回后不再写已销毁页面的 data
+    this._detailDestroyed = true;
+  },
+
+  onHide() {
+    this.setData({ deleteKeyboardHeight: 0 });
+  },
+
   /**
    * 用户点击右上角分享
    */
@@ -208,28 +218,51 @@ Page({
     }
   },
 
-  // 认领任务
+  // 认领任务：确认后立即进入受理中（按钮给反馈），授权与提交随后推进，状态以服务端为准
   async claimTask(e) {
     if (!memberStatus.canWrite()) return;
     if (this.data.claiming) return;
     const taskId = this.data.taskId;
     const task = this.data.taskDetail;
-    if (!taskId || !task || task.applicantId === app.globalData.openid) { wx.showToast({ title: '不能受理自己的报修', icon: 'none' }); return; }
-    this.setData({ claiming: true });
+    if (!taskId || !task) { wx.showToast({ title: '任务信息未就绪', icon: 'none' }); return; }
+    // 自己的报修默认不可受理；组长及以上可自领，便于测试与后续拓展
+    const isSelfTask = task.applicantId === app.globalData.openid;
+    const canSelfClaim = ['leader', 'admin'].includes(app.globalData.role || this.data.userRole);
+    if (isSelfTask && !canSelfClaim) { wx.showToast({ title: '不能受理自己的报修', icon: 'none' }); return; }
+
+    let confirmation;
     try {
-      const confirmation = await wx.showModal({ title: '受理维修任务', content: `受理任务 ${taskId}？请核对问题与预约时间。`, confirmText: '受理任务', cancelText: '返回' });
-      if (!confirmation.confirm) return;
-      try { await SubscriptionAuth.requestAssigneeAuth({ showTip: true, allowPartialSuccess: true }); } catch (_) {}
-      const latest = await api.call('maintenanceTasks', { action: 'getMaintenanceTaskDetail', params: { maintenanceTaskId: taskId } });
-      if (!latest.success || !latest.data || latest.data.taskStatus !== 'pending') {
-        wx.showToast({ title: latest.success ? '该任务状态已变化，请查看最新受理信息' : (latest.message || '无法核对任务状态'), icon: 'none' });
-        await this.getTaskDetail(); return;
-      }
-      const result = await api.call('maintenanceTasks', { action: 'assignMaintenanceTask', params: { maintenanceTaskId: taskId, assigneeId: app.globalData.openid }, config: { retries: 0 } });
-      wx.showToast({ title: result.success ? '受理成功' : (result.code === 503 ? '结果待核实，正在刷新任务' : (result.message || '未能受理，请核对最新任务')), icon: result.success ? 'success' : 'none' });
-      await this.getTaskDetail();
-      if (result.success) app.publish('maintenanceChanged', { taskId });
-    } finally { this.setData({ claiming: false }); }
+      confirmation = await wx.showModal({ title: '受理维修任务', content: `受理任务 ${taskId}？请核对问题与预约时间。`, confirmText: '受理任务', cancelText: '返回' });
+    } catch (_) { return; }
+    if (!confirmation || !confirmation.confirm || this.data.claiming) return;
+    // 离线时不进入受理中，直接告知未提交
+    if (!require('../../../../utils/network').isOnline()) {
+      wx.showToast({ title: '当前离线，尚未受理', icon: 'none', duration: 2500 });
+      return;
+    }
+
+    // 立即锁定并给按钮反馈，不等授权与网络
+    this.setData({ claiming: true });
+    // 订阅授权不阻塞受理：拒绝、取消或失败都继续认领
+    try { SubscriptionAuth.requestAssigneeAuth({ showTip: false, allowPartialSuccess: true }).catch(() => {}); } catch (_) {}
+
+    // 服务端事务内校验任务状态与权限，因此不再前置拉详情
+    let result;
+    try {
+      result = await api.call('maintenanceTasks', { action: 'assignMaintenanceTask', params: { maintenanceTaskId: taskId, assigneeId: app.globalData.openid }, config: { retries: 0 } });
+    } catch (err) {
+      console.error('认领维修任务异常', err);
+      result = { success: false, code: 0, message: '网络异常，未能确认受理结果' };
+    }
+
+    const claimed = !!(result && result.success);
+    if (claimed) app.publish('maintenanceChanged', { taskId });
+    if (this._detailDestroyed) return;
+    this.setData({ claiming: false });
+
+    const unknownResult = !result || result.code === 0 || result.code === 503;
+    wx.showToast({ title: claimed ? '受理成功' : (unknownResult ? '结果待核实，正在核对任务' : (result.message || '未能受理，请核对最新任务')), icon: claimed ? 'success' : 'none' });
+    await this.getTaskDetail();
   },
   // 返回上一页
   goBack: function() {
@@ -492,6 +525,7 @@ Page({
         if (res.confirm) {
           this.setData({
             showDeleteConfirmModal: true,
+            deleteKeyboardHeight: 0,
             taskToDelete: task,
             deleteConfirmInput: ''
           });
@@ -505,13 +539,23 @@ Page({
     this.setData({ deleteConfirmInput: e.detail.value });
   },
 
+  // 手动在键盘上方的可用区域居中，避免原生顶起与弹窗位移叠加。
+  onDeleteKeyboardHeightChange(e) {
+    if (this._detailDestroyed || !this.data.showDeleteConfirmModal) return;
+    const height = Number(e.detail && e.detail.height);
+    if (!Number.isFinite(height)) return;
+    this.setData({ deleteKeyboardHeight: Math.max(0, height) });
+  },
+
   // 取消删除确认
   cancelDeleteConfirm: function() {
     this.setData({
       showDeleteConfirmModal: false,
+      deleteKeyboardHeight: 0,
       taskToDelete: null,
       deleteConfirmInput: ''
     });
+    if (wx.hideKeyboard) wx.hideKeyboard();
   },
 
   // 确认删除任务
@@ -541,7 +585,8 @@ Page({
       return;
     }
 
-    this.setData({ deleting: true, showDeleteConfirmModal: false });
+    this.setData({ deleting: true, showDeleteConfirmModal: false, deleteKeyboardHeight: 0 });
+    if (wx.hideKeyboard) wx.hideKeyboard();
     loadingFeedback.show({ title: '删除中...' });
 
     try {

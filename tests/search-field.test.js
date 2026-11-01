@@ -50,7 +50,6 @@ test('志愿活动清空不回退到旧关键词，重置分页且保留状态�
   page.setData({ searchKeyword: '旧关键词', currentStatus: 'ended', page: 3 });
   let count = 0;
   page.getActivitiesList = () => { count++; };
-  page.triggerCardAnimation = () => {};
   page.handleSearchConfirm({ detail: { value: '' } });
   assert.equal(page.data.searchKeyword, '');
   assert.equal(page.data.currentStatus, 'ended');

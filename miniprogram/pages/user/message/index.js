@@ -97,9 +97,15 @@ Page({
   /**
    * 加载消息列表（改为适配器）
    */
+  syncUnreadCount(count) {
+    this._messageRevision = (this._messageRevision || 0) + 1;
+    app.updateUnreadMessageCount(count, this.data.userOpenid);
+  },
+
   loadMessages: async function() {
-    if (this._loadingMessages) return;
+    if (this._loadingMessages || this._writingMessages) return;
     this._loadingMessages = true;
+    const revision = this._messageRevision || 0;
     this.setData({ isLoading: this.data.messages.length === 0, loadError: '' });
     
     try {
@@ -107,6 +113,7 @@ Page({
         action: 'getMessage',
         params: { messageUserId: this.data.userOpenid }
       });
+      if (this._writingMessages || revision !== (this._messageRevision || 0)) return;
       if (result.success) {
         const { messages = [], messageNumber = 0 } = result.data || {};
         const processedMessages = (messages || []).map(msg => {
@@ -153,10 +160,11 @@ Page({
           isEmpty: sortedMessages.length === 0,
           isLoading: false
         });
-        app.getUnreadMessageCount && app.getUnreadMessageCount();
+        this.syncUnreadCount(unreadCount);
       } else {
         if (result.message === '未找到消息') {
           this.setData({ messages: [], messageNumber: 0, unreadCount: 0, isEmpty: true });
+          this.syncUnreadCount(0);
         } else this.setData({ loadError: result.message || '消息加载失败，保留上次内容' });
       }
     } catch (err) {
@@ -173,12 +181,14 @@ Page({
    * 标记消息为已读（保留写操作）
    */
   markAsRead: async function(e) {
+    if (this._writingMessages) return;
     const displayIndex = e.currentTarget.dataset.index;
     const message = this.data.messages[displayIndex];
     
-    if (message.isRead) return;
+    if (!message || message.isRead) return;
     
     const originalIndex = this.data.messageNumber - displayIndex - 1;
+    this._writingMessages = true;
     
     try {
       const res = await api.call('messages', {
@@ -193,13 +203,15 @@ Page({
           messages: updatedMessages,
           unreadCount
         });
-        app.getUnreadMessageCount && app.getUnreadMessageCount();
+        this.syncUnreadCount(unreadCount);
       } else {
         wx.showToast({ title: res.message || '标记已读失败', icon: 'none' });
       }
     } catch (err) {
       console.error('标记已读失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+    } finally {
+      this._writingMessages = false;
     }
   },
 
@@ -209,13 +221,15 @@ Page({
    * 清空所有消息（保留写操作）
    */
   clearAllMessages: function() {
-    if (this.data.messages.length === 0) return;
+    if (this._writingMessages || this.data.messages.length === 0) return;
     
     wx.showModal({
       title: '清空消息',
       content: '确定要清空所有消息吗？',
       success: async (res) => {
         if (res.confirm) {
+          if (this._writingMessages) return;
+          this._writingMessages = true;
           loadingFeedback.show({ title: '处理中...' });
           
           try {
@@ -234,7 +248,7 @@ Page({
                 isEmpty: true 
               });
               wx.showToast({ title: '已清空所有消息', icon: 'success' });
-              app.getUnreadMessageCount && app.getUnreadMessageCount();
+              this.syncUnreadCount(0);
             } else {
               wx.showToast({ title: result.message || '操作失败', icon: 'none' });
             }
@@ -242,6 +256,8 @@ Page({
             loadingFeedback.hide();
             console.error('清空消息失败', err);
             wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+          } finally {
+            this._writingMessages = false;
           }
         }
       }
@@ -252,7 +268,7 @@ Page({
    * 标记所有消息为已读（保留写操作）
    */
   markAllAsRead: async function() {
-    if (this.data.messages.length === 0) return;
+    if (this._writingMessages || this.data.messages.length === 0) return;
     
     const hasUnread = this.data.messages.some(msg => !msg.isRead);
     if (!hasUnread) {
@@ -260,6 +276,7 @@ Page({
       return;
     }
     
+    this._writingMessages = true;
     loadingFeedback.show({ title: '处理中...' });
     
     try {
@@ -277,7 +294,7 @@ Page({
           unreadCount 
         });
         wx.showToast({ title: '全部标记为已读', icon: 'success' });
-        app.getUnreadMessageCount && app.getUnreadMessageCount();
+        this.syncUnreadCount(unreadCount);
       } else {
         wx.showToast({ title: res.message || '操作失败', icon: 'none' });
       }
@@ -285,6 +302,8 @@ Page({
       loadingFeedback.hide();
       console.error('标记全部已读失败', err);
       wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+    } finally {
+      this._writingMessages = false;
     }
   },
 

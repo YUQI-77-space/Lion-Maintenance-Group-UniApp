@@ -98,6 +98,10 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
       const ref = tx.collection('maintenance_tasks').doc(found.data[0]._id)
       const { data: current } = await ref.get()
       if (!current || current.taskStatus !== 'pending') return { stats: { updated: 0 } }
+      // 自己的报修默认不可受理；组长及以上可自领
+      if (current.applicantId === assigneeId && !['leader', 'admin'].includes(currentCaller.role)) {
+        throw Object.assign(new Error('不能认领自己发布的报修任务'), { code: 403 })
+      }
       await ref.update({ data: assigneeInfo })
       return { stats: { updated: 1 } }
     })
@@ -168,8 +172,8 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
       }
     })
     
-    // 添加到认领人待办事项
-    await db.collection('maintenance_toDo_list').add({
+    // 添加到认领人待办事项；自领时上面的更新已覆盖申请人待办，无需重复写入
+    if (task.applicantId !== user.openid) await db.collection('maintenance_toDo_list').add({
       data: {
         toDoListUserId: user.openid,
         taskId: params.maintenanceTaskId,
@@ -201,24 +205,26 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
       }
     })
     
-    // 发送消息通知
-    try {
-      // 发送消息给申请人
-      await cloud.callFunction({
-        name: 'messages',
+    // 通知并行发送：三次调用此前串行，额外增加约两次往返；并行后仍全部 await，
+    // 避免云函数 return 后被冻结而丢失通知，单项失败也不影响受理结果
+    const notifyTasks = [
+      cloud.callFunction({
+        name: 'subscriptionMessage',
         data: {
-          action: 'createMessage',
+          action: 'sendTaskClaimedNotification',
           params: {
-            messageUserId: task.applicantId,
-            title: '维修任务已被认领',
-            content: `您的维修任务"${task.level1} > ${task.level2} > ${task.level3}"已被${user.nickName}认领，请通过QQ联系: ${user.qqId}`,
-            messagetype: 'maintenance'
+            applicantOpenid: task.applicantId,
+            taskId: params.maintenanceTaskId,
+            taskCategory: task.level3,
+            assigneeName: user.nickName,
+
+            maintenanceTaskId: params.maintenanceTaskId
           }
         }
-      });
-      
-      // 发送消息给认领人
-      await cloud.callFunction({
+      }).then(() => console.log('任务认领订阅消息发送成功'))
+        .catch(subscriptionErr => console.error('发送任务认领订阅消息失败:', subscriptionErr)),
+      // 发给认领人（自领时就是同一人，保留这一条）
+      cloud.callFunction({
         name: 'messages',
         data: {
           action: 'createMessage',
@@ -229,37 +235,27 @@ exports.assignMaintenanceTask = async (params = {}, OPENID) => {
             messagetype: 'maintenance'
           }
         }
-      });
-    } catch (messageErr) {
-      console.error('发送消息失败', messageErr);
-      // 消息发送失败不影响主流程
-    }
-    
-    // 发送订阅消息通知
-    try {
-      await cloud.callFunction({
-        name: 'subscriptionMessage',
+      }).catch(messageErr => console.error('发送认领人消息失败', messageErr))
+    ]
+
+    // 发给申请人（自领时跳过，避免给自己发通知）
+    if (task.applicantId !== user.openid) {
+      notifyTasks.push(cloud.callFunction({
+        name: 'messages',
         data: {
-          action: 'sendTaskClaimedNotification',
+          action: 'createMessage',
           params: {
-            applicantOpenid: task.applicantId,
-            taskId: params.maintenanceTaskId,
-            taskCategory: task.level3,
-            assigneeName: user.nickName,
-      
-            maintenanceTaskId: params.maintenanceTaskId
+            messageUserId: task.applicantId,
+            title: '维修任务已被认领',
+            content: `您的维修任务"${task.level1} > ${task.level2} > ${task.level3}"已被${user.nickName}认领，请通过QQ联系: ${user.qqId}`,
+            messagetype: 'maintenance'
           }
         }
-      });
-      
-      console.log('任务认领订阅消息发送成功');
-    } catch (subscriptionErr) {
-      console.error('发送任务认领订阅消息失败:', subscriptionErr);
-      // 订阅消息发送失败不影响主流程
+      }).catch(messageErr => console.error('发送申请人消息失败', messageErr)))
     }
-    
 
-    
+    await Promise.all(notifyTasks)
+
     return {
       code: 200,
       data: {

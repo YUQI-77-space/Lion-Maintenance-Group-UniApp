@@ -1,6 +1,7 @@
 @import "/styles/data-pages.wxss";
 /* pages/team/maintenance/detail/index.wxss */
 @import "/styles/variables.wxss";
+@import "/styles/maintenance-actions.wxss";
 
 /* 维修任务详情页样式 */
 .container {
@@ -57,17 +58,46 @@
   border-bottom: none;
 }
 
-.section-action-btn {
+/* 添加协助受理人：轻量文字操作，不做高 48px 胶囊，不抢标题行的高度 */
+.assignee-add-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  flex-shrink: 0;
+  padding: 6rpx 8rpx 6rpx 4rpx;
+  margin-left: auto;
   font-size: var(--mg-font-label);
-  color: var(--primary-color);
-  padding: 10rpx 24rpx;
-  border-radius: 999rpx;
-  border: 1rpx solid rgba(58, 117, 251, 0.4);
-  white-space: nowrap;
+  line-height: var(--mg-line-label);
+  color: var(--mg-color-brand);
+  border-radius: var(--mg-radius-tag);
 }
 
-.section-action-btn:active {
-  background: rgba(58, 117, 251, 0.08);
+/* 视觉高度轻量，热区上下补齐到 48px */
+.assignee-add-action::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -14rpx;
+  bottom: -14rpx;
+}
+
+.assignee-add-action:active {
+  color: var(--mg-color-brand-strong);
+  background-color: var(--mg-color-brand-selected);
+}
+
+.assignee-add-plus {
+  font-size: var(--mg-font-body);
+  line-height: 1;
+  font-weight: var(--mg-weight-medium);
+}
+
+/* 受理人信息卡头部不再留出空白第二行 */
+.assignees-section .card-header {
+  padding-bottom: 12rpx;
+  margin-bottom: 16rpx;
 }
 
 /* 状态标签：与志愿活动详情页同一套表达 */
@@ -157,83 +187,15 @@
   box-shadow: var(--box-shadow);
 }
 
-/* 按钮区域与新按钮样式 */
+/* 按钮外层保留页面间距；尺寸、颜色和居中布局共用同一套样式。 */
 .action-area {
-  display: flex;
-  justify-content: center; /* 整体居中 */
-  align-items: center;
-  gap: 40rpx; /* 按钮间距 */
   margin-top: 40rpx;
 }
 
-.btn {
-  padding: 22rpx 80rpx; /* 稍宽些 */
-  font-size: var(--mg-font-body);
-  border-radius: 999rpx; /* 宽圆角矩形 */
-  border: 2rpx solid;
-  line-height: 1;
+.task-action-bar {
+  margin-top: 32rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
 }
-
-/* 返回：黑色描边、无底色 */
-.btn-outline-black {
-  border-color: #000000;
-  color: #000000;
-  background-color: transparent;
-}
-.btn-outline-black:active { background-color: rgba(0,0,0,0.06); }
-
-/* 编辑受理人：绿色描边、无底色 */
-.btn-outline-green {
-  border-color: var(--success-color);
-  color: var(--success-color);
-  background-color: transparent;
-}
-.btn-outline-green:active { background-color: rgba(40, 167, 69, 0.1); }
-
-/* 认领：var(--mg-color-brand) 边框 + 实心底色，白字 */
-.btn-claim {
-  border-color: var(--mg-color-brand);
-  background-color: var(--mg-color-brand);
-  color: #ffffff;
-}
-.btn-claim:active { opacity: 0.9; }
-
-/* 管理操作按钮区域 */
-.management-action-area {
-  flex-wrap: wrap;
-  gap: 20rpx;
-  padding-bottom: 20rpx;
-}
-
-.management-action-area .btn {
-  flex: 0 0 auto;
-  padding: 20rpx 48rpx;
-  font-size: var(--mg-font-body);
-}
-
-/* 完成：实心绿色 */
-.btn-complete {
-  border-color: var(--success-color);
-  background-color: var(--success-color);
-  color: #ffffff;
-}
-.btn-complete:active { opacity: 0.9; }
-
-/* 设置EW：实心深蓝 */
-.btn-ew {
-  border-color: var(--mg-color-brand);
-  background-color: var(--mg-color-brand);
-  color: #ffffff;
-}
-.btn-ew:active { opacity: 0.9; }
-
-/* 删除：实心红色 */
-.btn-delete {
-  border-color: var(--mg-color-danger);
-  background-color: var(--mg-color-danger);
-  color: #ffffff;
-}
-.btn-delete:active { opacity: 0.9; }
 
 .btn-disabled {
   opacity: 0.5;
@@ -279,15 +241,26 @@
 }
 
 .assignee-remove-btn {
+  position: relative;
+  padding: 6rpx 8rpx;
+  border-radius: var(--mg-radius-tag);
   font-size: var(--mg-font-label);
-  color: var(--danger-color);
-  padding: 8rpx 20rpx;
-  border-radius: 999rpx;
-  border: 1rpx solid rgba(255, 77, 79, 0.4);
+  line-height: var(--mg-line-label);
+  color: var(--mg-color-danger);
+}
+
+/* 文字型移除按钮，热区上下补齐 */
+.assignee-remove-btn::after {
+  content: '';
+  position: absolute;
+  left: -8rpx;
+  right: -8rpx;
+  top: -14rpx;
+  bottom: -14rpx;
 }
 
 .assignee-remove-btn:active {
-  background: rgba(255, 77, 79, 0.1);
+  background-color: var(--mg-color-danger-soft);
 }
 
 /* 编辑受理人弹窗样式 */
@@ -482,6 +455,7 @@
 }
 
 .member-role-tag {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   font-size: var(--mg-font-caption);
   color: var(--primary-color);
   background: rgba(58, 117, 251, 0.12);
@@ -920,8 +894,7 @@
    弹窗外壳（EW设置 / 删除二次确认）
    与全局「线框 + 极简」风格保持一致：白底、细描边、无多余装饰
    ============================================ */
-.ew-modal,
-.custom-confirm-modal {
+.ew-modal {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -938,14 +911,38 @@
 }
 
 .custom-confirm-modal {
-  width: 600rpx;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
-.ew-modal .modal-content,
 .custom-confirm-modal .modal-content {
+  width: 600rpx;
+  max-width: 100%;
+  max-height: 100%;
+  background: var(--card-background);
+  border-radius: var(--mg-radius-modal);
+  box-shadow: var(--mg-shadow-overlay);
+}
+
+.ew-modal .modal-content {
   display: flex;
   flex-direction: column;
   max-height: 82vh;
+  overflow: hidden;
+}
+
+.custom-confirm-modal .modal-content {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -990,6 +987,7 @@
 }
 
 .ew-head-tag {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   font-size: var(--mg-font-caption);
   line-height: 1;
   color: var(--primary-color);
@@ -1149,6 +1147,7 @@
 }
 
 .ew-assignee-role {
+  display: inline-flex; align-items: center; justify-content: center; align-self: center; vertical-align: middle;
   flex-shrink: 0;
   font-size: var(--mg-font-caption);
   line-height: 1;

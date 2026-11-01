@@ -182,5 +182,5 @@ image {
 
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
 /* 人员当前在职状态；文字确保状态不只依靠颜色传达。 */
-.member-retired { display: inline-block; flex-shrink: 0; margin-left: 8rpx; padding: 2rpx 10rpx; border-radius: 8rpx; font-size: 12px; line-height: 18px; color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); vertical-align: middle; white-space: nowrap; }
+.member-retired { display: inline-flex; align-items: center; justify-content: center; align-self: center; flex-shrink: 0; margin-left: 8rpx; padding: 2rpx 10rpx; border-radius: 8rpx; font-size: var(--mg-font-caption); line-height: var(--mg-line-caption); color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); vertical-align: middle; white-space: nowrap; }
 .member-readonly-note { padding: 20rpx 28rpx; font-size: 13px; line-height: 20px; color: var(--mg-color-text-secondary); background: var(--mg-color-bg-subtle); }
